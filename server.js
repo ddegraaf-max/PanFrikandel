@@ -58,7 +58,7 @@ const FRIKANDEL_PREP = [
 ];
 
 const PRODUCTS = [
-  // ---- Klassiekers ----
+  // ---- Frikandele & klasyki ----
   { id: 'frikandel-40', cat: 'klasyki', name: 'Frikandel · 40 szt.', price: 12900, unit: '40 × 85 g (3400 g)', badge: 'BESTSELLER', icon: 'frikandel', img: 'frikandel-karton.webp', img2: 'frikandel.webp',
     desc: 'Legenda holenderskiej frytkowni w kartonie horeca. 40 sztuk po 85 g — zapas na długo.',
     details: { prep: FRIKANDEL_PREP, ingredients: FRIKANDEL_INGREDIENTS, allergens: 'Gluten (pszenica)', nutrition: FRIKANDEL_NUTRITION,
@@ -69,25 +69,238 @@ const PRODUCTS = [
     details: { prep: FRIKANDEL_PREP, ingredients: FRIKANDEL_INGREDIENTS, allergens: 'Gluten (pszenica)', nutrition: FRIKANDEL_NUTRITION,
       storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
 
-  { id: 'bitterballen-30', cat: 'klasyki', name: 'Bitterballen · 30 szt.', price: 7900, unit: '30 × 30 g', badge: 'HIT NA IMPREZY', icon: 'bitterbal',
-    desc: 'Chrupiące kulki z kremowym ragù wołowym. Obowiązkowe z musztardą przy piwie.',
-    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–11 min z zamrożenia']] } },
+  { id: 'frikandel-halal-40', cat: 'klasyki', name: 'Frikadel halal · 40 szt.', price: 13900, unit: '40 × 85 g (3400 g)', badge: 'HALAL', icon: 'frikandel', img: 'frikandel-halal-karton.webp',
+    desc: 'Frikadel z certyfikatem halal (Halal Certification Authority Netherlands) od De Vries Snacks — pioniera frikandela na holenderskim rynku.',
+    details: {
+      prep: [
+        ['🍟 Frytkownica', '180°C · 5 min z zamrożenia (3 min po rozmrożeniu)'],
+        ['🔥 Piekarnik', '225°C · 7,5–8 min z zamrożenia (4 min po rozmrożeniu)'],
+        ['💨 Airfryer', '180°C · ok. 9–10 min z zamrożenia']
+      ],
+      ingredients: '51% mięso oddzielone mechanicznie z kurczaka, kolagen z kurczaka, bułka tarta (PSZENICA), woda, tłuszcz z kurczaka, 4% wołowina, hydrolizat białka roślinnego (SOJA), sól, cebula, zioła, przyprawy, stabilizatory: E450, E451, E452, cukier, wzmacniacz smaku: E621, przeciwutleniacze: E301, E331, ekstrakt drożdżowy, aromat, olej słonecznikowy.',
+      allergens: 'Gluten (pszenica), soja',
+      nutrition: [['Energia', '767 kJ / 184 kcal'], ['Tłuszcz', '13 g'], ['— w tym kwasy nasycone', '3,9 g'], ['Węglowodany', '8,9 g'], ['— w tym cukry', '0,5 g'], ['Białko', '12 g'], ['Sól', '2 g']],
+      storage: 'Przechowywać w -18°C. Po wyjęciu z zamrażarki: 48 h w lodówce (maks. 7°C). Nie rozmrażać w opakowaniu.' } },
 
-  { id: 'kroket-10', cat: 'klasyki', name: 'Kroket wołowy · 10 szt.', price: 6500, unit: '10 × 80 g', badge: null, icon: 'kroket',
-    desc: 'Duży brat bitterballen. Holendrzy jedzą go w bułce — „broodje kroket".',
-    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–12 min z zamrożenia']] } },
+  { id: 'frikandel-bezglutenowy', cat: 'klasyki', name: 'Frikandel bezglutenowy', price: 3900, unit: 'tacka 5 × 70 g', badge: 'BEZ GLUTENU', icon: 'frikandel', img: 'frikandel-bezglutenowy.webp',
+    desc: 'Klasyczny smak i struktura frikandela — bez glutenu. Idealny dla osób z celiakią lub nietolerancją glutenu. Sprawdzi się też na grillu.',
+    details: {
+      prep: [['🍳 Patelnia', 'na średnim ogniu, regularnie obracać'], ['🍟 Frytkownica', '180°C · ok. 4 min z zamrożenia'], ['🔥 Grill / BBQ', 'na umiarkowanym żarze, często obracać']],
+      ingredients: '72% mięso oddzielone mechanicznie z kurczaka, skrobia ziemniaczana, tłuszcz wołowy, woda, 2% wołowina, sól, bulion (hydrolizowane białko (SOJA, kukurydza), sól, ekstrakt przypraw), kolagen wołowy, cebula w proszku, zioła, przyprawy, wzmacniacz smaku: E621, stabilizatory: E450/E452, przeciwutleniacz: E300, aromat.',
+      allergens: 'Soja (bez glutenu)',
+      nutrition: [['Energia', '1106 kJ / 264 kcal'], ['Tłuszcz', '20 g'], ['— w tym kwasy nasycone', '8 g'], ['Węglowodany', '7 g'], ['— w tym cukry', '0 g'], ['Białko', '12 g'], ['Sól', '2,3 g']],
+      storage: 'Przechowywać w -18°C.' } },
 
-  { id: 'kaassouffle-10', cat: 'klasyki', name: 'Kaassoufflé · 10 szt.', price: 6900, unit: '10 × 65 g', badge: 'WEGE', icon: 'kaassouffle',
-    desc: 'Chrupiąca kieszonka z płynnym serem Gouda. Wegetariański klasyk frytkowni.',
+  { id: 'mora-frikandel-vege', cat: 'klasyki', name: 'Mora Frikandel wegetariański · 20 szt.', price: 10900, unit: '20 × 70 g', badge: 'WEGE · PROMOCJA', icon: 'frikandel',
+    desc: 'Wegetariański frikandel od Mora — ten sam kształt, ta sama przyprawowa dusza, zero mięsa. Także dla mięsożerców trudny do odróżnienia.',
     details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia'], ['🔥 Piekarnik', '200°C · 12 min']] } },
 
-  { id: 'bamischijf-8', cat: 'klasyki', name: 'Bamischijf · 8 szt.', price: 5900, unit: '8 × 90 g', badge: null, icon: 'bamischijf',
-    desc: 'Smażony krążek z indonezyjskim makaronem bami — holendersko-azjatycka fuzja.',
-    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 10 min z zamrożenia']] } },
+  { id: 'vanreusel-xxl-250', cat: 'klasyki', name: 'Vanreusel Frikandel XXL · 250 g', price: 15900, unit: '10 × 250 g (2500 g)', badge: 'ĆWIERĆ KILO', icon: 'frikandel',
+    desc: 'Frikandel ważący ćwierć kilograma. Belgijska odpowiedź na pytanie, którego nikt nie zadał — a jednak wszyscy chcą spróbować. Jeden = pełny obiad.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 6–7 min z zamrożenia'], ['💨 Airfryer', '180°C · 13–15 min z zamrożenia, obrócić w połowie'], ['🔥 Piekarnik', '200°C · 18–20 min']] } },
 
-  { id: 'mexicano-8', cat: 'klasyki', name: 'Mexicano · 8 szt.', price: 6200, unit: '8 × 100 g', badge: 'OSTRE', icon: 'mexicano',
-    desc: 'Pikantny, płaski kotlet z charakterem. Dla tych, którym frikandel to za mało.',
+  { id: 'vanreusel-best-bite', cat: 'klasyki', name: 'Vanreusel Best Bite · 100 g', price: 13900, unit: '40 × 100 g', badge: 'BELGIJSKI PREMIUM', icon: 'frikandel',
+    desc: 'Flagowy frikandel belgijskiej marki Vanreusel — delikatniejsza struktura i pełniejsze przyprawienie. Belgia vs Holandia: oceń sam.',
+    details: { prep: FRIKANDEL_PREP } },
+
+  { id: 'van-lieshout-goudfrik', cat: 'klasyki', name: 'Van Lieshout Goudfrik · 100 g', price: 13900, unit: '40 × 100 g', badge: null, icon: 'frikandel',
+    desc: 'Złota wersja frikandela od Van Lieshout — rodzinnej firmy, która smaży frikandele od pokoleń. Cięższy, bardziej mięsny profil.',
+    details: { prep: FRIKANDEL_PREP } },
+
+  { id: 'beckers-original', cat: 'klasyki', name: 'Beckers Frikandel Original · 85 g', price: 12900, unit: '40 × 85 g', badge: 'KLASYK Z LIMBURGII', icon: 'frikandel',
+    desc: 'Beckers z Limburgii to jedna z najstarszych marek frikandeli w Holandii — receptura Original niezmienna od dekad.',
+    details: { prep: FRIKANDEL_PREP } },
+
+  { id: 'kaassouffle-10', cat: 'klasyki', name: 'Souflesse Kaassoufflé · 10 szt.', price: 6900, unit: '10 × 75 g', badge: 'WEGE', icon: 'kaassouffle',
+    desc: 'Chrupiąca kieszonka z płynnym serem od Souflesse — holenderskiego specjalisty od soufflé. Wegetariański klasyk frytkowni.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia'], ['🔥 Piekarnik', '200°C · 12 min']] } },
+
+  { id: 'van-dobben-kaassouffle', cat: 'klasyki', name: 'Van Dobben Kaassoufflé · 10 szt.', price: 8900, unit: '10 × 75 g', badge: 'PREMIUM · WEGE', icon: 'kaassouffle',
+    desc: 'Kaassoufflé od kultowego Van Dobben — więcej sera, cieńsze ciasto, amsterdamska klasa.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia']] } },
+
+  { id: 'souflesse-mini', cat: 'klasyki', name: 'Souflesse Kaassoufflé mini · 30 szt.', price: 7900, unit: '30 × 25 g', badge: 'NA IMPREZY · WEGE', icon: 'kaassouffle',
+    desc: 'Miniaturowe soufflé serowe na jeden kęs — obok bitterballen obowiązkowy punkt każdej holenderskiej deski przekąsek.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 2,5–3 min z zamrożenia'], ['💨 Airfryer', '180°C · 6–7 min z zamrożenia']] } },
+
+  { id: 'souflesse-tomaat-mozzarella', cat: 'klasyki', name: 'Souflesse Kaassoufflé pomidor-mozzarella · 10 szt.', price: 7900, unit: '10 × 75 g', badge: 'WEGE', icon: 'kaassouffle',
+    desc: 'Włoski akcent w holenderskim soufflé: mozzarella z pomidorami w chrupiącym cieście. Caprese z frytkownicy.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia']] } },
+
+  { id: 'souflesse-ham-kaas', cat: 'klasyki', name: 'Souflesse Kaassoufflé szynka-ser · 10 szt.', price: 7900, unit: '10 × 75 g', badge: null, icon: 'kaassouffle',
+    desc: 'Klasyczne duo szynki i sera w wersji soufflé — tost hawajski bez ananasa, za to z chrupiącą skorupką.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia']] } },
+
+  { id: 'borrelmaatjes-kaas', cat: 'klasyki', name: 'Borrelmaatjes serowe · 48 szt.', price: 13900, unit: '48 × 23,5 g', badge: 'PROMOCJA · WEGE', icon: 'kaassouffle',
+    desc: 'Serowe kąski „borrelmaatjes" od Ad van Geloven — 48 sztuk w kartonie, czyli holenderska impreza w wersji instant.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3 min z zamrożenia'], ['💨 Airfryer', '180°C · 7 min z zamrożenia']] } },
+
+  { id: 'bamischijf-8', cat: 'klasyki', name: 'Elite Bamischijf · 8 szt.', price: 6900, unit: '8 × 130 g', badge: null, icon: 'bamischijf',
+    desc: 'Smażony krążek z indonezyjskim makaronem bami od Elite — specjalisty od tej holendersko-azjatyckiej fuzji. Solidne 130 g.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–11 min z zamrożenia']] } },
+
+  { id: 'elite-bamischijf-pittig', cat: 'klasyki', name: 'Elite Bamischijf extra ostry · 8 szt.', price: 6900, unit: '8 × 130 g', badge: 'BARDZO OSTRE', icon: 'bamischijf',
+    desc: 'Ta sama bami-klasyka, ale z porządnym kopem sambala. Dla tych, którym zwykły bamischijf to za mało ognia.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–11 min z zamrożenia']] } },
+
+  { id: 'elite-bamischijf-vege', cat: 'klasyki', name: 'Elite Bamischijf wegetariański · 8 szt.', price: 6900, unit: '8 × 130 g', badge: 'WEGE', icon: 'bamischijf',
+    desc: 'Bamischijf w wersji w pełni wegetariańskiej — makaron, warzywa i indonezyjskie przyprawy, zero mięsa.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–11 min z zamrożenia']] } },
+
+  { id: 'welten-bami-mini', cat: 'klasyki', name: 'Welten Bamischijf mini oriental', price: 7900, unit: '30 szt. mini', badge: 'NA IMPREZY', icon: 'bamischijf',
+    desc: 'Miniaturowe krążki bami na jeden kęs — orientalny akcent na desce przekąsek obok bitterballen i mini soufflé.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3 min z zamrożenia'], ['💨 Airfryer', '180°C · 7–8 min z zamrożenia']] } },
+
+  { id: 'elite-nasischijf', cat: 'klasyki', name: 'Elite Nasischijf · 8 szt.', price: 6900, unit: '8 × 130 g', badge: null, icon: 'bamischijf',
+    desc: 'Brat bamischijfa: smażony krążek z indonezyjskim ryżem nasi goreng zamiast makaronu. Druga połowa holendersko-indonezyjskiego duetu.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–11 min z zamrożenia']] } },
+
+  { id: 'elite-nasischijf-pittig-vega', cat: 'klasyki', name: 'Elite Nasischijf extra ostry wege · 8 szt.', price: 6900, unit: '8 × 130 g', badge: 'BARDZO OSTRE · WEGE', icon: 'bamischijf',
+    desc: 'Nasischijf z podwójną dawką sambala i w pełni roślinny — najostrzejszy wegetariański snack w naszej frytkowni.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–11 min z zamrożenia']] } },
+
+  { id: 'mexicano-8', cat: 'klasyki', name: 'De Vries Mexicano · 8 szt.', price: 6900, unit: '8 × 135 g', badge: 'OSTRE', icon: 'mexicano',
+    desc: 'Pikantny, płaski kotlet z charakterem od De Vries — twórcy oryginału. Dla tych, którym frikandel to za mało.',
     details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–12 min z zamrożenia']] } },
+
+  { id: 'de-vries-super-mexicano-xxl', cat: 'klasyki', name: 'De Vries Super Mexicano XXL · 245 g', price: 14900, unit: '10 × 245 g', badge: 'ĆWIERĆ KILO', icon: 'mexicano',
+    desc: 'Mexicano w rozmiarze ćwierć kilograma — pikantny kolos do pary z naszym frikandelem XXL. Jeden = obiad z kopem.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 6–7 min z zamrożenia'], ['💨 Airfryer', '180°C · 13–15 min z zamrożenia, obrócić w połowie']] } },
+
+  { id: 'de-vries-mexicano-mini', cat: 'klasyki', name: 'De Vries Mexicano mini · 30 g', price: 8900, unit: '30 szt. × 30 g', badge: 'OSTRE · NA IMPREZY', icon: 'mexicano',
+    desc: 'Mini mexicano na jeden kęs — pikantny element deski przekąsek dla gości, którzy lubią ogień.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3 min z zamrożenia'], ['💨 Airfryer', '180°C · 7–8 min z zamrożenia']] } },
+
+  { id: 'de-vries-mexicano-halal', cat: 'klasyki', name: 'De Vries Mexicano halal · 8 szt.', price: 7900, unit: '8 × 135 g', badge: 'HALAL · OSTRE', icon: 'mexicano',
+    desc: 'Pełnoprawny mexicano z wołowiny i kurczaka, z certyfikatem halal — pikantna klasyka dostępna dla każdego.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–12 min z zamrożenia']] } },
+
+  // ---- Bitterballen & krokiety ----
+  { id: 'bitterbal-20-100', cat: 'bitterballen', name: 'Bitterballen 20% · ok. 100 szt.', price: 9900, unit: 'ok. 100 × 20 g (2000 g)', badge: 'KARTON HORECA', icon: 'bitterbal', img: 'bitterbal-20-karton.webp',
+    desc: 'Klasyczne bitterballen z 20% wypełnieniem mięsnym (uwaga: mięso końskie — tradycyjna holenderska receptura) o bogatym, pełnym smaku. Karton na dużą imprezę.',
+    details: {
+      prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia (3 min po rozmrożeniu) · maks. 10 szt. naraz'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']],
+      ingredients: 'Woda, mięso końskie 29%*, bułka tarta (mąka PSZENNA, mąka PSZENNA pełnoziarnista, olej słonecznikowy, drożdże, sól, woda, otręby PSZENNE, cukier, siemię lniane, margaryna, ekstrakt słodowy (zawiera JĘCZMIEŃ)), panier (woda, mąka PSZENNA, skrobia PSZENNA, sól), mąka PSZENNA, oleje roślinne (palmowy, rzepakowy), hydrolizat białka SOJOWEGO, żelatyna wołowa, sól, substancje zagęszczające: E464, E466, przyprawy, aromat (zawiera PSZENICĘ, SOJĘ), wzmacniacze smaku: E621, E631, błonnik PSZENNY, maltodekstryna. *odpowiada 20% gotowanego mięsa końskiego.',
+      allergens: 'Gluten (pszenica, jęczmień), soja',
+      nutrition: [['Energia', '721 kJ / 172 kcal'], ['Tłuszcz', '7,2 g'], ['— w tym kwasy nasycone', '3,4 g'], ['Węglowodany', '18 g'], ['— w tym cukry', '2,4 g'], ['Błonnik', '1,6 g'], ['Białko', '8,5 g'], ['Sól', '1,1 g']],
+      storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
+
+  { id: 'kwekkeboom-oven-bitterballen', cat: 'bitterballen', name: 'Kwekkeboom Bitterballen wołowe do piekarnika · 50 szt.', price: 10900, unit: '2 × 25 szt. × 25 g', badge: 'PIEKARNIK / AIRFRYER', icon: 'bitterbal', img: 'kwekkeboom-bitterballen-karton.webp',
+    desc: 'Legendarna amsterdamska marka od 1900 r. Chrupiąca skorupka, kremowe wnętrze z wołowiną — bez frytkownicy, prosto z piekarnika lub airfryera.',
+    details: {
+      prep: [['🔥 Piekarnik', '220°C · 8 min z zamrożenia (nie rozmrażać!), po upieczeniu odczekać min. 2 min'], ['💨 Airfryer', '200°C · ok. 7–8 min z zamrożenia']],
+      ingredients: 'Woda, MĄKA PSZENNA, 14% gotowana wołowina, olej roślinny (rzepakowy, palmowy), 2% śmietanka (MLEKO), sól, białko SOJOWE, aromat (zawiera SOJĘ, SELER), substancje zagęszczające (polidekstroza, E415, E461), skrobia (zawiera PSZENICĘ), stabilizator (E466), mąka SOJOWA, żelatyna (wołowa), zioła i przyprawy (zawiera SELER), skrobia modyfikowana, barwniki (E160b, karmel), białko JAJ kurzych, ekstrakt drożdżowy, błonnik (ziemniaczany, bambusowy, cytrusowy, inulina), SOJA, substancja konserwująca (E223 — zawiera SIARCZYNY), glukoza, maltodekstryna, hydrolizowane białko kukurydziane, suszona cebula, białko MLEKA, kwas mlekowy, palony cukier, syrop z palonego cukru, przeciwutleniacz (ekstrakt z rozmarynu). Wyprodukowano w zakładzie przetwarzającym orzeszki ziemne.',
+      allergens: 'Gluten, jaja, mleko, seler, soja, siarczyny · może zawierać orzeszki ziemne',
+      nutrition: [['Energia', '1122 kJ / 268 kcal'], ['Tłuszcz', '15,8 g'], ['— w tym kwasy nasycone', '4,4 g'], ['Węglowodany', '23,1 g'], ['— w tym cukry', '2,2 g'], ['Białko', '8,3 g'], ['Sól', '1,3 g']],
+      storage: 'Przechowywać w -18°C. Nie rozmrażać przed przygotowaniem.' } },
+
+  { id: 'kwekkeboom-bitterbal-30', cat: 'bitterballen', name: 'Kwekkeboom Bitterbal wołowy · 30 g', price: 11900, unit: '30 szt. × 30 g', badge: null, icon: 'bitterbal',
+    desc: 'Duży bitterbal 30 g z bogatym wołowym ragù — wersja klasyczna do frytkownicy. Obowiązkowy z musztardą przy piwie.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–11 min z zamrożenia']] } },
+
+  { id: 'old-amsterdam-bitterballen', cat: 'bitterballen', name: 'Kwekkeboom Bitterballen Old Amsterdam · 25 g', price: 12900, unit: '40 szt. × 25 g · piekarnik', badge: 'SEROWE', icon: 'bitterbal',
+    desc: 'Bitterballen z dojrzewającym serem Old Amsterdam — wytrawne, pełne umami. Wersja do piekarnika i airfryera.',
+    details: { prep: [['🔥 Piekarnik', '220°C · 8 min z zamrożenia'], ['💨 Airfryer', '200°C · 7–8 min z zamrożenia']] } },
+
+  { id: 'van-dobben-bitterbal', cat: 'bitterballen', name: 'Van Dobben Bitterbal wołowy · 30 g', price: 11900, unit: '30 szt. × 30 g', badge: 'IKONA AMSTERDAMU', icon: 'bitterbal',
+    desc: 'Van Dobben to bitterbal, po który amsterdamczycy stoją w kolejce od 1945 roku. Kremowe wołowe ragù w cienkiej, chrupiącej panierce — punkt odniesienia dla całej kategorii.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia · maks. 10 szt. naraz'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
+
+  { id: 'bourgondier-bitterbal-35', cat: 'bitterballen', name: 'De Bourgondiër Bitterbal wołowy · 35 g', price: 10900, unit: '30 szt. × 35 g', badge: null, icon: 'bitterbal',
+    desc: 'Większy, rustykalny bitterbal 35 g w burgundzkim stylu — więcej nadzienia, więcej przyjemności.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10 min z zamrożenia']] } },
+
+  { id: 'rotterdamse-bitterbal', cat: 'bitterballen', name: 'Rotterdamse Bitterbal · 60 szt.', price: 8900, unit: '60 szt. × 30 g', badge: 'PROMOCJA', icon: 'bitterbal',
+    desc: 'Solidny bitterbal z Rotterdamu — bez zadęcia, za to w dużym kartonie w świetnej cenie. Miasto pracy, kulka konkretu.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia · maks. 10 szt. naraz'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
+
+  { id: 'amsterdamse-bitterbal', cat: 'bitterballen', name: 'Amsterdamse Bitterbal wołowy · 50 szt.', price: 15900, unit: '50 szt. × 30 g', badge: 'PROMOCJA', icon: 'bitterbal',
+    desc: 'Rzemieślniczy bitterbal od Amsterdamse Croquetten — gęste ragù wołowe według stołecznej tradycji.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
+
+  { id: 'mekkafood-bitterballen-halal', cat: 'bitterballen', name: 'Mekkafood Bitterballen halal', price: 13900, unit: 'karton', badge: 'HALAL', icon: 'bitterbal',
+    desc: 'Bitterballen z certyfikatem halal — klasyczny smak holenderskiej frytkowni dostępny dla każdego.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
+
+  { id: 'oma-bobs-draadjesvlees', cat: 'bitterballen', name: 'Oma Bob’s Bitterballen draadjesvlees · 30 g', price: 12900, unit: '30 szt. × 30 g', badge: 'JAK U BABCI', icon: 'bitterbal',
+    desc: 'Z długo duszonej, rozpadającej się wołowiny (draadjesvlees) — jak niedzielny obiad u holenderskiej babci, zamknięty w chrupiącej kulce.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
+
+  { id: 'holtkamp-kalfsvlees', cat: 'bitterballen', name: 'Holtkamp Bitterbal cielęcy · 30 g', price: 16900, unit: '30 szt. × 30 g', badge: 'PREMIUM', icon: 'bitterbal',
+    desc: 'Holtkamp to legendarna amsterdamska patisserie — ich cielęcy bitterbal serwują najlepsze bary i restauracje w kraju. Klasa mistrzowska.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia · maks. 10 szt. naraz']] } },
+
+  { id: 'holtkamp-garnaal', cat: 'bitterballen', name: 'Holtkamp Bitterbal z krewetkami · 30 g', price: 18900, unit: '30 szt. × 30 g', badge: 'PREMIUM', icon: 'bitterbal',
+    desc: 'Bitterbal z holenderskimi krewetkami północnomorskimi — morska elegancja od Holtkamp. Do kieliszka wytrawnego białego wina.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia']] } },
+
+  { id: 'holtkamp-kreeft', cat: 'bitterballen', name: 'Holtkamp Bitterbal z homarem · 30 g', price: 21900, unit: '30 szt. × 30 g', badge: 'LUKSUS', icon: 'bitterbal',
+    desc: 'Homar w bitterbalu. Tak, naprawdę. Najbardziej luksusowa kulka Holandii — na specjalne okazje albo po prostu dlatego, że można.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia']] } },
+
+  { id: 'holtkamp-oude-kaas', cat: 'bitterballen', name: 'Holtkamp Bitterbal z serem dojrzewającym · 30 g', price: 15900, unit: '30 szt. × 30 g', badge: 'WEGE', icon: 'bitterbal',
+    desc: 'Kremowe wnętrze z dojrzewającego holenderskiego sera — wegetariański bitterbal w wydaniu premium.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia']] } },
+
+  { id: 'la-trappe-bitterbal', cat: 'bitterballen', name: 'Bitterbal La Trappe Quadrupel · 64 szt.', price: 19900, unit: '64 szt. × 30 g', badge: 'Z PIWEM TRAPISTÓW', icon: 'bitterbal',
+    desc: 'Ragù wołowe duszone w piwie trapistów La Trappe Quadrupel (10%). Głęboki, słodowo-karmelowy smak — bitterbal dla koneserów. Idealna para: to samo piwo w szklance.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
+
+  { id: 'mora-bitterbal-vege', cat: 'bitterballen', name: 'Mora Bitterbal wegetariański · 25 g', price: 10900, unit: '54 szt. × 25 g', badge: 'WEGE · PROMOCJA', icon: 'bitterbal',
+    desc: 'Wegetariański bitterbal od Mora — największej marki snackowej w Holandii. Duży karton, mała cena.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9 min z zamrożenia']] } },
+
+  { id: 'captain-food-vegan', cat: 'bitterballen', name: 'Captain Food Bitterbal vegan · 30 g', price: 11900, unit: '54 szt. × 30 g', badge: 'VEGAN · PROMOCJA', icon: 'bitterbal',
+    desc: 'W 100% roślinny bitterbal, który smakuje jak oryginał. Nikt na imprezie nie zauważy różnicy — sprawdzone.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9 min z zamrożenia']] } },
+
+  { id: 'oesterzwam-bitterbal', cat: 'bitterballen', name: 'Bitterbal z boczniaków · 30 g (vegan)', price: 13900, unit: '30 szt. × 30 g', badge: 'VEGAN', icon: 'bitterbal',
+    desc: 'Roślinny bitterbal na bazie boczniaków z holenderskiej uprawy — mięsista struktura i głębia umami prosto z natury.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9 min z zamrożenia']] } },
+
+  { id: 'kwekkeboom-rundvleeskroket', cat: 'bitterballen', name: 'Kwekkeboom Kroket wołowy · 100 g', price: 8900, unit: '10 × 100 g', badge: null, icon: 'kroket',
+    desc: 'Pełnowymiarowy kroket wołowy 100 g. Holendrzy jedzą go w bułce — „broodje kroket". Marka premium z Amsterdamu.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 5 min z zamrożenia'], ['💨 Airfryer', '180°C · 11–12 min z zamrożenia']] } },
+
+  { id: 'kwekkeboom-kalfsvleeskroket', cat: 'bitterballen', name: 'Kwekkeboom Kroket cielęcy · 90 g', price: 9900, unit: '10 × 90 g', badge: 'PREMIUM', icon: 'kroket',
+    desc: 'Najszlachetniejsza wersja kroketa — z delikatną cielęciną. Klasa sama w sobie.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 5 min z zamrożenia'], ['💨 Airfryer', '180°C · 11–12 min z zamrożenia']] } },
+
+  { id: 'kwekkeboom-oven-croquetten', cat: 'bitterballen', name: 'Kwekkeboom Krokiety do piekarnika · 70 g', price: 9900, unit: '4 × 5 szt. × 70 g', badge: 'PIEKARNIK / AIRFRYER', icon: 'kroket',
+    desc: 'Krokiety, które piecze się zamiast smażyć — chrupiące z piekarnika lub airfryera, bez kropli oleju.',
+    details: { prep: [['🔥 Piekarnik', '220°C · ok. 10 min z zamrożenia'], ['💨 Airfryer', '200°C · ok. 9 min z zamrożenia']] } },
+
+  { id: 'old-amsterdam-croquetten', cat: 'bitterballen', name: 'Kwekkeboom Krokiety Old Amsterdam · 60 g', price: 9900, unit: '10 × 60 g · piekarnik', badge: 'SEROWE', icon: 'kroket',
+    desc: 'Serowe krokiety z Old Amsterdam do piekarnika — wegetariańska gratka dla fanów sera.',
+    details: { prep: [['🔥 Piekarnik', '220°C · ok. 10 min z zamrożenia'], ['💨 Airfryer', '200°C · ok. 9 min z zamrożenia']] } },
+
+  { id: 'kwekkeboom-kaashapjes', cat: 'bitterballen', name: 'Kwekkeboom Kaashapjes · 12 szt.', price: 4900, unit: '12 × 20 g · piekarnik', badge: 'WEGE', icon: 'kaassouffle',
+    desc: 'Małe serowe kąski do piekarnika — idealne obok bitterballen na desce przekąsek.',
+    details: { prep: [['🔥 Piekarnik', '220°C · ok. 8 min z zamrożenia'], ['💨 Airfryer', '200°C · ok. 7 min z zamrożenia']] } },
+
+  { id: 'rotterdamse-kroket', cat: 'bitterballen', name: 'Rotterdamse Kroket · 24 szt.', price: 9900, unit: '24 × 100 g', badge: 'PROMOCJA', icon: 'kroket',
+    desc: 'Solidny kroket z Rotterdamu w dużym kartonie — konkret bez zadęcia, idealny do bułki na drugie śniadanie po holendersku.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 5 min z zamrożenia'], ['💨 Airfryer', '180°C · 11–12 min z zamrożenia']] } },
+
+  { id: 'amsterdamse-kroket', cat: 'bitterballen', name: 'Amsterdamse Kroket wołowy · 18 szt.', price: 16900, unit: '18 × 100 g', badge: 'RZEMIEŚLNICZY', icon: 'kroket',
+    desc: 'Rzemieślniczy kroket od Amsterdamse Croquetten — gęste, wolno gotowane ragù wołowe. Stołeczna klasa do pary z ich bitterballen.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 5 min z zamrożenia'], ['💨 Airfryer', '180°C · 11–12 min z zamrożenia']] } },
+
+  { id: 'mora-kroket-vege', cat: 'bitterballen', name: 'Mora Kroket wegetariański · 21 szt.', price: 13900, unit: '21 × 75 g', badge: 'WEGE · PROMOCJA', icon: 'kroket',
+    desc: 'Wegetariański kroket od największej marki snackowej Holandii — kremowe wnętrze bez grama mięsa.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–11 min z zamrożenia']] } },
+
+  { id: 'captain-kroket-vegan', cat: 'bitterballen', name: 'Captain Food Kroket vegan · 20 szt.', price: 11900, unit: '20 × 100 g', badge: 'VEGAN · PROMOCJA', icon: 'kroket',
+    desc: 'Pełnowymiarowy kroket 100 g w wersji 100% roślinnej. „Broodje kroket" bez kompromisów.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 5 min z zamrożenia'], ['💨 Airfryer', '180°C · 11 min z zamrożenia']] } },
+
+  { id: 'cas-mini-kroket-chorizo', cat: 'bitterballen', name: 'Mini kroket chorizo · 30 g', price: 12900, unit: '30 szt. × 30 g', badge: 'HISZPAŃSKI TWIST', icon: 'kroket',
+    desc: 'Mini kroket z pikantnym chorizo — holendersko-hiszpańska fuzja na deskę przekąsek. Ostrzejszy kuzyn bitterbala.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9 min z zamrożenia']] } },
+
+  { id: 'ambachterie-zeeuws-spek', cat: 'bitterballen', name: 'Kroket z boczkiem zelandzkim · 65 g', price: 11900, unit: '20 × 65 g', badge: 'SPECJALNOŚĆ', icon: 'kroket',
+    desc: 'Rzemieślniczy kroket z wędzonym boczkiem z Zelandii (Zeeuws spek) — dymny, głęboki smak od De Ambachterie.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10 min z zamrożenia']] } },
 
   // ---- Sosy ----
   { id: 'sos-curry-900', cat: 'sosy', name: 'Oliehoorn Sos curry · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'DO SPECIAAL', icon: 'saus', img: 'sos-curry.webp',
@@ -106,13 +319,45 @@ const PRODUCTS = [
       nutrition: [['Energia', '3023 kJ / 735 kcal'], ['Tłuszcz', '79,9 g'], ['— w tym kwasy nasycone', '6,5 g'], ['Węglowodany', '2,6 g'], ['— w tym cukry', '2,5 g'], ['Białko', '1,1 g'], ['Sól', '0,9 g']],
       storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
-  { id: 'fritessaus-750', cat: 'sosy', name: 'Fritessaus · 750 ml', price: 2900, unit: '750 ml', badge: null, icon: 'saus',
-    desc: 'NIE mylić z majonezem! Lżejszy, słodszy — jedyny słuszny sos do frytek w NL.',
-    details: { storage: 'Po otwarciu przechowywać w lodówce.' } },
+  { id: 'fritessaus-750', cat: 'sosy', name: 'Oliehoorn Fritessaus 25% · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'HOLENDERSKI KLASYK', icon: 'saus', img: 'fritessaus.webp',
+    desc: 'NIE mylić z majonezem! Kremowy, świeży, lekko słodszy — jedyny słuszny sos do frytek w Holandii. 25% oleju, stabilny nawet na ciepłych daniach.',
+    details: {
+      ingredients: 'Woda, 25% olej rzepakowy, cukier, skrobia PSZENNA, ocet, żółtko JAJ z chowu ściółkowego, sól, MUSZTARDA (woda, nasiona GORCZYCY, ocet, sól, cukier, przyprawy), modyfikowana skrobia ziemniaczana, substancja konserwująca (sorbinian potasu), regulator kwasowości (kwas cytrynowy), substancje zagęszczające (guma guar, guma ksantanowa), barwnik (beta-karoten), przeciwutleniacz (E385), aromat.',
+      allergens: 'Gluten (pszenica), jaja, gorczyca',
+      nutrition: [['Energia', '1205 kJ / 291 kcal'], ['Tłuszcz', '25,7 g'], ['— w tym kwasy nasycone', '2,1 g'], ['Węglowodany', '14,1 g'], ['— w tym cukry', '8,3 g'], ['Białko', '0,5 g'], ['Sól', '1,8 g']],
+      storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
-  { id: 'joppiesaus-500', cat: 'sosy', name: 'Joppiesaus · 500 ml', price: 2700, unit: '500 ml', badge: 'KULTOWY', icon: 'saus',
-    desc: 'Kultowy żółty sos z nutą curry i cebuli. Receptura owiana tajemnicą.',
-    details: { storage: 'Po otwarciu przechowywać w lodówce.' } },
+  { id: 'joppiesaus-500', cat: 'sosy', name: 'Joppie Original · 850 ml', price: 3200, unit: 'butelka 850 ml', badge: 'KULTOWY', icon: 'saus', img: 'joppiesaus.webp',
+    desc: 'Kultowy żółty sos z nutą curry i 11% cebuli. Receptura owiana tajemnicą — Holendrzy wylewają go na wszystko, od frytek po kanapki.',
+    details: {
+      ingredients: 'Woda, olej roślinny (rzepakowy), 11% cebula, cukier, syrop glukozowo-fruktozowy, regulatory kwasowości (kwas octowy, kwas mlekowy, kwas cytrynowy, mleczan sodu), modyfikowana skrobia kukurydziana, żółtko JAJ z chowu ściółkowego, syrop glukozowy, sól, koncentrat pomidorowy, skrobia PSZENNA, skrobia kukurydziana, mąka PSZENNA, substancje konserwujące (E202, E211), substancje zagęszczające (E412, E415), zioła, barwniki (luteina, E150c), błonnik grochowy, przyprawy, substancje słodzące (acesulfam K, aspartam — zawiera źródło fenyloalaniny), aromat, przeciwutleniacze (E385, E392), nasiona GORCZYCY, SELER, skrobia ziemniaczana.',
+      allergens: 'Jaja, gluten (pszenica), gorczyca, seler · zawiera źródło fenyloalaniny',
+      nutrition: [['Energia', '1272 kJ / 306 kcal'], ['Tłuszcz', '23 g'], ['— w tym kwasy nasycone', '1,8 g'], ['Węglowodany', '24 g'], ['— w tym cukry', '20 g'], ['Białko', '1,1 g'], ['Sól', '1,3 g']],
+      storage: 'Po otwarciu przechowywać w lodówce (1–7°C).' } },
+
+  { id: 'wijko-satesaus', cat: 'sosy', name: 'Wijko Sos satay gotowy', price: 2900, unit: 'butelka', badge: 'DO „PATATJE OORLOG"', icon: 'saus',
+    desc: 'Gęsty sos orzechowy — standard każdej holenderskiej frytkowni. Podstawa legendarnego „patatje oorlog": frytki + saté + majonez + surowa cebulka.',
+    details: { allergens: 'Orzeszki ziemne', storage: 'Po otwarciu przechowywać w lodówce.' } },
+
+  { id: 'calve-satesaus', cat: 'sosy', name: 'Calvé Sos satay indonezyjski', price: 3200, unit: 'słoik', badge: null, icon: 'saus',
+    desc: 'Indonezyjski sos satay od Calvé — marki, na której wychowały się pokolenia Holendrów. Do snacków, szaszłyków i oczywiście frytek.',
+    details: { allergens: 'Orzeszki ziemne', storage: 'Po otwarciu przechowywać w lodówce.' } },
+
+  { id: 'oliehoorn-ketchup-900', cat: 'sosy', name: 'Oliehoorn Ketchup pomidorowy · 900 ml', price: 2700, unit: 'butelka 900 ml', badge: null, icon: 'saus', img: 'ketchup.webp',
+    desc: 'Ketchup z dojrzałych pomidorów — 165 g pomidorów na każde 100 g ketchupu. Pełny, świeży smak, delikatnie przyprawiony. Bez zbędnych dodatków.',
+    details: {
+      ingredients: 'Woda, koncentrat pomidorowy (165 g pomidorów na 100 g ketchupu), cukier, ocet, modyfikowana skrobia ziemniaczana, sól, regulator kwasowości (kwas cytrynowy), substancja konserwująca (sorbinian potasu), zioła i przyprawy.',
+      allergens: 'Brak',
+      nutrition: [['Energia', '375 kJ / 88 kcal'], ['Tłuszcz', '0,2 g'], ['— w tym kwasy nasycone', '0,1 g'], ['Węglowodany', '20,2 g'], ['— w tym cukry', '17,5 g'], ['Białko', '1,3 g'], ['Sól', '1,8 g']],
+      storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
+
+  { id: 'oliehoorn-musztarda-900', cat: 'sosy', name: 'Oliehoorn Musztarda francuska · 900 ml', price: 2900, unit: 'butelka 900 ml', badge: 'DO BITTERBALLEN', icon: 'saus', img: 'musztarda.webp',
+    desc: 'Łagodna, aromatyczna musztarda w stylu francuskim — obowiązkowy towarzysz bitterballen i kroketów. Krótki, uczciwy skład: woda, gorczyca, ocet, sól, cukier, zioła.',
+    details: {
+      ingredients: 'Woda, nasiona GORCZYCY, ocet, sól, cukier, zioła.',
+      allergens: 'Gorczyca',
+      nutrition: [['Energia', '428 kJ / 103 kcal'], ['Tłuszcz', '5,8 g'], ['— w tym kwasy nasycone', '0,3 g'], ['Węglowodany', '4,1 g'], ['— w tym cukry', '3,2 g'], ['Białko', '5 g'], ['Sól', '3,8 g']],
+      storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
   // ---- Boxy ----
   { id: 'box-speciaal', cat: 'boxy', name: 'Box „Speciaal"', price: 16900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box',

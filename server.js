@@ -360,15 +360,20 @@ const PRODUCTS = [
       storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
   // ---- Boxy ----
-  { id: 'box-speciaal', top: true, cat: 'boxy', name: 'Box „Speciaal"', price: 16900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box',
+  { id: 'box-niespodzianka', top: true, cat: 'boxy', name: 'Box Niespodzianka', price: 14900, unit: 'min. 40 szt. + sos', badge: 'MY WYBIERAMY', icon: 'box', img: 'box-niespodzianka.webp',
+    desc: 'Ty ufasz, my pakujemy: minimum 40 przekąsek-niespodzianek + sos, o wartości zawsze wyższej niż cena boxu. Idealny sposób na odkrycie holenderskich smaków, których sam byś nie wybrał. Podaj w koszyku ewentualne wykluczenia (np. wege, bez ostrych) — uwzględnimy je.',
+    details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · czasy przygotowania znajdziesz przy poszczególnych produktach na stronie']],
+      storage: 'Produkty głęboko mrożone (-18°C). Po rozmrożeniu nie zamrażać ponownie.' } },
+
+  { id: 'box-speciaal', top: true, cat: 'boxy', name: 'Box „Speciaal"', price: 16900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box', img: 'box-speciaal.webp',
     desc: '40 frikandeli + sos curry Oliehoorn + majonez Oliehoorn + suszona cebulka. Wszystko do frikandel speciaal w domu.',
     details: { prep: FRIKANDEL_PREP } },
 
-  { id: 'box-party', top: true, cat: 'boxy', name: 'Party Box · 60 szt.', price: 24900, unit: '60 szt. + 2 sosy', badge: 'NAJLEPSZA CENA', icon: 'box',
+  { id: 'box-party', top: true, cat: 'boxy', name: 'Party Box · 60 szt.', price: 24900, unit: '60 szt. + 2 sosy', badge: 'NAJLEPSZA CENA', icon: 'box', img: 'box-party.webp',
     desc: '20 bitterballen, 20 frikandeli, 10 kroketów, 10 kaassoufflé + 2 sosy. Impreza po holendersku.',
     details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · patrz czasy przy poszczególnych produktach']] } },
 
-  { id: 'box-proba', top: true, cat: 'boxy', name: 'Box „Pierwszy raz"', price: 9900, unit: '24 szt. + sos', badge: 'DLA NOWYCH', icon: 'box',
+  { id: 'box-proba', top: true, cat: 'boxy', name: 'Box „Pierwszy raz"', price: 9900, unit: '24 szt. + sos', badge: 'DLA NOWYCH', icon: 'box', img: 'box-proba.webp',
     desc: 'Po 4 sztuki każdego klasyka + mały fritessaus. Poznaj wszystkie smaki bez zobowiązań.',
     details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · patrz czasy przy poszczególnych produktach']] } },
 
@@ -399,17 +404,40 @@ const PRODUCTS = [
       ['Materiał', 'stal nierdzewna 18/0']
     ] } },
 
-  { id: 'frytkownica-4l', cat: 'sprzet', name: 'Frytkownica kompakt 4 l', price: 39900, unit: '2200 W · stal nierdzewna', badge: null, icon: 'box',
-    desc: 'Mniejsza siostra modelu 8 l — dla domowej frytkowni na 2–4 osoby. Regulacja do 190°C, wyjmowana misa, kosz i pokrywa w zestawie.',
-    details: { specs: [['Pojemność', '4 l'], ['Moc', '2200 W · 230 V'], ['Temperatura', 'regulowana do 190°C'], ['Czyszczenie', 'wyjmowana misa'], ['W zestawie', 'kosz, pokrywa']] } },
+  { id: 'frytkownica-4l', cat: 'sprzet', name: 'Princess Frytkownica 5 l', price: 29900, unit: '5 l · stal nierdzewna', badge: null, icon: 'box', img: 'princess-friteuse-5l.webp', img2: 'princess-friteuse-5l-frytki.webp',
+    desc: 'Domowa frytkownica Princess o pojemności 5 l — duże porcje frytek i przekąsek dla całej rodziny. Stal nierdzewna, regulacja temperatury do 190°C, okienko w pokrywie i lampki kontrolne.',
+    details: { specs: [
+      ['Pojemność', '5 l — duże porcje'],
+      ['Kosz', '1, z zimnym uchwytem'],
+      ['Temperatura', 'pokrętło 130–190°C, lampki kontrolne'],
+      ['Pokrywa', 'z okienkiem podglądowym'],
+      ['Materiał', 'stal nierdzewna']
+    ] } },
 
-  { id: 'airfryer-55', top: true, cat: 'sprzet', name: 'Airfryer 5,5 l', price: 34900, unit: '1700 W · cyfrowy panel', badge: 'BEZ OLEJU', icon: 'box',
-    desc: 'Frikandel bez kropli oleju? Airfryer 5,5 l z cyfrowym panelem i 8 programami. Kosz na całą blachę przekąsek dla rodziny.',
-    details: { specs: [['Pojemność', '5,5 l'], ['Moc', '1700 W'], ['Temperatura', '80–200°C'], ['Programy', '8 + timer 60 min'], ['Kosz', 'nieprzywierający, do mycia w zmywarce']] } },
+  { id: 'airfryer-55', top: true, cat: 'sprzet', name: 'Princess Airfryer Slimfry 8 l', price: 44900, unit: '8 l · dotykowy panel · dla 6 osób', badge: 'BEZ OLEJU', icon: 'box', img: 'princess-slimfry-front.webp', img2: 'princess-slimfry-frytki.webp',
+    desc: 'Smukły airfryer 8 l od Princess: frytki i przekąski dla 6 osób bez kropli oleju. Cyfrowy ekran dotykowy, 8 gotowych programów, a wąska konstrukcja zajmuje niewiele miejsca na blacie.',
+    details: { specs: [
+      ['Pojemność', '8 l — dla maks. 6 osób'],
+      ['Sterowanie', 'cyfrowy ekran dotykowy'],
+      ['Programy', '8 zaprogramowanych ustawień'],
+      ['Funkcje', 'smażenie, pieczenie i grillowanie bez tłuszczu'],
+      ['Zalety', 'mniej tłuszczu, ograniczone zapachy smażenia'],
+      ['Wymiary', '29,4 × 46,5 × 26,7 cm (dł. z uchwytem)'],
+      ['Konstrukcja', 'smukła — mało miejsca na blacie']
+    ] } },
 
-  { id: 'airfryer-9-dual', cat: 'sprzet', name: 'Airfryer XL Dual 9 l', price: 54900, unit: '2 × 4,5 l · 2600 W', badge: 'DLA RODZINY', icon: 'box',
-    desc: 'Dwie niezależne komory: w jednej frikandele, w drugiej frytki — gotowe w tym samym momencie dzięki funkcji synchronizacji.',
-    details: { specs: [['Pojemność', '2 × 4,5 l'], ['Moc', '2600 W'], ['Temperatura', '80–200°C na komorę'], ['Funkcje', 'sync finish, match cook, timer'], ['Kosze', 'nieprzywierające, do mycia w zmywarce']] } }
+  { id: 'airfryer-9-dual', cat: 'sprzet', name: 'GreenPan Airfryer Bistro Dual Zone · 2 × 4 l', price: 69900, unit: '2 × 4 l · 3000 W · Sync Air', badge: 'DLA RODZINY', icon: 'box', img: 'greenpan-dual-front.webp', img2: 'greenpan-dual-open.webp',
+    desc: 'Dwie niezależne komory po 4 l: w jednej frikandele, w drugiej frytki — dzięki technologii Sync Air oba dania są gotowe w tym samym momencie. Chrupiące comfort food dla maks. 6 osób, w zdrowszym wydaniu.',
+    details: { specs: [
+      ['Pojemność', '2 × 4 l (razem 8 l) — dla maks. 6 osób'],
+      ['System', 'gorące powietrze, technologia Sync Air'],
+      ['Moc', '3000 W'],
+      ['Temperatura', 'regulowana 80–200°C, zabezpieczenie przed przegrzaniem'],
+      ['Obsługa', 'wyświetlacz, timer, automatyczne wyłączanie'],
+      ['Kosze', '2, z chłodnymi uchwytami (mycie ręczne)'],
+      ['Wymiary', '42 × 37,5 × 32 cm'],
+      ['Kolor', 'czarny']
+    ] } }
 ];
 
 const SHIPPING = {

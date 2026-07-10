@@ -1,0 +1,18 @@
+{
+  "name": "pan-frikandel",
+  "version": "1.0.0",
+  "description": "Pan Frikandel — holenderskie przekąski z dostawą w całej Polsce",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ejs": "^3.1.10",
+    "stripe": "^16.0.0",
+    "resend": "^3.4.0"
+  }
+}

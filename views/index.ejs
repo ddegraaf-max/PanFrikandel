@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <title>Pan Frikandel — holenderskie przekąski z dostawą w całej Polsce</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+<%- include('partials/snacks') %>
+
+<!-- ======================= TOPBAR ======================= -->
+<div class="topbar">
+  <div class="marquee"><div class="marquee-track">
+    <% for (let i = 0; i < 3; i++) { %>
+      <span>FRIKANDEL</span><i>★</i><span>BITTERBALLEN</span><i>★</i><span>KROKET</span><i>★</i><span>KAASSOUFFLÉ</span><i>★</i><span>DOSTAWA W CAŁEJ POLSCE</span><i>★</i><span>LEKKER!</span><i>★</i>
+    <% } %>
+  </div></div>
+</div>
+
+<header class="nav">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/><path d="M28 50 Q50 44 72 50" stroke="#7B3A16" stroke-width="4" fill="none"/></svg>
+    <span>Pan&nbsp;Frikandel</span>
+  </a>
+  <nav class="nav-links">
+    <a href="#sklep">Sklep</a>
+    <a href="#dostawa">Dostawa</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <button class="cart-btn" id="cartBtn" aria-label="Koszyk">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M2 3h3l2.6 12.4a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 7H6"/></svg>
+    <span>Koszyk</span>
+    <b id="cartCount" class="cart-count" hidden>0</b>
+  </button>
+</header>
+
+<!-- ======================= HERO ======================= -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="hero-kicker">🇳🇱 Prosto z Holandii → 🇵🇱 pod Twoje drzwi</p>
+      <h1>Tęsknisz za <em>frikandelem</em>?<br>My go przywozimy.</h1>
+      <p class="hero-sub">Oryginalne przekąski z holenderskiej frytkowni — mrożone, pakowane w termobox z suchym lodem i dostarczane kurierem <strong>w całej Polsce w 24–48 h</strong>.</p>
+      <div class="hero-cta">
+        <a href="#sklep" class="btn btn-primary">Zamów teraz</a>
+        <a href="#dostawa" class="btn btn-ghost">Jak działa dostawa?</a>
+      </div>
+      <div class="hero-badges">
+        <span>❄️ Zawsze mrożone</span>
+        <span>💳 BLIK · P24 · karta</span>
+        <span>🚚 Gratis od <%= zl(shipping.freeAboveGr) %></span>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-sticker">100%<br>lekker</div>
+      <svg viewBox="0 0 140 140" class="hero-snack"><use href="#snack-frikandel"/></svg>
+      <svg viewBox="0 0 140 140" class="hero-snack hero-snack-2"><use href="#snack-bitterbal"/></svg>
+    </div>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
+<!-- ======================= SKLEP ======================= -->
+<main id="sklep" class="shop">
+  <div class="section-head">
+    <h2>Frytkownia <em>online</em></h2>
+    <p>Wszystko mrożone, gotowe w 10 minut w piekarniku lub airfryerze.</p>
+  </div>
+
+  <% const cats = [ ['klasyki','Klasyki frytkowni'], ['sosy','Sosy — połowa magii'], ['boxy','Boxy — najlepiej się opłaca'] ]; %>
+  <% for (const [catId, catName] of cats) { %>
+    <h3 class="cat-title"><%= catName %></h3>
+    <div class="grid">
+      <% for (const p of products.filter(x => x.cat === catId)) { %>
+        <article class="card">
+          <% if (p.badge) { %><span class="badge"><%= p.badge %></span><% } %>
+          <div class="card-art"><svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg></div>
+          <h4><%= p.name %></h4>
+          <p class="card-unit"><%= p.unit %></p>
+          <p class="card-desc"><%= p.desc %></p>
+          <div class="card-foot">
+            <span class="price"><%= zl(p.price) %></span>
+            <button class="btn btn-add" data-add="<%= p.id %>">+ Do koszyka</button>
+          </div>
+        </article>
+      <% } %>
+    </div>
+  <% } %>
+</main>
+
+<!-- ======================= DOSTAWA ======================= -->
+<section id="dostawa" class="delivery">
+  <div class="check-strip"></div>
+  <div class="delivery-inner">
+    <h2>Mrożonki przez pół Europy?<br><em>Tak, to działa.</em></h2>
+    <div class="steps">
+      <div class="step"><b>1</b><h4>Zamawiasz</h4><p>Wybierasz przekąski, płacisz BLIK-iem, Przelewy24 lub kartą przez bezpieczny Stripe.</p></div>
+      <div class="step"><b>2</b><h4>Pakujemy na zimno</h4><p>Termobox + suchy lód utrzymują -18°C przez ponad 48 godzin.</p></div>
+      <div class="step"><b>3</b><h4>Kurier puka</h4><p>Dostawa w 24–48 h pod dowolny adres w Polsce. Wysyłka <%= zl(shipping.standardGr) %>, <strong>gratis od <%= zl(shipping.freeAboveGr) %></strong>.</p></div>
+      <div class="step"><b>4</b><h4>Do zamrażarki → airfryer</h4><p>10 minut i masz w domu prawdziwą holenderską frytkownię. Eet smakelijk!</p></div>
+    </div>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
+<!-- ======================= FAQ ======================= -->
+<section id="faq" class="faq">
+  <div class="section-head"><h2>Pytania? <em>Mamy odpowiedzi</em></h2></div>
+  <details><summary>Czym właściwie jest frikandel?</summary><p>Najpopularniejsza przekąska w Holandii: podłużny, smażony kotlecik z mieszanki mięs, o gładkiej konsystencji i lekko korzennym smaku. Holendrzy zjadają ich ponad 600 milionów rocznie. „Frikandel speciaal" = z curry ketchupem, fritessaus i surową cebulką.</p></details>
+  <details><summary>Czy produkty dojadą naprawdę zamrożone?</summary><p>Tak. Pakujemy w profesjonalny termobox z suchym lodem (-78°C), który utrzymuje głębokie mrożenie znacznie dłużej niż trwa transport. Po odbiorze włóż produkty od razu do zamrażarki.</p></details>
+  <details><summary>Jak przygotować przekąski?</summary><p>Najlepiej w airfryerze (ok. 8–10 min, 180°C) lub piekarniku (ok. 12–15 min, 200°C). Można też klasycznie we frytkownicy — 3–4 minuty w 180°C. Zawsze prosto z zamrażarki, bez rozmrażania.</p></details>
+  <details><summary>Jakie są metody płatności?</summary><p>BLIK, Przelewy24 i karty płatnicze — wszystko obsługiwane przez Stripe, bez zakładania konta.</p></details>
+  <details><summary>Co jeśli nie będzie mnie w domu?</summary><p>Kurier podejmie drugą próbę doręczenia. Termobox spokojnie wytrzyma ten czas, ale zalecamy wybrać dzień, w którym ktoś odbierze paczkę.</p></details>
+</section>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-logo">Pan Frikandel</p>
+      <p>Holenderskie przekąski z dostawą<br>w całej Polsce. Echt lekker.</p>
+    </div>
+    <div>
+      <p class="footer-head">Sklep</p>
+      <a href="#sklep">Wszystkie produkty</a>
+      <a href="#dostawa">Dostawa</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div>
+      <p class="footer-head">Informacje</p>
+      <a href="/regulamin">Regulamin</a>
+      <a href="/prywatnosc">Polityka prywatności</a>
+      <a href="mailto:hallo@panfrikandel.pl">hallo@panfrikandel.pl</a>
+    </div>
+  </div>
+  <p class="footer-note">© <%= new Date().getFullYear() %> Pan Frikandel · Płatności obsługuje Stripe (BLIK · Przelewy24 · karta)</p>
+</footer>
+
+<!-- ======================= CART DRAWER ======================= -->
+<div class="cart-overlay" id="cartOverlay" hidden></div>
+<aside class="cart" id="cartDrawer" aria-label="Koszyk" hidden>
+  <div class="cart-head">
+    <h3>Twój koszyk</h3>
+    <button class="cart-close" id="cartClose" aria-label="Zamknij">✕</button>
+  </div>
+  <div class="cart-items" id="cartItems"></div>
+  <div class="cart-foot">
+    <p class="cart-ship" id="cartShip"></p>
+    <div class="cart-total"><span>Razem</span><b id="cartTotal">0,00 zł</b></div>
+    <button class="btn btn-primary btn-checkout" id="checkoutBtn">Przejdź do płatności →</button>
+    <p class="cart-pay">💳 BLIK · Przelewy24 · karta — przez Stripe</p>
+  </div>
+</aside>
+
+<script>
+  window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon }))) %>;
+  window.SHIPPING = <%- JSON.stringify(shipping) %>;
+</script>
+<script src="/shop.js?v=<%= v %>"></script>
+</body>
+</html>

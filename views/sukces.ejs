@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <title>Dziękujemy! — Pan Frikandel</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+<%- include('partials/snacks') %>
+<header class="nav">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/></svg>
+    <span>Pan&nbsp;Frikandel</span>
+  </a>
+</header>
+
+<div class="success-hero">
+  <div class="hero-sticker">Dank<br>je!</div>
+  <h1 style="font-family:'Shrikhand';font-size:clamp(30px,5vw,48px)">Zamówienie przyjęte! 🍟</h1>
+  <p style="max-width:52ch;margin:16px auto 32px">
+    <% if (order && order.email) { %>
+      Potwierdzenie wysłaliśmy na <strong><%= order.email %></strong>. Pakujemy Twoje przekąski w termobox z suchym lodem — kurier dostarczy je w 24–48 h.
+    <% } else { %>
+      Pakujemy Twoje przekąski w termobox z suchym lodem — kurier dostarczy je w 24–48 h.
+    <% } %>
+  </p>
+
+  <% if (order && order.items.length) { %>
+    <div class="order-box">
+      <% for (const i of order.items) { %>
+        <div class="ci"><div class="ci-name"><%= i.qty %> × <%= i.name %></div><b><%= i.total %></b></div>
+      <% } %>
+      <div class="cart-total" style="margin-top:14px"><span>Razem</span><b><%= order.total %></b></div>
+    </div>
+  <% } %>
+
+  <p style="margin-top:36px"><a class="btn btn-primary" href="/#sklep">← Wróć do sklepu</a></p>
+</div>
+
+<script>try { localStorage.removeItem('pf_cart_v1'); } catch (e) {}</script>
+</body>
+</html>

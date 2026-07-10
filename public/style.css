@@ -456,3 +456,32 @@ em { font-style: normal; color: var(--oranje); }
   .ai-fab span { display: none; }
   .ai-fab { padding: 12px; }
 }
+
+/* ---------- Admin ---------- */
+.admin-login { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+.admin-login input, .admin-bar input {
+  border: 3px solid var(--ink); border-radius: 12px; padding: 13px 16px;
+  font: 600 15px 'Hanken Grotesk', sans-serif; background: #fff; color: var(--ink);
+}
+.admin-login input:focus, .admin-bar input:focus { outline: 3px solid var(--geel); }
+.admin-error {
+  background: #ffe1e1; border: 2.5px solid var(--rood); border-radius: 10px;
+  padding: 10px 14px; font-weight: 700; margin-bottom: 10px;
+}
+.admin-bar { display: flex; gap: 12px; margin: 18px 0 10px; position: sticky; top: 84px; z-index: 5; }
+.admin-bar input { flex: 1; }
+.admin-status { font-weight: 800; margin: 4px 0 10px; }
+.admin-table { width: 100%; border-collapse: collapse; background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; }
+.admin-table th { text-align: left; background: var(--geel); border-bottom: 3px solid var(--ink); padding: 10px 12px; font-size: 13px; letter-spacing: .04em; }
+.admin-table td { padding: 9px 12px; border-bottom: 2px dashed rgba(42,21,3,.15); font-size: 14px; vertical-align: middle; }
+.admin-table tr.dirty td { background: #fff3c4; }
+.admin-unit { color: var(--muted); font-size: 12.5px; font-weight: 700; }
+.admin-badge {
+  background: var(--rood); color: #fff; border-radius: 999px; padding: 2px 8px;
+  font-size: 10px; font-weight: 800; letter-spacing: .05em; white-space: nowrap;
+}
+.admin-price {
+  width: 110px; text-align: right; border: 2.5px solid var(--ink); border-radius: 10px;
+  padding: 7px 10px; font: 700 14px 'Hanken Grotesk', sans-serif; background: #fff;
+}
+.admin-price:focus { outline: 3px solid var(--geel); }

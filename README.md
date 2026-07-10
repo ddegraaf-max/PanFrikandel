@@ -17,6 +17,8 @@ Node.js/Express/EJS + Stripe Checkout (BLIK · P24 · karta) + Resend.
 | `ORDER_EMAIL_FROM` | `Pan Frikandel <zamowienia@panfrikandel.pl>` (domein eerst verifiëren in Resend) |
 | `ORDER_EMAIL_BCC` | eigen mailadres — kopie van elke bestelling (optioneel) |
 | `ANTHROPIC_API_KEY` | `sk-ant-...` — voor de AI-assistent "Pan Frikandel" |
+| `ADMIN_PASSWORD` | wachtwoord voor het prijzenbeheer op `/admin` |
+| `DATABASE_URL` | Railway PostgreSQL — nodig zodat prijswijzigingen deploys overleven |
 
 ## Stripe-instellingen
 
@@ -53,3 +55,16 @@ Zonder `ANTHROPIC_API_KEY` geeft de assistent een nette foutmelding.
 Per categorie tonen we alleen producten met `top: true` (in `server.js`);
 de rest zit achter "Pokaż wszystkie X produktów". Wijzig de toppers door
 de `top`-vlag te verplaatsen.
+
+## Admin (prijzenbeheer)
+
+`/admin` → inloggen met `ADMIN_PASSWORD` (sessie 8 uur, HttpOnly-cookie,
+max. 8 pogingen per 15 min). Prijzen inline aanpassen, zoeken, en met één
+klik opslaan — wijzigingen zijn direct live voor de shop, Stripe én de
+AI-assistent.
+
+Persistentie: met `DATABASE_URL` (Railway → PostgreSQL toevoegen aan het
+project) gaan overrides naar de tabel `price_overrides` en overleven ze
+elke deploy. Zonder database valt de app terug op `data/prices.json` —
+prima lokaal, maar op Railway gaat dat bestand bij een redeploy verloren,
+dus koppel daar altijd PostgreSQL.

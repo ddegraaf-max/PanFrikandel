@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <title>Admin — Pan Frikandel</title>
+  <%- include('partials/head') %>
+  <meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<header class="nav">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/></svg>
+    <span translate="no">Pan&nbsp;Frikandel</span>
+  </a>
+  <% if (authed) { %>
+  <form method="POST" action="/admin/logout" style="margin-left:auto">
+    <button class="btn btn-add" type="submit">Uitloggen</button>
+  </form>
+  <% } %>
+</header>
+
+<div class="page" style="max-width:<%= authed ? '860px' : '420px' %>">
+<% if (!authed) { %>
+  <h1>Admin</h1>
+  <% if (error) { %><p class="admin-error"><%= error %></p><% } %>
+  <form method="POST" action="/admin/login" class="admin-login">
+    <input type="password" name="password" placeholder="Wachtwoord" required autofocus>
+    <button class="btn btn-primary" type="submit">Inloggen</button>
+  </form>
+<% } else { %>
+  <h1>Prijzen</h1>
+  <p style="color:var(--muted);font-weight:700">Pas prijzen aan (in zł) en klik op Opslaan. Gewijzigde regels kleuren geel. Wijzigingen zijn direct live — ook voor Stripe en de AI-assistent.</p>
+
+  <div class="admin-bar">
+    <input type="search" id="adminFilter" placeholder="Zoek product… (bijv. frikandel, holtkamp, wege)">
+    <button class="btn btn-primary" id="adminSave" disabled>Opslaan</button>
+  </div>
+  <p id="adminStatus" class="admin-status" hidden></p>
+
+  <table class="admin-table" id="adminTable">
+    <thead><tr><th>Product</th><th>Eenheid</th><th>Cat.</th><th style="text-align:right">Prijs (zł)</th></tr></thead>
+    <tbody>
+      <% for (const p of products) { %>
+      <tr data-search="<%= (p.name + ' ' + p.cat + ' ' + (p.badge || '')).toLowerCase() %>">
+        <td><b><%= p.name %></b><% if (p.badge) { %> <small class="admin-badge"><%= p.badge %></small><% } %></td>
+        <td class="admin-unit"><%= p.unit %></td>
+        <td class="admin-unit"><%= p.cat %></td>
+        <td style="text-align:right">
+          <input type="number" step="0.01" min="1" class="admin-price" data-id="<%= p.id %>"
+                 value="<%= (p.price / 100).toFixed(2) %>" data-orig="<%= (p.price / 100).toFixed(2) %>">
+        </td>
+      </tr>
+      <% } %>
+    </tbody>
+  </table>
+
+<script>
+(function () {
+  const $ = s => document.querySelector(s);
+  const saveBtn = $('#adminSave'), status = $('#adminStatus');
+
+  function changed() {
+    return [...document.querySelectorAll('.admin-price')].filter(i => {
+      const dirty = parseFloat(i.value) !== parseFloat(i.dataset.orig);
+      i.closest('tr').classList.toggle('dirty', dirty);
+      return dirty;
+    });
+  }
+  document.addEventListener('input', e => {
+    if (e.target.classList.contains('admin-price')) saveBtn.disabled = changed().length === 0;
+  });
+
+  $('#adminFilter').addEventListener('input', e => {
+    const q = e.target.value.toLowerCase().trim();
+    document.querySelectorAll('#adminTable tbody tr').forEach(tr => {
+      tr.hidden = q && !tr.dataset.search.includes(q);
+    });
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const dirty = changed();
+    if (!dirty.length) return;
+    const prices = {};
+    for (const i of dirty) prices[i.dataset.id] = i.value;
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Opslaan…';
+    try {
+      const r = await fetch('/admin/prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prices })
+      });
+      const data = await r.json();
+      if (r.ok) {
+        for (const i of dirty) { i.dataset.orig = parseFloat(i.value).toFixed(2); i.closest('tr').classList.remove('dirty'); }
+        status.textContent = '✅ ' + data.saved + ' prijs(zen) opgeslagen en direct live.';
+      } else {
+        status.textContent = '⚠️ ' + (data.error || 'Opslaan mislukt.');
+        saveBtn.disabled = false;
+      }
+    } catch (e) {
+      status.textContent = '⚠️ Verbindingsfout — probeer opnieuw.';
+      saveBtn.disabled = false;
+    }
+    status.hidden = false;
+    saveBtn.textContent = 'Opslaan';
+  });
+})();
+</script>
+<% } %>
+</div>
+</body>
+</html>

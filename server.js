@@ -449,6 +449,102 @@ const productById = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
 const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
 
 // ============================================================
+//  PRIJS-OVERRIDES  (PostgreSQL op Railway; lokaal JSON-fallback)
+// ============================================================
+
+const fs = require('fs');
+const PRICES_FILE = path.join(__dirname, 'data', 'prices.json');
+let pool = null;
+if (process.env.DATABASE_URL) {
+  const { Pool } = require('pg');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+  });
+}
+
+function applyOverrides(overrides) {
+  for (const [id, price] of Object.entries(overrides)) {
+    const p = productById[id];
+    const gr = parseInt(price, 10);
+    if (p && Number.isInteger(gr) && gr >= 100 && gr <= 10000000) p.price = gr;
+  }
+}
+
+async function loadPrices() {
+  try {
+    if (pool) {
+      await pool.query('CREATE TABLE IF NOT EXISTS price_overrides (product_id TEXT PRIMARY KEY, price_gr INTEGER NOT NULL, updated_at TIMESTAMPTZ DEFAULT now())');
+      const { rows } = await pool.query('SELECT product_id, price_gr FROM price_overrides');
+      applyOverrides(Object.fromEntries(rows.map(r => [r.product_id, r.price_gr])));
+      console.log(`💾 ${rows.length} prijs-overrides geladen uit PostgreSQL`);
+    } else if (fs.existsSync(PRICES_FILE)) {
+      applyOverrides(JSON.parse(fs.readFileSync(PRICES_FILE, 'utf8')));
+      console.log('💾 Prijs-overrides geladen uit data/prices.json (⚠️ zet DATABASE_URL voor persistentie op Railway)');
+    }
+  } catch (err) {
+    console.error('Prijzen laden mislukt:', err.message);
+  }
+}
+
+async function savePrices(changes) {
+  applyOverrides(changes);
+  if (pool) {
+    for (const [id, gr] of Object.entries(changes)) {
+      await pool.query(
+        'INSERT INTO price_overrides (product_id, price_gr, updated_at) VALUES ($1, $2, now()) ON CONFLICT (product_id) DO UPDATE SET price_gr = $2, updated_at = now()',
+        [id, gr]
+      );
+    }
+  } else {
+    let all = {};
+    try { if (fs.existsSync(PRICES_FILE)) all = JSON.parse(fs.readFileSync(PRICES_FILE, 'utf8')); } catch (e) {}
+    Object.assign(all, changes);
+    fs.mkdirSync(path.dirname(PRICES_FILE), { recursive: true });
+    fs.writeFileSync(PRICES_FILE, JSON.stringify(all, null, 2));
+  }
+}
+
+// ============================================================
+//  ADMIN-AUTH  (cookie met HMAC-token, geen extra dependencies)
+// ============================================================
+
+const crypto = require('crypto');
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
+const ADMIN_SECRET = crypto.createHash('sha256').update('pf-admin:' + (ADMIN_PASSWORD || 'x')).digest();
+const adminToken = () => crypto.createHmac('sha256', ADMIN_SECRET).update('admin-ok').digest('hex');
+
+function getCookie(req, name) {
+  const raw = req.headers.cookie || '';
+  for (const part of raw.split(';')) {
+    const [k, ...v] = part.trim().split('=');
+    if (k === name) return decodeURIComponent(v.join('='));
+  }
+  return null;
+}
+
+function isAdmin(req) {
+  if (!ADMIN_PASSWORD) return false;
+  const c = getCookie(req, 'pf_admin');
+  if (!c) return false;
+  try {
+    return crypto.timingSafeEqual(Buffer.from(c), Buffer.from(adminToken()));
+  } catch (e) { return false; }
+}
+
+const loginAttempts = new Map(); // ip → { n, until }
+function loginAllowed(ip) {
+  const a = loginAttempts.get(ip);
+  return !a || a.n < 8 || Date.now() > a.until;
+}
+function registerFail(ip) {
+  const a = loginAttempts.get(ip) || { n: 0, until: 0 };
+  a.n++;
+  if (a.n >= 8) { a.until = Date.now() + 15 * 60 * 1000; a.n = 0; }
+  loginAttempts.set(ip, a);
+}
+
+// ============================================================
 //  ROUTES
 // ============================================================
 
@@ -459,14 +555,61 @@ app.get('/', (req, res) => {
 app.get('/regulamin',   (req, res) => res.render('regulamin',   { v: ASSET_V }));
 app.get('/prywatnosc',  (req, res) => res.render('prywatnosc',  { v: ASSET_V }));
 
+// ---- Admin: prijzenbeheer ----
+app.get('/admin', (req, res) => {
+  if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
+  res.render('admin', { authed: isAdmin(req), products: PRODUCTS, v: ASSET_V, zl, error: null });
+});
+
+app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+  if (!ADMIN_PASSWORD || !loginAllowed(ip)) {
+    return res.status(429).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, error: 'Te veel pogingen — probeer het over 15 minuten opnieuw.' });
+  }
+  const given = String(req.body.password || '');
+  const ok = given.length === ADMIN_PASSWORD.length &&
+    crypto.timingSafeEqual(Buffer.from(given), Buffer.from(ADMIN_PASSWORD));
+  if (!ok) {
+    registerFail(ip);
+    return res.status(401).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, error: 'Onjuist wachtwoord.' });
+  }
+  res.setHeader('Set-Cookie', `pf_admin=${adminToken()}; HttpOnly; Path=/; Max-Age=${8 * 3600}; SameSite=Lax${BASE_URL.startsWith('https') ? '; Secure' : ''}`);
+  res.redirect('/admin');
+});
+
+app.post('/admin/logout', (req, res) => {
+  res.setHeader('Set-Cookie', 'pf_admin=; HttpOnly; Path=/; Max-Age=0');
+  res.redirect('/admin');
+});
+
+app.post('/admin/prices', async (req, res) => {
+  try {
+    if (!isAdmin(req)) return res.status(401).json({ error: 'Niet ingelogd.' });
+    const changes = {};
+    for (const [id, val] of Object.entries(req.body.prices || {})) {
+      if (!productById[id]) continue;
+      const gr = Math.round(parseFloat(String(val).replace(',', '.')) * 100);
+      if (!Number.isInteger(gr) || gr < 100 || gr > 10000000) {
+        return res.status(400).json({ error: `Ongeldige prijs voor ${productById[id].name}.` });
+      }
+      if (gr !== productById[id].price) changes[id] = gr;
+    }
+    if (Object.keys(changes).length) await savePrices(changes);
+    res.json({ saved: Object.keys(changes).length });
+  } catch (err) {
+    console.error('Prijzen opslaan mislukt:', err.message);
+    res.status(500).json({ error: 'Opslaan mislukt — probeer opnieuw.' });
+  }
+});
+
 // ---- AI Frikandel-assistent (Pan Frikandel) ----
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
 
-const CATALOG_FOR_AI = PRODUCTS.map(p =>
+const CATALOG_FOR_AI = () => PRODUCTS.map(p =>
   `${p.id} | ${p.name} | ${zl(p.price)} | ${p.unit} | kat: ${p.cat}${p.badge ? ' | ' + p.badge : ''} | ${p.desc}`
 ).join('\n');
 
-const ASSISTANT_SYSTEM = `Jesteś "Panem Frikandelem" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami (dostawa mrożonek kurierem w całej Polsce, 24-48h, darmowa dostawa od 250 zł, wysyłka 49 zł).
+const ASSISTANT_SYSTEM = () => `Jesteś "Panem Frikandelem" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami (dostawa mrożonek kurierem w całej Polsce, 24-48h, darmowa dostawa od 250 zł, wysyłka 49 zł).
 
 Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
 
@@ -479,7 +622,7 @@ ZASADY:
 - Nie odpowiadasz na pytania niezwiązane ze sklepem — uprzejmie wracasz do tematu przekąsek.
 
 KATALOG:
-${CATALOG_FOR_AI}`;
+${CATALOG_FOR_AI()}`;
 
 app.post('/api/assistent', async (req, res) => {
   try {
@@ -504,7 +647,7 @@ app.post('/api/assistent', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5',   // snel & goedkoop; evt. 'claude-sonnet-4-6' voor slimmere antwoorden
         max_tokens: 600,
-        system: ASSISTANT_SYSTEM,
+        system: ASSISTANT_SYSTEM(),
         messages: msgs
       })
     });
@@ -635,4 +778,6 @@ app.get('/sukces', async (req, res) => {
 
 app.use((req, res) => res.redirect('/'));
 
-app.listen(PORT, () => console.log(`🍟 Pan Frikandel draait op ${BASE_URL}`));
+loadPrices().then(() => {
+  app.listen(PORT, () => console.log(`🍟 Pan Frikandel draait op ${BASE_URL}`));
+});

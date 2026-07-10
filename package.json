@@ -1,7 +1,7 @@
 {
   "name": "pan-frikandel",
   "version": "1.0.0",
-  "description": "Pan Frikandel — holenderskie przekąski z dostawą w całej Polsce",
+  "description": "Pan Frikandel \u2014 holenderskie przek\u0105ski z dostaw\u0105 w ca\u0142ej Polsce",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -13,6 +13,7 @@
     "express": "^4.19.2",
     "ejs": "^3.1.10",
     "stripe": "^16.0.0",
-    "resend": "^3.4.0"
+    "resend": "^3.4.0",
+    "pg": "^8.12.0"
   }
 }

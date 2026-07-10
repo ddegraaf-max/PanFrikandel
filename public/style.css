@@ -370,3 +370,89 @@ em { font-style: normal; color: var(--oranje); }
 .pd-table th, .pd-table td { text-align: left; padding: 7px 10px; border-bottom: 2px dashed rgba(42,21,3,.15); }
 .pd-table th { font-weight: 800; width: 44%; }
 .pd-table-nutri td { text-align: right; }
+
+/* ---------- Toppers + uitklap ---------- */
+.grid-more { margin-top: 22px; }
+.more-wrap { text-align: center; margin: 26px 0 8px; }
+.btn-more {
+  background: var(--paper); color: var(--ink); box-shadow: var(--shadow-sm);
+  font-size: 15px;
+}
+.btn-more:hover { background: var(--geel); transform: translate(-2px,-2px); box-shadow: 5px 5px 0 var(--ink); }
+.more-count {
+  display: inline-grid; place-items: center; min-width: 26px; height: 26px;
+  background: var(--oranje); color: #fff; border-radius: 999px;
+  font-size: 13px; padding: 0 6px; margin: 0 2px; vertical-align: middle;
+  border: 2px solid var(--ink);
+}
+
+/* ---------- AI assistent ---------- */
+.ai-fab {
+  position: fixed; left: 20px; bottom: 20px; z-index: 80;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--ink); color: var(--geel);
+  font: 800 15px 'Hanken Grotesk', sans-serif;
+  border: 3px solid var(--geel); border-radius: 999px;
+  padding: 11px 20px 11px 14px; cursor: pointer;
+  box-shadow: 5px 5px 0 rgba(42,21,3,.35);
+  transition: transform .15s;
+}
+.ai-fab:hover { transform: translateY(-3px) rotate(-1deg); }
+.ai-fab svg { flex: none; }
+
+.ai-panel {
+  position: fixed; left: 20px; bottom: 20px; z-index: 120;
+  width: min(400px, calc(100vw - 40px)); height: min(560px, calc(100vh - 40px));
+  background: var(--paper); border: 3px solid var(--ink); border-radius: var(--radius);
+  box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden;
+  animation: popIn .2s ease;
+}
+.ai-head {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--oranje); color: var(--paper);
+  padding: 14px 18px; border-bottom: 3px solid var(--ink);
+}
+.ai-head b { font-family: 'Shrikhand', cursive; font-size: 20px; display: block; }
+.ai-head small { font-weight: 700; opacity: .9; }
+.ai-head .cart-close { color: var(--paper); }
+.ai-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.ai-msg {
+  max-width: 88%; padding: 10px 14px; border-radius: 14px;
+  font-size: 14.5px; line-height: 1.45; border: 2.5px solid var(--ink);
+}
+.ai-msg-bot { background: #fff; align-self: flex-start; border-bottom-left-radius: 4px; }
+.ai-msg-user { background: var(--geel); align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 600; }
+.ai-typing { color: var(--muted); font-style: italic; animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .5; } }
+
+.ai-chip {
+  display: flex; align-items: center; gap: 10px; margin: 8px 0 2px;
+  background: var(--cream); border: 2.5px solid var(--ink); border-radius: 12px;
+  padding: 8px 10px;
+}
+.ai-chip img, .ai-chip svg { width: 40px; height: 40px; object-fit: contain; background: #fff; border-radius: 8px; flex: none; }
+.ai-chip-info { flex: 1; min-width: 0; }
+.ai-chip-info b { display: block; font-size: 13px; line-height: 1.25; }
+.ai-chip-info i { font-style: normal; font-family: 'Shrikhand', cursive; color: var(--oranje); font-size: 14px; }
+.ai-chip-add {
+  flex: none; width: 34px; height: 34px; border-radius: 10px;
+  border: 2.5px solid var(--ink); background: var(--geel);
+  font-size: 19px; font-weight: 800; cursor: pointer; box-shadow: 2px 2px 0 var(--ink);
+}
+.ai-chip-add:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+
+.ai-form {
+  display: flex; gap: 8px; padding: 12px; border-top: 3px solid var(--ink); background: var(--cream);
+}
+.ai-form input {
+  flex: 1; border: 2.5px solid var(--ink); border-radius: 12px;
+  padding: 11px 14px; font: 600 14px 'Hanken Grotesk', sans-serif;
+  background: #fff; color: var(--ink);
+}
+.ai-form input:focus { outline: 3px solid var(--geel); }
+.ai-send { padding: 11px 16px; }
+
+@media (max-width: 640px) {
+  .ai-fab span { display: none; }
+  .ai-fab { padding: 12px; }
+}

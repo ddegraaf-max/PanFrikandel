@@ -130,3 +130,96 @@
 
   render();
 })();
+
+// ===== Toppers uitklappen =====
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-more]');
+  if (!btn) return;
+  const box = document.getElementById('more-' + btn.dataset.more);
+  if (!box) return;
+  const open = box.hidden;
+  box.hidden = !open;
+  btn.innerHTML = open
+    ? 'Pokaż mniej ▴'
+    : 'Pokaż wszystkie <span class="more-count">' + btn.dataset.count + '</span> produktów ▾';
+  if (!open) btn.closest('.more-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+document.querySelectorAll('[data-more]').forEach(b => {
+  const c = b.querySelector('.more-count');
+  if (c) b.dataset.count = c.textContent;
+});
+
+// ===== Pan Frikandel — AI assistent =====
+(function () {
+  const fab = document.getElementById('aiFab');
+  const panel = document.getElementById('aiPanel');
+  if (!fab || !panel) return;
+  const msgsBox = document.getElementById('aiMsgs');
+  const form = document.getElementById('aiForm');
+  const input = document.getElementById('aiInput');
+  const send = document.getElementById('aiSend');
+  const byId = Object.fromEntries(window.CATALOG.map(p => [p.id, p]));
+  const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
+  const history = [];
+
+  fab.addEventListener('click', () => { panel.hidden = false; fab.hidden = true; input.focus(); });
+  document.getElementById('aiClose').addEventListener('click', () => { panel.hidden = true; fab.hidden = false; });
+
+  function esc(s) {
+    return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  }
+
+  // [[product-id]] → productchip met + knop
+  function renderBot(text) {
+    let html = esc(text);
+    html = html.replace(/\[\[([a-z0-9-]+)\]\]/g, (m, id) => {
+      const p = byId[id];
+      if (!p) return '';
+      const img = p.img
+        ? `<img src="/img/${p.img}" alt="">`
+        : `<svg viewBox="0 0 140 140"><use href="#snack-${p.icon}"/></svg>`;
+      return `<span class="ai-chip">${img}<span class="ai-chip-info"><b>${esc(p.name)}</b><i>${zl(p.price)}</i></span><button class="ai-chip-add" data-add="${id}">+</button></span>`;
+    });
+    return html.replace(/\n/g, '<br>');
+  }
+
+  function addMsg(cls, html) {
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + cls;
+    div.innerHTML = html;
+    msgsBox.appendChild(div);
+    msgsBox.scrollTop = msgsBox.scrollHeight;
+    return div;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const q = input.value.trim();
+    if (!q || send.disabled) return;
+    input.value = '';
+    addMsg('ai-msg-user', esc(q));
+    history.push({ role: 'user', content: q });
+    send.disabled = true;
+    const typing = addMsg('ai-msg-bot ai-typing', 'Pan Frikandel myśli…');
+    try {
+      const r = await fetch('/api/assistent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: history })
+      });
+      const data = await r.json();
+      typing.remove();
+      if (data.reply) {
+        history.push({ role: 'assistant', content: data.reply });
+        addMsg('ai-msg-bot', renderBot(data.reply));
+      } else {
+        addMsg('ai-msg-bot', esc(data.error || 'Coś poszło nie tak — spróbuj ponownie.'));
+      }
+    } catch (err) {
+      typing.remove();
+      addMsg('ai-msg-bot', 'Błąd połączenia — spróbuj ponownie.');
+    }
+    send.disabled = false;
+    input.focus();
+  });
+})();

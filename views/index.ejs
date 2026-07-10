@@ -68,29 +68,25 @@
 
   <% const cats = [ ['klasyki','Frikandele i klasyki'], ['bitterballen','Bitterballen i krokiety — największy wybór w Polsce'], ['sosy','Sosy — połowa magii'], ['boxy','Boxy — najlepiej się opłaca'], ['sprzet','Olej i sprzęt — frytkownia w domu'] ]; %>
   <% for (const [catId, catName] of cats) { %>
+    <% const inCat = products.filter(x => x.cat === catId);
+       const tops = inCat.filter(p => p.top).length ? inCat.filter(p => p.top) : inCat.slice(0, 4);
+       const rest = inCat.filter(p => !tops.includes(p)); %>
     <h3 class="cat-title"><%= catName %></h3>
     <div class="grid">
-      <% for (const p of products.filter(x => x.cat === catId)) { %>
-        <article class="card">
-          <% if (p.badge) { %><span class="badge"><%= p.badge %></span><% } %>
-          <div class="card-art" data-details="<%= p.id %>" role="button" tabindex="0" aria-label="Szczegóły produktu">
-            <% if (p.img) { %>
-              <img src="/img/<%= p.img %>" alt="<%= p.name %>" loading="lazy">
-            <% } else { %>
-              <svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg>
-            <% } %>
-          </div>
-          <h4><%= p.name %></h4>
-          <p class="card-unit"><%= p.unit %></p>
-          <p class="card-desc"><%= p.desc %></p>
-          <% if (p.details) { %><button class="card-more" data-details="<%= p.id %>">Składniki i przygotowanie →</button><% } %>
-          <div class="card-foot">
-            <span class="price"><%= zl(p.price) %></span>
-            <button class="btn btn-add" data-add="<%= p.id %>">+ Do koszyka</button>
-          </div>
-        </article>
+      <% for (const p of tops) { %>
+        <%- include('partials/card', { p, zl }) %>
       <% } %>
     </div>
+    <% if (rest.length) { %>
+      <div class="grid grid-more" id="more-<%= catId %>" hidden>
+        <% for (const p of rest) { %>
+          <%- include('partials/card', { p, zl }) %>
+        <% } %>
+      </div>
+      <div class="more-wrap">
+        <button class="btn btn-more" data-more="<%= catId %>">Pokaż wszystkie <span class="more-count"><%= inCat.length %></span> produktów ▾</button>
+      </div>
+    <% } %>
   <% } %>
 
   <!-- Detail-content per product (verborgen; modal kopieert dit) -->
@@ -195,6 +191,28 @@
     <button class="btn btn-primary btn-checkout" id="checkoutBtn">Przejdź do płatności →</button>
     <p class="cart-pay">💳 BLIK · Przelewy24 · karta — przez Stripe</p>
   </div>
+</aside>
+
+<!-- ======================= AI ASSISTENT ======================= -->
+<button class="ai-fab" id="aiFab" aria-label="Zapytaj Pana Frikandela">
+  <svg viewBox="0 0 100 100" width="30" height="30"><rect x="14" y="38" width="72" height="24" rx="12" fill="#A0522D" stroke="#2A1503" stroke-width="7"/><path d="M24 48 Q50 41 76 48" stroke="#7B3A16" stroke-width="5" fill="none"/></svg>
+  <span>Zapytaj Pana Frikandela</span>
+</button>
+<aside class="ai-panel" id="aiPanel" hidden aria-label="Asystent Pan Frikandel">
+  <div class="ai-head">
+    <div>
+      <b>Pan Frikandel</b>
+      <small>Twój holenderski doradca 🍟</small>
+    </div>
+    <button class="cart-close" id="aiClose" aria-label="Zamknij">✕</button>
+  </div>
+  <div class="ai-msgs" id="aiMsgs">
+    <div class="ai-msg ai-msg-bot">Cześć! Jestem Pan Frikandel. Powiedz, na co masz ochotę — impreza ze znajomymi, szybki obiad, coś wege, coś bardzo ostrego? Doradzę jak stary znajomy z frytkowni. 🧡</div>
+  </div>
+  <form class="ai-form" id="aiForm">
+    <input type="text" id="aiInput" placeholder="np. coś ostrego na imprezę dla 8 osób…" maxlength="500" autocomplete="off">
+    <button type="submit" class="btn btn-primary ai-send" id="aiSend">➤</button>
+  </form>
 </aside>
 
 <!-- ======================= PRODUCT MODAL ======================= -->

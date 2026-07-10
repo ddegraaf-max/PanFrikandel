@@ -59,12 +59,12 @@ const FRIKANDEL_PREP = [
 
 const PRODUCTS = [
   // ---- Frikandele & klasyki ----
-  { id: 'frikandel-40', cat: 'klasyki', name: 'Frikandel · 40 szt.', price: 12900, unit: '40 × 85 g (3400 g)', badge: 'BESTSELLER', icon: 'frikandel', img: 'frikandel-karton.webp', img2: 'frikandel.webp',
+  { id: 'frikandel-40', top: true, cat: 'klasyki', name: 'Frikandel · 40 szt.', price: 12900, unit: '40 × 85 g (3400 g)', badge: 'BESTSELLER', icon: 'frikandel', img: 'frikandel-karton.webp', img2: 'frikandel.webp',
     desc: 'Legenda holenderskiej frytkowni w kartonie horeca. 40 sztuk po 85 g — zapas na długo.',
     details: { prep: FRIKANDEL_PREP, ingredients: FRIKANDEL_INGREDIENTS, allergens: 'Gluten (pszenica)', nutrition: FRIKANDEL_NUTRITION,
       storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
 
-  { id: 'frikandel-kingsize-40', cat: 'klasyki', name: 'Frikandel Kingsize · 40 szt.', price: 14900, unit: '40 × 100 g (4000 g)', badge: 'XXL', icon: 'frikandel', img: 'frikandel-kingsize-karton.webp', img2: 'frikandel.webp',
+  { id: 'frikandel-kingsize-40', top: true, cat: 'klasyki', name: 'Frikandel Kingsize · 40 szt.', price: 14900, unit: '40 × 100 g (4000 g)', badge: 'XXL', icon: 'frikandel', img: 'frikandel-kingsize-karton.webp', img2: 'frikandel.webp',
     desc: 'Ekstra duży frikandel 100 g. Idealna baza pod frikandel speciaal — z sosem curry, majonezem i cebulką.',
     details: { prep: FRIKANDEL_PREP, ingredients: FRIKANDEL_INGREDIENTS, allergens: 'Gluten (pszenica)', nutrition: FRIKANDEL_NUTRITION,
       storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
@@ -95,7 +95,7 @@ const PRODUCTS = [
     desc: 'Wegetariański frikandel od Mora — ten sam kształt, ta sama przyprawowa dusza, zero mięsa. Także dla mięsożerców trudny do odróżnienia.',
     details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia'], ['🔥 Piekarnik', '200°C · 12 min']] } },
 
-  { id: 'vanreusel-xxl-250', cat: 'klasyki', name: 'Vanreusel Frikandel XXL · 250 g', price: 15900, unit: '10 × 250 g (2500 g)', badge: 'ĆWIERĆ KILO', icon: 'frikandel',
+  { id: 'vanreusel-xxl-250', top: true, cat: 'klasyki', name: 'Vanreusel Frikandel XXL · 250 g', price: 15900, unit: '10 × 250 g (2500 g)', badge: 'ĆWIERĆ KILO', icon: 'frikandel',
     desc: 'Frikandel ważący ćwierć kilograma. Belgijska odpowiedź na pytanie, którego nikt nie zadał — a jednak wszyscy chcą spróbować. Jeden = pełny obiad.',
     details: { prep: [['🍟 Frytkownica', '180°C · 6–7 min z zamrożenia'], ['💨 Airfryer', '180°C · 13–15 min z zamrożenia, obrócić w połowie'], ['🔥 Piekarnik', '200°C · 18–20 min']] } },
 
@@ -111,7 +111,7 @@ const PRODUCTS = [
     desc: 'Beckers z Limburgii to jedna z najstarszych marek frikandeli w Holandii — receptura Original niezmienna od dekad.',
     details: { prep: FRIKANDEL_PREP } },
 
-  { id: 'kaassouffle-10', cat: 'klasyki', name: 'Souflesse Kaassoufflé · 10 szt.', price: 6900, unit: '10 × 75 g', badge: 'WEGE', icon: 'kaassouffle',
+  { id: 'kaassouffle-10', top: true, cat: 'klasyki', name: 'Souflesse Kaassoufflé · 10 szt.', price: 6900, unit: '10 × 75 g', badge: 'WEGE', icon: 'kaassouffle',
     desc: 'Chrupiąca kieszonka z płynnym serem od Souflesse — holenderskiego specjalisty od soufflé. Wegetariański klasyk frytkowni.',
     details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia'], ['🔥 Piekarnik', '200°C · 12 min']] } },
 
@@ -176,7 +176,7 @@ const PRODUCTS = [
     details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–12 min z zamrożenia']] } },
 
   // ---- Bitterballen & krokiety ----
-  { id: 'bitterbal-20-100', cat: 'bitterballen', name: 'Bitterballen 20% · ok. 100 szt.', price: 9900, unit: 'ok. 100 × 20 g (2000 g)', badge: 'KARTON HORECA', icon: 'bitterbal', img: 'bitterbal-20-karton.webp',
+  { id: 'bitterbal-20-100', top: true, cat: 'bitterballen', name: 'Bitterballen 20% · ok. 100 szt.', price: 9900, unit: 'ok. 100 × 20 g (2000 g)', badge: 'KARTON HORECA', icon: 'bitterbal', img: 'bitterbal-20-karton.webp',
     desc: 'Klasyczne bitterballen z 20% wypełnieniem mięsnym (uwaga: mięso końskie — tradycyjna holenderska receptura) o bogatym, pełnym smaku. Karton na dużą imprezę.',
     details: {
       prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia (3 min po rozmrożeniu) · maks. 10 szt. naraz'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']],
@@ -185,7 +185,7 @@ const PRODUCTS = [
       nutrition: [['Energia', '721 kJ / 172 kcal'], ['Tłuszcz', '7,2 g'], ['— w tym kwasy nasycone', '3,4 g'], ['Węglowodany', '18 g'], ['— w tym cukry', '2,4 g'], ['Błonnik', '1,6 g'], ['Białko', '8,5 g'], ['Sól', '1,1 g']],
       storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
 
-  { id: 'kwekkeboom-oven-bitterballen', cat: 'bitterballen', name: 'Kwekkeboom Bitterballen wołowe do piekarnika · 50 szt.', price: 10900, unit: '2 × 25 szt. × 25 g', badge: 'PIEKARNIK / AIRFRYER', icon: 'bitterbal', img: 'kwekkeboom-bitterballen-karton.webp',
+  { id: 'kwekkeboom-oven-bitterballen', top: true, cat: 'bitterballen', name: 'Kwekkeboom Bitterballen wołowe do piekarnika · 50 szt.', price: 10900, unit: '2 × 25 szt. × 25 g', badge: 'PIEKARNIK / AIRFRYER', icon: 'bitterbal', img: 'kwekkeboom-bitterballen-karton.webp',
     desc: 'Legendarna amsterdamska marka od 1900 r. Chrupiąca skorupka, kremowe wnętrze z wołowiną — bez frytkownicy, prosto z piekarnika lub airfryera.',
     details: {
       prep: [['🔥 Piekarnik', '220°C · 8 min z zamrożenia (nie rozmrażać!), po upieczeniu odczekać min. 2 min'], ['💨 Airfryer', '200°C · ok. 7–8 min z zamrożenia']],
@@ -202,7 +202,7 @@ const PRODUCTS = [
     desc: 'Bitterballen z dojrzewającym serem Old Amsterdam — wytrawne, pełne umami. Wersja do piekarnika i airfryera.',
     details: { prep: [['🔥 Piekarnik', '220°C · 8 min z zamrożenia'], ['💨 Airfryer', '200°C · 7–8 min z zamrożenia']] } },
 
-  { id: 'van-dobben-bitterbal', cat: 'bitterballen', name: 'Van Dobben Bitterbal wołowy · 30 g', price: 11900, unit: '30 szt. × 30 g', badge: 'IKONA AMSTERDAMU', icon: 'bitterbal',
+  { id: 'van-dobben-bitterbal', top: true, cat: 'bitterballen', name: 'Van Dobben Bitterbal wołowy · 30 g', price: 11900, unit: '30 szt. × 30 g', badge: 'IKONA AMSTERDAMU', icon: 'bitterbal',
     desc: 'Van Dobben to bitterbal, po który amsterdamczycy stoją w kolejce od 1945 roku. Kremowe wołowe ragù w cienkiej, chrupiącej panierce — punkt odniesienia dla całej kategorii.',
     details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia · maks. 10 szt. naraz'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
 
@@ -242,7 +242,7 @@ const PRODUCTS = [
     desc: 'Kremowe wnętrze z dojrzewającego holenderskiego sera — wegetariański bitterbal w wydaniu premium.',
     details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia']] } },
 
-  { id: 'la-trappe-bitterbal', cat: 'bitterballen', name: 'Bitterbal La Trappe Quadrupel · 64 szt.', price: 19900, unit: '64 szt. × 30 g', badge: 'Z PIWEM TRAPISTÓW', icon: 'bitterbal',
+  { id: 'la-trappe-bitterbal', top: true, cat: 'bitterballen', name: 'Bitterbal La Trappe Quadrupel · 64 szt.', price: 19900, unit: '64 szt. × 30 g', badge: 'Z PIWEM TRAPISTÓW', icon: 'bitterbal',
     desc: 'Ragù wołowe duszone w piwie trapistów La Trappe Quadrupel (10%). Głęboki, słodowo-karmelowy smak — bitterbal dla koneserów. Idealna para: to samo piwo w szklance.',
     details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–10 min z zamrożenia']] } },
 
@@ -303,7 +303,7 @@ const PRODUCTS = [
     details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10 min z zamrożenia']] } },
 
   // ---- Sosy ----
-  { id: 'sos-curry-900', cat: 'sosy', name: 'Oliehoorn Sos curry · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'DO SPECIAAL', icon: 'saus', img: 'sos-curry.webp',
+  { id: 'sos-curry-900', top: true, cat: 'sosy', name: 'Oliehoorn Sos curry · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'DO SPECIAAL', icon: 'saus', img: 'sos-curry.webp',
     desc: 'Korzenny, lekko słodki sos curry — fundament frikandel speciaal. Tradycyjna receptura z Hoorn, praktyczna butelka z dozownikiem.',
     details: {
       ingredients: 'Woda, cukier, skrobia modyfikowana kukurydziana, koncentrat pomidorowy, ocet, sól, zioła i przyprawy (zawiera GORCZYCĘ), barwnik (karmel), substancja konserwująca (sorbinian potasu), naturalny aromat.',
@@ -311,7 +311,7 @@ const PRODUCTS = [
       nutrition: [['Energia', '655 kJ / 154 kcal'], ['Tłuszcz', '0,1 g'], ['— w tym kwasy nasycone', '0 g'], ['Węglowodany', '37,7 g'], ['— w tym cukry', '32,7 g'], ['Białko', '0,3 g'], ['Sól', '1,4 g']],
       storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
-  { id: 'majonez-900', cat: 'sosy', name: 'Oliehoorn Majonez 80% · 900 ml', price: 3900, unit: 'butelka 900 ml', badge: null, icon: 'saus', img: 'majonez.webp',
+  { id: 'majonez-900', top: true, cat: 'sosy', name: 'Oliehoorn Majonez 80% · 900 ml', price: 3900, unit: 'butelka 900 ml', badge: null, icon: 'saus', img: 'majonez.webp',
     desc: 'Klasyczny, pełny majonez 80% według autentycznej receptury. W Holandii frytki je się z majonezem — kropka.',
     details: {
       ingredients: '78% olej rzepakowy, woda, 6% żółtko JAJ z chowu ściółkowego, cukier, ocet, MUSZTARDA (woda, nasiona GORCZYCY, ocet, sól, cukier, przyprawy), sól, substancja konserwująca (sorbinian potasu), regulator kwasowości (kwas cytrynowy), substancja zagęszczająca (guma ksantanowa), barwnik (beta-karoten), przeciwutleniacz (E385).',
@@ -319,7 +319,7 @@ const PRODUCTS = [
       nutrition: [['Energia', '3023 kJ / 735 kcal'], ['Tłuszcz', '79,9 g'], ['— w tym kwasy nasycone', '6,5 g'], ['Węglowodany', '2,6 g'], ['— w tym cukry', '2,5 g'], ['Białko', '1,1 g'], ['Sól', '0,9 g']],
       storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
-  { id: 'fritessaus-750', cat: 'sosy', name: 'Oliehoorn Fritessaus 25% · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'HOLENDERSKI KLASYK', icon: 'saus', img: 'fritessaus.webp',
+  { id: 'fritessaus-750', top: true, cat: 'sosy', name: 'Oliehoorn Fritessaus 25% · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'HOLENDERSKI KLASYK', icon: 'saus', img: 'fritessaus.webp',
     desc: 'NIE mylić z majonezem! Kremowy, świeży, lekko słodszy — jedyny słuszny sos do frytek w Holandii. 25% oleju, stabilny nawet na ciepłych daniach.',
     details: {
       ingredients: 'Woda, 25% olej rzepakowy, cukier, skrobia PSZENNA, ocet, żółtko JAJ z chowu ściółkowego, sól, MUSZTARDA (woda, nasiona GORCZYCY, ocet, sól, cukier, przyprawy), modyfikowana skrobia ziemniaczana, substancja konserwująca (sorbinian potasu), regulator kwasowości (kwas cytrynowy), substancje zagęszczające (guma guar, guma ksantanowa), barwnik (beta-karoten), przeciwutleniacz (E385), aromat.',
@@ -327,7 +327,7 @@ const PRODUCTS = [
       nutrition: [['Energia', '1205 kJ / 291 kcal'], ['Tłuszcz', '25,7 g'], ['— w tym kwasy nasycone', '2,1 g'], ['Węglowodany', '14,1 g'], ['— w tym cukry', '8,3 g'], ['Białko', '0,5 g'], ['Sól', '1,8 g']],
       storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
-  { id: 'joppiesaus-500', cat: 'sosy', name: 'Joppie Original · 850 ml', price: 3200, unit: 'butelka 850 ml', badge: 'KULTOWY', icon: 'saus', img: 'joppiesaus.webp',
+  { id: 'joppiesaus-500', top: true, cat: 'sosy', name: 'Joppie Original · 850 ml', price: 3200, unit: 'butelka 850 ml', badge: 'KULTOWY', icon: 'saus', img: 'joppiesaus.webp',
     desc: 'Kultowy żółty sos z nutą curry i 11% cebuli. Receptura owiana tajemnicą — Holendrzy wylewają go na wszystko, od frytek po kanapki.',
     details: {
       ingredients: 'Woda, olej roślinny (rzepakowy), 11% cebula, cukier, syrop glukozowo-fruktozowy, regulatory kwasowości (kwas octowy, kwas mlekowy, kwas cytrynowy, mleczan sodu), modyfikowana skrobia kukurydziana, żółtko JAJ z chowu ściółkowego, syrop glukozowy, sól, koncentrat pomidorowy, skrobia PSZENNA, skrobia kukurydziana, mąka PSZENNA, substancje konserwujące (E202, E211), substancje zagęszczające (E412, E415), zioła, barwniki (luteina, E150c), błonnik grochowy, przyprawy, substancje słodzące (acesulfam K, aspartam — zawiera źródło fenyloalaniny), aromat, przeciwutleniacze (E385, E392), nasiona GORCZYCY, SELER, skrobia ziemniaczana.',
@@ -360,20 +360,20 @@ const PRODUCTS = [
       storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
 
   // ---- Boxy ----
-  { id: 'box-speciaal', cat: 'boxy', name: 'Box „Speciaal"', price: 16900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box',
+  { id: 'box-speciaal', top: true, cat: 'boxy', name: 'Box „Speciaal"', price: 16900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box',
     desc: '40 frikandeli + sos curry Oliehoorn + majonez Oliehoorn + suszona cebulka. Wszystko do frikandel speciaal w domu.',
     details: { prep: FRIKANDEL_PREP } },
 
-  { id: 'box-party', cat: 'boxy', name: 'Party Box · 60 szt.', price: 24900, unit: '60 szt. + 2 sosy', badge: 'NAJLEPSZA CENA', icon: 'box',
+  { id: 'box-party', top: true, cat: 'boxy', name: 'Party Box · 60 szt.', price: 24900, unit: '60 szt. + 2 sosy', badge: 'NAJLEPSZA CENA', icon: 'box',
     desc: '20 bitterballen, 20 frikandeli, 10 kroketów, 10 kaassoufflé + 2 sosy. Impreza po holendersku.',
     details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · patrz czasy przy poszczególnych produktach']] } },
 
-  { id: 'box-proba', cat: 'boxy', name: 'Box „Pierwszy raz"', price: 9900, unit: '24 szt. + sos', badge: 'DLA NOWYCH', icon: 'box',
+  { id: 'box-proba', top: true, cat: 'boxy', name: 'Box „Pierwszy raz"', price: 9900, unit: '24 szt. + sos', badge: 'DLA NOWYCH', icon: 'box',
     desc: 'Po 4 sztuki każdego klasyka + mały fritessaus. Poznaj wszystkie smaki bez zobowiązań.',
     details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · patrz czasy przy poszczególnych produktach']] } },
 
   // ---- Olej & sprzęt ----
-  { id: 'olej-oersterk-10l', cat: 'sprzet', name: 'Oliehoorn Frituur Oersterk · 10 l', price: 18900, unit: 'Bag-in-Box 10 l', badge: 'BEZ OLEJU PALMOWEGO', icon: 'saus', img: 'olej-oersterk-10l.webp',
+  { id: 'olej-oersterk-10l', top: true, cat: 'sprzet', name: 'Oliehoorn Frituur Oersterk · 10 l', price: 18900, unit: 'Bag-in-Box 10 l', badge: 'BEZ OLEJU PALMOWEGO', icon: 'saus', img: 'olej-oersterk-10l.webp',
     desc: 'Profesjonalny olej do frytkownicy o wyjątkowej stabilności i długiej żywotności. Neutralny smak, minimalne pryskanie, złocisty i chrupiący efekt. Higieniczne opakowanie Bag-in-Box z kranikiem.',
     details: {
       ingredients: 'Olej rzepakowy, olej słonecznikowy wysokooleinowy, substancja przeciwpieniąca: E900, aromat. Bez oleju palmowego.',
@@ -381,7 +381,11 @@ const PRODUCTS = [
       nutrition: [['Energia', '3404 kJ / 828 kcal'], ['Tłuszcz', '92 g'], ['— w tym kwasy nasycone', '7 g'], ['Węglowodany', '0 g'], ['Białko', '0 g'], ['Sól', '0 g']],
       storage: 'Przechowywać w 4–20°C, z dala od światła.' } },
 
-  { id: 'frytkownica-8l', cat: 'sprzet', name: 'Frytkownica profesjonalna 8 l', price: 64900, unit: '3500 W · stal nierdzewna', badge: 'HORECA', icon: 'box', img: 'frytkownica-8l-front.webp', img2: 'frytkownica-8l-bok.webp',
+  { id: 'puntzak-friet', cat: 'sprzet', name: 'Puntzak kraft z przegródką na sos · 50 szt.', price: 3900, unit: '50 szt. · 16 × 27 cm · FSC', badge: 'JAK W HOLANDII', icon: 'box', img: 'puntzak.webp', top: true,
+    desc: 'Kultowa holenderska „puntzak" — papierowa tutka na frytki z osobną przegródką na sos. Frytki w domu smakują lepiej, gdy wyglądają jak z frytkowni. Kraft z certyfikatem FSC, wytrzymały materiał.',
+    details: { specs: [['Wymiary', '16 × 27 cm'], ['Przegródka na sos', 'tak'], ['Materiał', 'karton kraft (bambus), certyfikat FSC'], ['Zastosowanie', 'frytki, snacki, przekąski'], ['Ilość', '50 sztuk']] } },
+
+  { id: 'frytkownica-8l', top: true, cat: 'sprzet', name: 'Frytkownica profesjonalna 8 l', price: 64900, unit: '3500 W · stal nierdzewna', badge: 'HORECA', icon: 'box', img: 'frytkownica-8l-front.webp', img2: 'frytkownica-8l-bok.webp',
     desc: 'Solidna frytkownica ze stali nierdzewnej 18/0 z zimną strefą chroniącą jakość oleju. Wyjmowana misa i element grzewczy — łatwe czyszczenie. Kosz z ekstra długim uchwytem, w zestawie pokrywa.',
     details: { specs: [
       ['Pojemność', '8 l'],
@@ -399,7 +403,7 @@ const PRODUCTS = [
     desc: 'Mniejsza siostra modelu 8 l — dla domowej frytkowni na 2–4 osoby. Regulacja do 190°C, wyjmowana misa, kosz i pokrywa w zestawie.',
     details: { specs: [['Pojemność', '4 l'], ['Moc', '2200 W · 230 V'], ['Temperatura', 'regulowana do 190°C'], ['Czyszczenie', 'wyjmowana misa'], ['W zestawie', 'kosz, pokrywa']] } },
 
-  { id: 'airfryer-55', cat: 'sprzet', name: 'Airfryer 5,5 l', price: 34900, unit: '1700 W · cyfrowy panel', badge: 'BEZ OLEJU', icon: 'box',
+  { id: 'airfryer-55', top: true, cat: 'sprzet', name: 'Airfryer 5,5 l', price: 34900, unit: '1700 W · cyfrowy panel', badge: 'BEZ OLEJU', icon: 'box',
     desc: 'Frikandel bez kropli oleju? Airfryer 5,5 l z cyfrowym panelem i 8 programami. Kosz na całą blachę przekąsek dla rodziny.',
     details: { specs: [['Pojemność', '5,5 l'], ['Moc', '1700 W'], ['Temperatura', '80–200°C'], ['Programy', '8 + timer 60 min'], ['Kosz', 'nieprzywierający, do mycia w zmywarce']] } },
 
@@ -426,6 +430,69 @@ app.get('/', (req, res) => {
 
 app.get('/regulamin',   (req, res) => res.render('regulamin',   { v: ASSET_V }));
 app.get('/prywatnosc',  (req, res) => res.render('prywatnosc',  { v: ASSET_V }));
+
+// ---- AI Frikandel-assistent (Pan Frikandel) ----
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
+
+const CATALOG_FOR_AI = PRODUCTS.map(p =>
+  `${p.id} | ${p.name} | ${zl(p.price)} | ${p.unit} | kat: ${p.cat}${p.badge ? ' | ' + p.badge : ''} | ${p.desc}`
+).join('\n');
+
+const ASSISTANT_SYSTEM = `Jesteś "Panem Frikandelem" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami (dostawa mrożonek kurierem w całej Polsce, 24-48h, darmowa dostawa od 250 zł, wysyłka 49 zł).
+
+Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
+
+ZASADY:
+- Odpowiadasz WYŁĄCZNIE po polsku.
+- Polecasz TYLKO produkty z katalogu. Gdy polecasz produkt, wstaw jego ID w podwójnych nawiasach: [[id-produktu]]. Maksymalnie 3-4 polecenia naraz.
+- Pytaj o preferencje gdy potrzeba (mięsne/wege, ostre/łagodne, na imprezę/na obiad, piekarnik/frytkownica/airfryer).
+- Znasz się na holenderskiej kulturze frytkowni (frikandel speciaal, broodje kroket, patatje oorlog, bitterballen z musztardą przy piwie) i chętnie ją tłumaczysz.
+- Nie wymyślasz cen, składników ani produktów spoza katalogu. Przy pytaniach o alergeny odsyłaj do szczegółów produktu na stronie.
+- Nie odpowiadasz na pytania niezwiązane ze sklepem — uprzejmie wracasz do tematu przekąsek.
+
+KATALOG:
+${CATALOG_FOR_AI}`;
+
+app.post('/api/assistent', async (req, res) => {
+  try {
+    if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'Asystent nie jest jeszcze skonfigurowany (ANTHROPIC_API_KEY).' });
+
+    let msgs = Array.isArray(req.body.messages) ? req.body.messages : [];
+    msgs = msgs.slice(-12).map(m => ({
+      role: m.role === 'assistant' ? 'assistant' : 'user',
+      content: String(m.content || '').slice(0, 1500)
+    })).filter(m => m.content);
+    if (!msgs.length || msgs[msgs.length - 1].role !== 'user') {
+      return res.status(400).json({ error: 'Brak wiadomości.' });
+    }
+
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',   // snel & goedkoop; evt. 'claude-sonnet-4-6' voor slimmere antwoorden
+        max_tokens: 600,
+        system: ASSISTANT_SYSTEM,
+        messages: msgs
+      })
+    });
+
+    if (!r.ok) {
+      console.error('Anthropic API error:', r.status, await r.text());
+      return res.status(502).json({ error: 'Asystent chwilowo niedostępny. Spróbuj za moment.' });
+    }
+    const data = await r.json();
+    const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    res.json({ reply: reply || 'Hmm, spróbuj zapytać inaczej 🍟' });
+  } catch (err) {
+    console.error('Assistent error:', err.message);
+    res.status(500).json({ error: 'Asystent chwilowo niedostępny.' });
+  }
+});
 
 // ---- Stripe Checkout ----
 app.post('/api/checkout', async (req, res) => {

@@ -66,23 +66,69 @@
     <p>Wszystko mrożone, gotowe w 10 minut w piekarniku lub airfryerze.</p>
   </div>
 
-  <% const cats = [ ['klasyki','Klasyki frytkowni'], ['sosy','Sosy — połowa magii'], ['boxy','Boxy — najlepiej się opłaca'] ]; %>
+  <% const cats = [ ['klasyki','Klasyki frytkowni'], ['sosy','Sosy — połowa magii'], ['boxy','Boxy — najlepiej się opłaca'], ['sprzet','Olej i sprzęt — frytkownia w domu'] ]; %>
   <% for (const [catId, catName] of cats) { %>
     <h3 class="cat-title"><%= catName %></h3>
     <div class="grid">
       <% for (const p of products.filter(x => x.cat === catId)) { %>
         <article class="card">
           <% if (p.badge) { %><span class="badge"><%= p.badge %></span><% } %>
-          <div class="card-art"><svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg></div>
+          <div class="card-art" data-details="<%= p.id %>" role="button" tabindex="0" aria-label="Szczegóły produktu">
+            <% if (p.img) { %>
+              <img src="/img/<%= p.img %>" alt="<%= p.name %>" loading="lazy">
+            <% } else { %>
+              <svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg>
+            <% } %>
+          </div>
           <h4><%= p.name %></h4>
           <p class="card-unit"><%= p.unit %></p>
           <p class="card-desc"><%= p.desc %></p>
+          <% if (p.details) { %><button class="card-more" data-details="<%= p.id %>">Składniki i przygotowanie →</button><% } %>
           <div class="card-foot">
             <span class="price"><%= zl(p.price) %></span>
             <button class="btn btn-add" data-add="<%= p.id %>">+ Do koszyka</button>
           </div>
         </article>
       <% } %>
+    </div>
+  <% } %>
+
+  <!-- Detail-content per product (verborgen; modal kopieert dit) -->
+  <% for (const p of products.filter(x => x.details)) { const d = p.details; %>
+    <div class="pd" id="pd-<%= p.id %>" hidden>
+      <div class="pd-media">
+        <% if (p.img) { %><img src="/img/<%= p.img %>" alt="<%= p.name %>"><% } %>
+        <% if (p.img2) { %><img src="/img/<%= p.img2 %>" alt="<%= p.name %>"><% } %>
+        <% if (!p.img) { %><svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg><% } %>
+      </div>
+      <h3><%= p.name %></h3>
+      <p class="pd-unit"><%= p.unit %> · <span class="pd-price"><%= zl(p.price) %></span></p>
+      <p><%= p.desc %></p>
+      <% if (d.prep) { %>
+        <h4>Przygotowanie</h4>
+        <table class="pd-table"><% for (const [k, v2] of d.prep) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
+      <% } %>
+      <% if (d.specs) { %>
+        <h4>Specyfikacja</h4>
+        <table class="pd-table"><% for (const [k, v2] of d.specs) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
+      <% } %>
+      <% if (d.ingredients) { %>
+        <h4>Składniki</h4>
+        <p class="pd-small"><%= d.ingredients %></p>
+      <% } %>
+      <% if (d.allergens) { %>
+        <h4>Alergeny</h4>
+        <p class="pd-small"><strong><%= d.allergens %></strong></p>
+      <% } %>
+      <% if (d.nutrition) { %>
+        <h4>Wartości odżywcze (na 100 g)</h4>
+        <table class="pd-table pd-table-nutri"><% for (const [k, v2] of d.nutrition) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
+      <% } %>
+      <% if (d.storage) { %>
+        <h4>Przechowywanie</h4>
+        <p class="pd-small"><%= d.storage %></p>
+      <% } %>
+      <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:18px">+ Do koszyka · <%= zl(p.price) %></button>
     </div>
   <% } %>
 </main>
@@ -151,8 +197,16 @@
   </div>
 </aside>
 
+<!-- ======================= PRODUCT MODAL ======================= -->
+<div class="modal-overlay" id="pdOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="pdClose" aria-label="Zamknij">✕</button>
+    <div class="modal-body" id="pdBody"></div>
+  </div>
+</div>
+
 <script>
-  window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon }))) %>;
+  window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon, img: p.img || null }))) %>;
   window.SHIPPING = <%- JSON.stringify(shipping) %>;
 </script>
 <script src="/shop.js?v=<%= v %>"></script>

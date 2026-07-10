@@ -309,3 +309,63 @@ em { font-style: normal; color: var(--oranje); }
   .footer-inner { grid-template-columns: 1fr; }
   .nav-links { display: none; }
 }
+
+/* ---------- Productfoto's op kaarten ---------- */
+.card-art { cursor: pointer; }
+.card-art img {
+  width: 100%; max-width: 190px; height: 150px; object-fit: contain;
+  background: #fff; border: 2.5px solid var(--ink); border-radius: 14px;
+  padding: 8px; transition: transform .2s;
+}
+.card:hover .card-art img { transform: scale(1.05) rotate(-1deg); }
+.card-more {
+  background: none; border: none; cursor: pointer; text-align: left;
+  font: 700 13.5px 'Hanken Grotesk', sans-serif; color: var(--oranje);
+  padding: 8px 0 0; text-decoration: underline; text-underline-offset: 3px;
+}
+.card-more:hover { color: var(--ink); }
+.ci img {
+  width: 56px; height: 56px; object-fit: contain; background: #fff;
+  border: 2px solid var(--ink); border-radius: 10px;
+}
+
+/* ---------- Product-detailmodal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(42,21,3,.6); backdrop-filter: blur(3px);
+  display: grid; place-items: center; padding: 18px;
+}
+.modal {
+  position: relative; width: min(620px, 100%); max-height: 88vh;
+  background: var(--paper); border: 3px solid var(--ink);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  display: flex; flex-direction: column;
+  animation: popIn .2s ease;
+}
+@keyframes popIn { from { transform: scale(.94); opacity: 0; } }
+.modal-close {
+  position: absolute; top: 12px; right: 12px; z-index: 2;
+  width: 36px; height: 36px; border: 3px solid var(--ink); border-radius: 50%;
+  background: var(--geel); font-size: 16px; font-weight: 800; cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.modal-body { overflow-y: auto; padding: 28px; }
+.modal-body h3 { font-family: 'Shrikhand', cursive; font-size: 26px; margin-bottom: 2px; }
+.modal-body h4 {
+  font-size: 15px; font-weight: 800; margin: 20px 0 8px;
+  display: inline-block; background: var(--geel); border: 2px solid var(--ink);
+  border-radius: 8px; padding: 3px 12px; transform: rotate(-.6deg);
+}
+.pd-media { display: flex; gap: 14px; justify-content: center; margin-bottom: 18px; }
+.pd-media img {
+  width: 46%; max-width: 220px; height: 180px; object-fit: contain;
+  background: #fff; border: 2.5px solid var(--ink); border-radius: 14px; padding: 10px;
+}
+.pd-media svg { width: 160px; height: 160px; }
+.pd-unit { color: var(--muted); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+.pd-price { font-family: 'Shrikhand', cursive; color: var(--oranje); font-size: 18px; }
+.pd-small { font-size: 13.5px; color: #4b3520; }
+.pd-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pd-table th, .pd-table td { text-align: left; padding: 7px 10px; border-bottom: 2px dashed rgba(42,21,3,.15); }
+.pd-table th { font-weight: 800; width: 44%; }
+.pd-table-nutri td { text-align: right; }

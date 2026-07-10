@@ -22,9 +22,8 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const ORDER_EMAIL_FROM = process.env.ORDER_EMAIL_FROM || 'Pan Frikandel <zamowienia@panfrikandel.pl>';
-const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null; // eigen kopie van elke order
+const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null;
 
-// Cache-busting versie (zelfde patroon als LumaDak)
 const ASSET_V = Date.now().toString(36);
 
 app.set('view engine', 'ejs');
@@ -33,30 +32,135 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
 // ============================================================
-//  CATALOGUS  (prijzen in grosze — 8900 = 89,00 zł)
-//  Alles diepvries, verzonden in thermobox met droogijs.
+//  CATALOGUS  (prijzen in grosze — 12900 = 129,00 zł)
+//  details.prep / ingredients / allergens / nutrition → productmodal
+//  (składniki + alergeny verplicht bij online voedselverkoop, EU 1169/2011)
 // ============================================================
+
+const FRIKANDEL_NUTRITION = [
+  ['Energia', '945 kJ / 226 kcal'],
+  ['Tłuszcz', '16 g'],
+  ['— w tym kwasy nasycone', '5,1 g'],
+  ['Węglowodany', '7 g'],
+  ['— w tym cukry', '0,6 g'],
+  ['Błonnik', '1,7 g'],
+  ['Białko', '13 g'],
+  ['Sól', '2,1 g']
+];
+
+const FRIKANDEL_INGREDIENTS = 'Mięso oddzielone mechanicznie z kurczaka, słonina wieprzowa, woda, bułka tarta (mąka PSZENNA, drożdże, sól), cebula, sól, przyprawy, emulgatory: E450, E452, przeciwutleniacze: kwas cytrynowy, E316, wzmacniacz smaku: E621, aromat (zawiera PSZENICĘ).';
+
+const FRIKANDEL_PREP = [
+  ['🍟 Frytkownica', '180°C · 4 min z zamrożenia (3 min po rozmrożeniu)'],
+  ['💨 Airfryer', '180°C · 8–10 min z zamrożenia, obrócić w połowie'],
+  ['🔥 Piekarnik', '200°C · 12–15 min z zamrożenia'],
+  ['🍳 Patelnia', 'na średnim ogniu, regularnie obracać']
+];
 
 const PRODUCTS = [
   // ---- Klassiekers ----
-  { id: 'frikandel-20',    cat: 'klasyki', name: 'Frikandel · 20 szt.',          desc: 'Legenda holenderskiej frytkowni. 20 sztuk po 70 g — do piekarnika, frytkownicy lub airfryera.', price: 8900,  unit: '20 × 70 g', badge: 'BESTSELLER', icon: 'frikandel' },
-  { id: 'frikandel-xxl',   cat: 'klasyki', name: 'Frikandel XXL · 10 szt.',      desc: 'Wersja dla głodnych: 10 gigantów po 100 g. Idealna baza pod frikandel speciaal.', price: 6900,  unit: '10 × 100 g', badge: null, icon: 'frikandel' },
-  { id: 'bitterballen-30', cat: 'klasyki', name: 'Bitterballen · 30 szt.',       desc: 'Chrupiące kulki z kremowym ragù wołowym. Obowiązkowe z musztardą przy piwie.', price: 7900,  unit: '30 × 30 g', badge: 'HIT NA IMPREZY', icon: 'bitterbal' },
-  { id: 'kroket-10',       cat: 'klasyki', name: 'Kroket wołowy · 10 szt.',      desc: 'Duży brat bitterballen. Holendrzy jedzą go w bułce — "broodje kroket".', price: 6500,  unit: '10 × 80 g', badge: null, icon: 'kroket' },
-  { id: 'kaassouffle-10',  cat: 'klasyki', name: 'Kaassoufflé · 10 szt.',        desc: 'Chrupiąca kieszonka z płynnym serem Gouda. Wegetariański klasyk frytkowni.', price: 6900,  unit: '10 × 65 g', badge: 'WEGE', icon: 'kaassouffle' },
-  { id: 'bamischijf-8',    cat: 'klasyki', name: 'Bamischijf · 8 szt.',          desc: 'Smażony krążek z indonezyjskim makaronem bami — holendersko-azjatycka fuzja.', price: 5900,  unit: '8 × 90 g', badge: null, icon: 'bamischijf' },
-  { id: 'mexicano-8',      cat: 'klasyki', name: 'Mexicano · 8 szt.',            desc: 'Pikantny, płaski kotlet z charakterem. Dla tych, którym frikandel to za mało.', price: 6200,  unit: '8 × 100 g', badge: 'OSTRE', icon: 'mexicano' },
+  { id: 'frikandel-40', cat: 'klasyki', name: 'Frikandel · 40 szt.', price: 12900, unit: '40 × 85 g (3400 g)', badge: 'BESTSELLER', icon: 'frikandel', img: 'frikandel-karton.webp', img2: 'frikandel.webp',
+    desc: 'Legenda holenderskiej frytkowni w kartonie horeca. 40 sztuk po 85 g — zapas na długo.',
+    details: { prep: FRIKANDEL_PREP, ingredients: FRIKANDEL_INGREDIENTS, allergens: 'Gluten (pszenica)', nutrition: FRIKANDEL_NUTRITION,
+      storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
+
+  { id: 'frikandel-kingsize-40', cat: 'klasyki', name: 'Frikandel Kingsize · 40 szt.', price: 14900, unit: '40 × 100 g (4000 g)', badge: 'XXL', icon: 'frikandel', img: 'frikandel-kingsize-karton.webp', img2: 'frikandel.webp',
+    desc: 'Ekstra duży frikandel 100 g. Idealna baza pod frikandel speciaal — z sosem curry, majonezem i cebulką.',
+    details: { prep: FRIKANDEL_PREP, ingredients: FRIKANDEL_INGREDIENTS, allergens: 'Gluten (pszenica)', nutrition: FRIKANDEL_NUTRITION,
+      storage: 'Produkt głęboko mrożony (-18°C). Po rozmrożeniu nie zamrażać ponownie. W lodówce (+4°C): 48 h.' } },
+
+  { id: 'bitterballen-30', cat: 'klasyki', name: 'Bitterballen · 30 szt.', price: 7900, unit: '30 × 30 g', badge: 'HIT NA IMPREZY', icon: 'bitterbal',
+    desc: 'Chrupiące kulki z kremowym ragù wołowym. Obowiązkowe z musztardą przy piwie.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 9–11 min z zamrożenia']] } },
+
+  { id: 'kroket-10', cat: 'klasyki', name: 'Kroket wołowy · 10 szt.', price: 6500, unit: '10 × 80 g', badge: null, icon: 'kroket',
+    desc: 'Duży brat bitterballen. Holendrzy jedzą go w bułce — „broodje kroket".',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–12 min z zamrożenia']] } },
+
+  { id: 'kaassouffle-10', cat: 'klasyki', name: 'Kaassoufflé · 10 szt.', price: 6900, unit: '10 × 65 g', badge: 'WEGE', icon: 'kaassouffle',
+    desc: 'Chrupiąca kieszonka z płynnym serem Gouda. Wegetariański klasyk frytkowni.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 3–4 min z zamrożenia'], ['💨 Airfryer', '180°C · 8–9 min z zamrożenia'], ['🔥 Piekarnik', '200°C · 12 min']] } },
+
+  { id: 'bamischijf-8', cat: 'klasyki', name: 'Bamischijf · 8 szt.', price: 5900, unit: '8 × 90 g', badge: null, icon: 'bamischijf',
+    desc: 'Smażony krążek z indonezyjskim makaronem bami — holendersko-azjatycka fuzja.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4 min z zamrożenia'], ['💨 Airfryer', '180°C · 10 min z zamrożenia']] } },
+
+  { id: 'mexicano-8', cat: 'klasyki', name: 'Mexicano · 8 szt.', price: 6200, unit: '8 × 100 g', badge: 'OSTRE', icon: 'mexicano',
+    desc: 'Pikantny, płaski kotlet z charakterem. Dla tych, którym frikandel to za mało.',
+    details: { prep: [['🍟 Frytkownica', '180°C · 4–5 min z zamrożenia'], ['💨 Airfryer', '180°C · 10–12 min z zamrożenia']] } },
 
   // ---- Sosy ----
-  { id: 'fritessaus-750',  cat: 'sosy', name: 'Fritessaus · 750 ml',             desc: 'NIE mylić z majonezem! Lżejszy, słodszy — jedyny słuszny sos do frytek w NL.', price: 2900, unit: '750 ml', badge: null, icon: 'saus' },
-  { id: 'curryketchup-500',cat: 'sosy', name: 'Curry ketchup · 500 ml',          desc: 'Korzenna, curry-owa siostra ketchupu. Fundament frikandel speciaal.', price: 2400, unit: '500 ml', badge: null, icon: 'saus' },
-  { id: 'joppiesaus-500',  cat: 'sosy', name: 'Joppiesaus · 500 ml',             desc: 'Kultowy żółty sos z nutą curry i cebuli. Receptura owiana tajemnicą.', price: 2700, unit: '500 ml', badge: 'KULTOWY', icon: 'saus' },
-  { id: 'satesaus-500',    cat: 'sosy', name: 'Satésaus · 500 ml',               desc: 'Gęsty sos orzechowy do frytek "patatje oorlog" i do wszystkiego innego.', price: 2600, unit: '500 ml', badge: null, icon: 'saus' },
+  { id: 'sos-curry-900', cat: 'sosy', name: 'Oliehoorn Sos curry · 900 ml', price: 3400, unit: 'butelka 900 ml', badge: 'DO SPECIAAL', icon: 'saus', img: 'sos-curry.webp',
+    desc: 'Korzenny, lekko słodki sos curry — fundament frikandel speciaal. Tradycyjna receptura z Hoorn, praktyczna butelka z dozownikiem.',
+    details: {
+      ingredients: 'Woda, cukier, skrobia modyfikowana kukurydziana, koncentrat pomidorowy, ocet, sól, zioła i przyprawy (zawiera GORCZYCĘ), barwnik (karmel), substancja konserwująca (sorbinian potasu), naturalny aromat.',
+      allergens: 'Gorczyca',
+      nutrition: [['Energia', '655 kJ / 154 kcal'], ['Tłuszcz', '0,1 g'], ['— w tym kwasy nasycone', '0 g'], ['Węglowodany', '37,7 g'], ['— w tym cukry', '32,7 g'], ['Białko', '0,3 g'], ['Sól', '1,4 g']],
+      storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
+
+  { id: 'majonez-900', cat: 'sosy', name: 'Oliehoorn Majonez 80% · 900 ml', price: 3900, unit: 'butelka 900 ml', badge: null, icon: 'saus', img: 'majonez.webp',
+    desc: 'Klasyczny, pełny majonez 80% według autentycznej receptury. W Holandii frytki je się z majonezem — kropka.',
+    details: {
+      ingredients: '78% olej rzepakowy, woda, 6% żółtko JAJ z chowu ściółkowego, cukier, ocet, MUSZTARDA (woda, nasiona GORCZYCY, ocet, sól, cukier, przyprawy), sól, substancja konserwująca (sorbinian potasu), regulator kwasowości (kwas cytrynowy), substancja zagęszczająca (guma ksantanowa), barwnik (beta-karoten), przeciwutleniacz (E385).',
+      allergens: 'Jaja, gorczyca',
+      nutrition: [['Energia', '3023 kJ / 735 kcal'], ['Tłuszcz', '79,9 g'], ['— w tym kwasy nasycone', '6,5 g'], ['Węglowodany', '2,6 g'], ['— w tym cukry', '2,5 g'], ['Białko', '1,1 g'], ['Sól', '0,9 g']],
+      storage: 'Po otwarciu przechowywać w lodówce (4–20°C).' } },
+
+  { id: 'fritessaus-750', cat: 'sosy', name: 'Fritessaus · 750 ml', price: 2900, unit: '750 ml', badge: null, icon: 'saus',
+    desc: 'NIE mylić z majonezem! Lżejszy, słodszy — jedyny słuszny sos do frytek w NL.',
+    details: { storage: 'Po otwarciu przechowywać w lodówce.' } },
+
+  { id: 'joppiesaus-500', cat: 'sosy', name: 'Joppiesaus · 500 ml', price: 2700, unit: '500 ml', badge: 'KULTOWY', icon: 'saus',
+    desc: 'Kultowy żółty sos z nutą curry i cebuli. Receptura owiana tajemnicą.',
+    details: { storage: 'Po otwarciu przechowywać w lodówce.' } },
 
   // ---- Boxy ----
-  { id: 'box-speciaal',    cat: 'boxy', name: 'Box "Speciaal"',                  desc: '20 frikandelli + curry ketchup + fritessaus + suszona cebulka. Wszystko do frikandel speciaal w domu.', price: 13900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box' },
-  { id: 'box-party',       cat: 'boxy', name: 'Party Box · 60 szt.',             desc: '20 bitterballen, 20 frikandelli, 10 kroketów, 10 kaassoufflé + 2 sosy. Impreza po holendersku.', price: 24900, unit: '60 szt. + 2 sosy', badge: 'NAJLEPSZA CENA', icon: 'box' },
-  { id: 'box-proba',       cat: 'boxy', name: 'Box "Pierwszy raz"',              desc: 'Po 4 sztuki każdego klasyka + mały fritessaus. Poznaj wszystkie smaki bez zobowiązań.', price: 9900, unit: '24 szt. + sos', badge: 'DLA NOWYCH', icon: 'box' }
+  { id: 'box-speciaal', cat: 'boxy', name: 'Box „Speciaal"', price: 16900, unit: 'zestaw', badge: 'POLECAMY', icon: 'box',
+    desc: '40 frikandeli + sos curry Oliehoorn + majonez Oliehoorn + suszona cebulka. Wszystko do frikandel speciaal w domu.',
+    details: { prep: FRIKANDEL_PREP } },
+
+  { id: 'box-party', cat: 'boxy', name: 'Party Box · 60 szt.', price: 24900, unit: '60 szt. + 2 sosy', badge: 'NAJLEPSZA CENA', icon: 'box',
+    desc: '20 bitterballen, 20 frikandeli, 10 kroketów, 10 kaassoufflé + 2 sosy. Impreza po holendersku.',
+    details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · patrz czasy przy poszczególnych produktach']] } },
+
+  { id: 'box-proba', cat: 'boxy', name: 'Box „Pierwszy raz"', price: 9900, unit: '24 szt. + sos', badge: 'DLA NOWYCH', icon: 'box',
+    desc: 'Po 4 sztuki każdego klasyka + mały fritessaus. Poznaj wszystkie smaki bez zobowiązań.',
+    details: { prep: [['💨 Airfryer / 🍟 Frytkownica', '180°C · patrz czasy przy poszczególnych produktach']] } },
+
+  // ---- Olej & sprzęt ----
+  { id: 'olej-oersterk-10l', cat: 'sprzet', name: 'Oliehoorn Frituur Oersterk · 10 l', price: 18900, unit: 'Bag-in-Box 10 l', badge: 'BEZ OLEJU PALMOWEGO', icon: 'saus', img: 'olej-oersterk-10l.webp',
+    desc: 'Profesjonalny olej do frytkownicy o wyjątkowej stabilności i długiej żywotności. Neutralny smak, minimalne pryskanie, złocisty i chrupiący efekt. Higieniczne opakowanie Bag-in-Box z kranikiem.',
+    details: {
+      ingredients: 'Olej rzepakowy, olej słonecznikowy wysokooleinowy, substancja przeciwpieniąca: E900, aromat. Bez oleju palmowego.',
+      allergens: 'Brak',
+      nutrition: [['Energia', '3404 kJ / 828 kcal'], ['Tłuszcz', '92 g'], ['— w tym kwasy nasycone', '7 g'], ['Węglowodany', '0 g'], ['Białko', '0 g'], ['Sól', '0 g']],
+      storage: 'Przechowywać w 4–20°C, z dala od światła.' } },
+
+  { id: 'frytkownica-8l', cat: 'sprzet', name: 'Frytkownica profesjonalna 8 l', price: 64900, unit: '3500 W · stal nierdzewna', badge: 'HORECA', icon: 'box', img: 'frytkownica-8l-front.webp', img2: 'frytkownica-8l-bok.webp',
+    desc: 'Solidna frytkownica ze stali nierdzewnej 18/0 z zimną strefą chroniącą jakość oleju. Wyjmowana misa i element grzewczy — łatwe czyszczenie. Kosz z ekstra długim uchwytem, w zestawie pokrywa.',
+    details: { specs: [
+      ['Pojemność', '8 l'],
+      ['Moc', '3500 W · 230 V (wtyczka w zestawie)'],
+      ['Temperatura', 'regulowana 50–190°C, lampka kontrolna'],
+      ['Zabezpieczenia', 'termostat maksymalny z resetem, wyłączanie przy wyjęciu elementu'],
+      ['Czyszczenie', 'wyjmowana misa i element grzewczy'],
+      ['Zimna strefa', 'tak — dłuższa żywotność oleju'],
+      ['W zestawie', 'kosz z długim uchwytem, pokrywa'],
+      ['Wymiary', '26,5 × 43 × 34,5 cm'],
+      ['Materiał', 'stal nierdzewna 18/0']
+    ] } },
+
+  { id: 'frytkownica-4l', cat: 'sprzet', name: 'Frytkownica kompakt 4 l', price: 39900, unit: '2200 W · stal nierdzewna', badge: null, icon: 'box',
+    desc: 'Mniejsza siostra modelu 8 l — dla domowej frytkowni na 2–4 osoby. Regulacja do 190°C, wyjmowana misa, kosz i pokrywa w zestawie.',
+    details: { specs: [['Pojemność', '4 l'], ['Moc', '2200 W · 230 V'], ['Temperatura', 'regulowana do 190°C'], ['Czyszczenie', 'wyjmowana misa'], ['W zestawie', 'kosz, pokrywa']] } },
+
+  { id: 'airfryer-55', cat: 'sprzet', name: 'Airfryer 5,5 l', price: 34900, unit: '1700 W · cyfrowy panel', badge: 'BEZ OLEJU', icon: 'box',
+    desc: 'Frikandel bez kropli oleju? Airfryer 5,5 l z cyfrowym panelem i 8 programami. Kosz na całą blachę przekąsek dla rodziny.',
+    details: { specs: [['Pojemność', '5,5 l'], ['Moc', '1700 W'], ['Temperatura', '80–200°C'], ['Programy', '8 + timer 60 min'], ['Kosz', 'nieprzywierający, do mycia w zmywarce']] } },
+
+  { id: 'airfryer-9-dual', cat: 'sprzet', name: 'Airfryer XL Dual 9 l', price: 54900, unit: '2 × 4,5 l · 2600 W', badge: 'DLA RODZINY', icon: 'box',
+    desc: 'Dwie niezależne komory: w jednej frikandele, w drugiej frytki — gotowe w tym samym momencie dzięki funkcji synchronizacji.',
+    details: { specs: [['Pojemność', '2 × 4,5 l'], ['Moc', '2600 W'], ['Temperatura', '80–200°C na komorę'], ['Funkcje', 'sync finish, match cook, timer'], ['Kosze', 'nieprzywierające, do mycia w zmywarce']] } }
 ];
 
 const SHIPPING = {
@@ -138,7 +242,7 @@ app.post('/api/checkout', async (req, res) => {
 });
 
 // ---- Success page + orderbevestiging via Resend ----
-const emailedSessions = new Set(); // simpele dubbel-send guard
+const emailedSessions = new Set();
 
 app.get('/sukces', async (req, res) => {
   let order = null;
@@ -175,7 +279,7 @@ app.get('/sukces', async (req, res) => {
                 <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
                   <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}</table>
                   <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">Razem: ${order.total}</p>
-                  <p>📦 Wysyłamy w termoboxie z suchym lodem — kurier dostarczy paczkę w 24–48 h. Produkty włóż od razu do zamrażarki.</p>
+                  <p>📦 Mrożonki wysyłamy w termoboxie z suchym lodem — kurier dostarczy paczkę w 24–48 h. Produkty włóż od razu do zamrażarki.</p>
                   <p style="color:#8a6a4f;font-size:13px">Pan Frikandel · panfrikandel.pl<br>Pytania? Odpowiedz na tego maila.</p>
                 </div>
               </div>`

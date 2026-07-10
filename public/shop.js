@@ -29,7 +29,7 @@
       box.innerHTML = Object.entries(cart).map(([id, q]) => {
         const p = byId[id];
         return `<div class="ci">
-          <svg viewBox="0 0 140 140"><use href="#snack-${p.icon}"/></svg>
+          ${p.img ? `<img src="/img/${p.img}" alt="">` : `<svg viewBox="0 0 140 140"><use href="#snack-${p.icon}"/></svg>`}
           <div><div class="ci-name">${p.name}</div><div class="ci-price">${zl(p.price)} / ${p.unit}</div></div>
           <div class="ci-qty">
             <button data-dec="${id}" aria-label="Mniej">−</button><b>${q}</b><button data-inc="${id}" aria-label="Więcej">+</button>
@@ -65,11 +65,32 @@
     toastT = setTimeout(() => toastEl.classList.remove('show'), 1800);
   }
 
+  // ---- product-detailmodal ----
+  const pdOverlay = $('#pdOverlay'), pdBody = $('#pdBody');
+  function openDetails(id) {
+    const src = document.getElementById('pd-' + id);
+    if (!src || !pdOverlay) return;
+    pdBody.innerHTML = src.innerHTML;
+    pdOverlay.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDetails() {
+    if (!pdOverlay) return;
+    pdOverlay.hidden = true;
+    document.body.style.overflow = '';
+  }
+  if (pdOverlay) {
+    $('#pdClose').addEventListener('click', closeDetails);
+    pdOverlay.addEventListener('click', e => { if (e.target === pdOverlay) closeDetails(); });
+  }
+
   document.addEventListener('click', e => {
+    const det = e.target.closest('[data-details]');
     const add = e.target.closest('[data-add]');
     const inc = e.target.closest('[data-inc]');
     const dec = e.target.closest('[data-dec]');
-    if (add) { const id = add.dataset.add; cart[id] = (cart[id] || 0) + 1; render(); toast('Dodano do koszyka! Lekker 👌'); }
+    if (det && !add) { openDetails(det.dataset.details); return; }
+    if (add) { const id = add.dataset.add; cart[id] = (cart[id] || 0) + 1; render(); toast('Dodano do koszyka! Lekker 👌'); closeDetails(); }
     if (inc) { cart[inc.dataset.inc]++; render(); }
     if (dec) {
       const id = dec.dataset.dec;
@@ -82,7 +103,7 @@
   $('#cartBtn').addEventListener('click', open);
   $('#cartClose').addEventListener('click', close);
   overlay.addEventListener('click', close);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); closeDetails(); } });
 
   $('#checkoutBtn').addEventListener('click', async () => {
     const btn = $('#checkoutBtn');

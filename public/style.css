@@ -361,7 +361,26 @@ em { font-style: normal; color: var(--oranje); }
 .pd-media img {
   width: 46%; max-width: 220px; height: 180px; object-fit: contain;
   background: #fff; border: 2.5px solid var(--ink); border-radius: 14px; padding: 10px;
+  cursor: zoom-in; transition: transform .2s;
 }
+.pd-media img:hover { transform: scale(1.04); }
+
+/* ---------- Lightbox (powiększenie zdjęcia) ---------- */
+.lightbox {
+  position: fixed; inset: 0; z-index: 300; display: none;
+  background: rgba(42,21,3,.78); backdrop-filter: blur(4px);
+  place-items: center; padding: 24px; cursor: zoom-out;
+}
+.lightbox.open { display: grid; }
+.lightbox img {
+  max-width: min(92vw, 720px); max-height: 86vh;
+  background: #fff; border: 3px solid var(--ink); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 14px;
+  cursor: zoom-in; transition: transform .25s ease;
+  animation: popIn .2s ease;
+}
+.lightbox img.zoomed { transform: scale(2.2); cursor: zoom-out; }
+.lightbox .lightbox-close { position: fixed; top: 18px; right: 18px; }
 .pd-media svg { width: 160px; height: 160px; }
 .pd-unit { color: var(--muted); font-weight: 700; font-size: 14px; margin-bottom: 10px; }
 .pd-price { font-family: 'Shrikhand', cursive; color: var(--oranje); font-size: 18px; }

@@ -84,7 +84,42 @@
     pdOverlay.addEventListener('click', e => { if (e.target === pdOverlay) closeDetails(); });
   }
 
+  // ---- lightbox (powiększanie zdjęć produktów) ----
+  let lbOverlay = null, lbImg = null;
+  function openLightbox(src, alt) {
+    if (!lbOverlay) {
+      lbOverlay = document.createElement('div');
+      lbOverlay.className = 'lightbox';
+      lbOverlay.innerHTML = '<button class="modal-close lightbox-close" aria-label="Zamknij">✕</button><img alt="">';
+      document.body.appendChild(lbOverlay);
+      lbImg = lbOverlay.querySelector('img');
+      lbOverlay.addEventListener('click', e => {
+        if (e.target === lbImg) toggleZoom(e);
+        else closeLightbox();
+      });
+    }
+    lbImg.src = src; lbImg.alt = alt || '';
+    lbImg.classList.remove('zoomed');
+    lbImg.style.transformOrigin = '';
+    lbOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function toggleZoom(e) {
+    const r = lbImg.getBoundingClientRect();
+    lbImg.style.transformOrigin =
+      ((e.clientX - r.left) / r.width * 100) + '% ' + ((e.clientY - r.top) / r.height * 100) + '%';
+    lbImg.classList.toggle('zoomed');
+  }
+  function closeLightbox() {
+    if (!lbOverlay) return;
+    lbOverlay.classList.remove('open');
+    document.body.style.overflow = pdOverlay && !pdOverlay.hidden ? 'hidden' : '';
+  }
+  const lightboxOpen = () => lbOverlay && lbOverlay.classList.contains('open');
+
   document.addEventListener('click', e => {
+    const zoomImg = e.target.closest('.pd-media img');
+    if (zoomImg) { openLightbox(zoomImg.src, zoomImg.alt); return; }
     const det = e.target.closest('[data-details]');
     const add = e.target.closest('[data-add]');
     const inc = e.target.closest('[data-inc]');
@@ -103,7 +138,11 @@
   $('#cartBtn').addEventListener('click', open);
   $('#cartClose').addEventListener('click', close);
   overlay.addEventListener('click', close);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { close(); closeDetails(); } });
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (lightboxOpen()) { closeLightbox(); return; }
+    close(); closeDetails();
+  });
 
   $('#checkoutBtn').addEventListener('click', async () => {
     const btn = $('#checkoutBtn');

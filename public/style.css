@@ -234,6 +234,27 @@ em { font-style: normal; color: var(--oranje); }
 .footer-head { font-weight: 800; margin-bottom: 10px; }
 .footer a { display: block; color: var(--paper); text-decoration: none; margin-bottom: 7px; opacity: .92; }
 .footer a:hover { text-decoration: underline; }
+.footer-pay {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 10px;
+  max-width: 1180px; margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 48px) 26px;
+}
+.footer-pay-label { font-size: 13px; font-weight: 700; opacity: .92; margin-right: 4px; }
+.pay-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px; min-width: 52px; padding: 0 12px;
+  background: var(--paper); color: var(--ink);
+  border: 2px solid var(--ink); border-radius: 8px;
+  box-shadow: 2px 2px 0 var(--ink);
+  font-weight: 800; font-size: 14px; line-height: 1;
+  user-select: none;
+}
+.pay-chip svg { display: block; }
+.pay-blik { background: #000; color: #fff; text-transform: lowercase; letter-spacing: .5px; }
+.pay-p24 { color: #D13239; font-size: 13px; }
+.pay-p24 b { color: #B3B2B1; margin-left: 1px; }
+.pay-visa { color: #1A1F71; font-style: italic; font-size: 15px; letter-spacing: 1px; }
 .footer-note { text-align: center; font-size: 13px; padding: 18px; border-top: 2px solid rgba(42,21,3,.25); opacity: .9; }
 
 /* ---------- Cart drawer ---------- */

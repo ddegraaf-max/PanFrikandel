@@ -174,7 +174,20 @@
       <a href="mailto:hallo@panfrikandel.pl">hallo@panfrikandel.pl</a>
     </div>
   </div>
-  <p class="footer-note">© <%= new Date().getFullYear() %> Pan Frikandel · Płatności obsługuje Stripe (BLIK · Przelewy24 · karta)</p>
+  <div class="footer-pay" aria-label="Dostępne metody płatności">
+    <span class="footer-pay-label">Bezpieczne płatności przez Stripe:</span>
+    <span class="pay-chip pay-blik" title="BLIK">blik</span>
+    <span class="pay-chip pay-p24" title="Przelewy24">Przelewy<b>24</b></span>
+    <span class="pay-chip pay-visa" title="Visa">VISA</span>
+    <span class="pay-chip pay-mc" title="Mastercard">
+      <svg viewBox="0 0 38 24" width="34" height="21" role="img" aria-label="Mastercard" focusable="false">
+        <circle cx="13" cy="12" r="9" fill="#EB001B"/>
+        <circle cx="25" cy="12" r="9" fill="#F79E1B"/>
+        <path d="M19 5.29A9 9 0 0 1 19 18.71A9 9 0 0 1 19 5.29Z" fill="#FF5F00"/>
+      </svg>
+    </span>
+  </div>
+  <p class="footer-note">© <%= new Date().getFullYear() %> Pan Frikandel · Echt lekker.</p>
 </footer>
 
 <!-- ======================= CART DRAWER ======================= -->

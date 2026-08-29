@@ -66,7 +66,7 @@ UI.pl = {
 
   // sukces
   successTitle: 'Dziękujemy! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Zamówienie przyjęte! 🍟',
-  successMailHtml: 'Potwierdzenie wysłaliśmy na <strong>{email}</strong>. ',
+  successMail: 'Potwierdzenie wysłaliśmy na',
   successHtml: '🛵 <strong>Dowozimy sami!</strong> Zadzwonimy lub napiszemy, żeby umówić dostawę — {eta}. Przekąski jadą prosto z mroźni, więc od razu do zamrażarki.',
   backToShop: '← Wróć do sklepu',
   termsTitle: 'Regulamin — PanFrikandel', privacyTitle: 'Polityka prywatności — PanFrikandel',
@@ -164,7 +164,7 @@ UI.en = {
   aiPlaceholder: 'e.g. something spicy for a party of 8…',
 
   successTitle: 'Thank you! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Order received! 🍟',
-  successMailHtml: 'We\'ve sent a confirmation to <strong>{email}</strong>. ',
+  successMail: 'We\'ve sent a confirmation to',
   successHtml: '🛵 <strong>We deliver ourselves!</strong> We\'ll call or message you to arrange delivery — {eta}. The snacks come straight from our freezer, so put them in yours right away.',
   backToShop: '← Back to the shop',
   termsTitle: 'Terms & conditions — PanFrikandel', privacyTitle: 'Privacy policy — PanFrikandel',

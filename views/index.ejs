@@ -1,34 +1,39 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="<%= lang %>">
 <head>
-  <title>Pan Frikandel — holenderskie przekąski z dostawą w całej Polsce</title>
+  <title><%= t('title') %></title>
   <%- include('partials/head') %>
 </head>
 <body>
 <%- include('partials/snacks') %>
+<%
+  // Variabelen voor de teksten: {radius} {city} {price} {free} {eta}
+  const D = delivery;
+  const V = { radius: D.radiusKm, city: D.city, price: zl(D.priceGr), free: zl(D.freeAboveGr), eta: D.eta };
+  const fill = (s, vars) => Object.entries(vars).reduce((acc, [k, val]) => acc.split('{' + k + '}').join(val), s);
+%>
 
 <!-- ======================= TOPBAR ======================= -->
 <div class="topbar">
   <div class="marquee"><div class="marquee-track">
-    <% for (let i = 0; i < 3; i++) { %>
-      <span>FRIKANDEL</span><i>★</i><span>BITTERBALLEN</span><i>★</i><span>KROKET</span><i>★</i><span>KAASSOUFFLÉ</span><i>★</i><span>DOSTAWA W CAŁEJ POLSCE</span><i>★</i><% if (local.enabled) { %><span>PŁOCK +<%= local.radiusKm %> KM: DOWOZIMY SAMI</span><i>★</i><% } %><span>LEKKER!</span><i>★</i>
-    <% } %>
+    <% for (let i = 0; i < 3; i++) { for (const w of dict.marquee) { %><span><%= fill(w, V) %></span><i>★</i><% } } %>
   </div></div>
 </div>
 
 <header class="nav">
   <a href="/" class="logo">
     <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/><path d="M28 50 Q50 44 72 50" stroke="#7B3A16" stroke-width="4" fill="none"/></svg>
-    <span translate="no">Pan&nbsp;Frikandel</span>
+    <span translate="no">PanFrikandel</span>
   </a>
   <nav class="nav-links">
-    <a href="#sklep">Sklep</a>
-    <a href="#dostawa">Dostawa</a>
-    <a href="#faq">FAQ</a>
+    <a href="#sklep"><%= t('navShop') %></a>
+    <a href="#dostawa"><%= t('navDelivery') %></a>
+    <a href="#faq"><%= t('navFaq') %></a>
   </nav>
-  <button class="cart-btn" id="cartBtn" aria-label="Koszyk">
+  <%- include('partials/lang') %>
+  <button class="cart-btn" id="cartBtn" aria-label="<%= t('navCart') %>">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><circle cx="9" cy="21" r="1.6"/><circle cx="19" cy="21" r="1.6"/><path d="M2 3h3l2.6 12.4a2 2 0 0 0 2 1.6h8.9a2 2 0 0 0 2-1.6L22 7H6"/></svg>
-    <span>Koszyk</span>
+    <span><%= t('navCart') %></span>
     <b id="cartCount" class="cart-count" hidden>0</b>
   </button>
 </header>
@@ -37,22 +42,22 @@
 <section class="hero">
   <div class="hero-inner">
     <div class="hero-copy">
-      <p class="hero-kicker">🇳🇱 Prosto z Holandii → 🇵🇱 pod Twoje drzwi</p>
-      <h1>Tęsknisz za <em>frikandelem</em>?<br>My go przywozimy.</h1>
-      <p class="hero-sub">Oryginalne przekąski z holenderskiej frytkowni — mrożone, pakowane w termobox z suchym lodem i dostarczane kurierem <strong>w całej Polsce w 24–48 h</strong>.<% if (local.enabled) { %> Mieszkasz w Płocku lub okolicy? <a href="#lokalnie">Dowozimy sami.</a><% } %></p>
+      <p class="hero-kicker"><%= t('heroKicker') %></p>
+      <h1><%- t('heroH1Html') %></h1>
+      <p class="hero-sub"><%- t('heroSubHtml', V) %></p>
       <div class="hero-cta">
-        <a href="#sklep" class="btn btn-primary">Zamów teraz</a>
-        <a href="#dostawa" class="btn btn-ghost">Jak działa dostawa?</a>
+        <a href="#sklep" class="btn btn-primary"><%= t('heroCta') %></a>
+        <a href="#dostawa" class="btn btn-ghost"><%= t('heroCta2') %></a>
       </div>
       <div class="hero-badges">
-        <span>❄️ Zawsze mrożone</span>
-        <span>💳 BLIK · P24 · karta</span>
-        <span>🚚 Gratis od <%= zl(shipping.freeAboveGr) %></span>
-        <% if (local.enabled) { %><span>🛵 Płock +<%= local.radiusKm %> km: dowozimy sami</span><% } %>
+        <span><%= t('badgeFrozen') %></span>
+        <span><%= t('badgePay') %></span>
+        <span><%= t('badgeDelivery', V) %></span>
+        <span><%= t('badgeZone', V) %></span>
       </div>
     </div>
     <div class="hero-art">
-      <div class="hero-sticker">100%<br>lekker</div>
+      <div class="hero-sticker"><%- t('stickerHtml') %></div>
       <svg viewBox="0 0 140 140" class="hero-snack"><use href="#snack-frikandel"/></svg>
       <svg viewBox="0 0 140 140" class="hero-snack hero-snack-2"><use href="#snack-bitterbal"/></svg>
     </div>
@@ -63,29 +68,28 @@
 <!-- ======================= SKLEP ======================= -->
 <main id="sklep" class="shop">
   <div class="section-head">
-    <h2>Frytkownia <em>online</em></h2>
-    <p>Wszystko mrożone, gotowe w 10 minut w piekarniku lub airfryerze.</p>
+    <h2><%- t('shopH2Html') %></h2>
+    <p><%= t('shopSub') %></p>
   </div>
 
-  <% const cats = [ ['klasyki','Frikandele i klasyki'], ['bitterballen','Bitterballen i krokiety — największy wybór w Polsce'], ['sosy','Sosy — połowa magii'], ['boxy','Boxy — najlepiej się opłaca'], ['sprzet','Olej i sprzęt — frytkownia w domu'] ]; %>
-  <% for (const [catId, catName] of cats) { %>
+  <% for (const catId of ['klasyki', 'bitterballen', 'sosy', 'boxy', 'sprzet']) { %>
     <% const inCat = products.filter(x => x.cat === catId);
        const tops = inCat.filter(p => p.top).length ? inCat.filter(p => p.top) : inCat.slice(0, 4);
        const rest = inCat.filter(p => !tops.includes(p)); %>
-    <h3 class="cat-title"><%= catName %></h3>
+    <h3 class="cat-title"><%= dict.cats[catId] %></h3>
     <div class="grid">
       <% for (const p of tops) { %>
-        <%- include('partials/card', { p, zl }) %>
+        <%- include('partials/card', { p }) %>
       <% } %>
     </div>
     <% if (rest.length) { %>
       <div class="grid grid-more" id="more-<%= catId %>" hidden>
         <% for (const p of rest) { %>
-          <%- include('partials/card', { p, zl }) %>
+          <%- include('partials/card', { p }) %>
         <% } %>
       </div>
       <div class="more-wrap">
-        <button class="btn btn-more" data-more="<%= catId %>">Pokaż wszystkie <span class="more-count"><%= inCat.length %></span> produktów ▾</button>
+        <button class="btn btn-more" data-more="<%= catId %>" data-count="<%= inCat.length %>"><%- t('showAllHtml', { n: inCat.length }) %></button>
       </div>
     <% } %>
   <% } %>
@@ -102,30 +106,30 @@
       <p class="pd-unit"><%= p.unit %> · <span class="pd-price"><%= zl(p.price) %></span></p>
       <p><%= p.desc %></p>
       <% if (d.prep) { %>
-        <h4>Przygotowanie</h4>
+        <h4><%= t('pdPrep') %></h4>
         <table class="pd-table"><% for (const [k, v2] of d.prep) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
       <% } %>
       <% if (d.specs) { %>
-        <h4>Specyfikacja</h4>
+        <h4><%= t('pdSpecs') %></h4>
         <table class="pd-table"><% for (const [k, v2] of d.specs) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
       <% } %>
       <% if (d.ingredients) { %>
-        <h4>Składniki</h4>
+        <h4><%= t('pdIngredients') %></h4>
         <p class="pd-small"><%= d.ingredients %></p>
       <% } %>
       <% if (d.allergens) { %>
-        <h4>Alergeny</h4>
+        <h4><%= t('pdAllergens') %></h4>
         <p class="pd-small"><strong><%= d.allergens %></strong></p>
       <% } %>
       <% if (d.nutrition) { %>
-        <h4>Wartości odżywcze (na 100 g)</h4>
+        <h4><%= t('pdNutrition') %></h4>
         <table class="pd-table pd-table-nutri"><% for (const [k, v2] of d.nutrition) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
       <% } %>
       <% if (d.storage) { %>
-        <h4>Przechowywanie</h4>
+        <h4><%= t('pdStorage') %></h4>
         <p class="pd-small"><%= d.storage %></p>
       <% } %>
-      <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:18px">+ Do koszyka · <%= zl(p.price) %></button>
+      <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:18px"><%= t('addToCart') %> · <%= zl(p.price) %></button>
     </div>
   <% } %>
 </main>
@@ -134,71 +138,63 @@
 <section id="dostawa" class="delivery">
   <div class="check-strip"></div>
   <div class="delivery-inner">
-    <h2>Mrożonki przez pół Europy?<br><em>Tak, to działa.</em></h2>
+    <h2><%- t('deliveryH2Html') %></h2>
     <div class="steps">
-      <div class="step"><b>1</b><h4>Zamawiasz</h4><p>Wybierasz przekąski, płacisz BLIK-iem, Przelewy24 lub kartą przez bezpieczny Stripe.</p></div>
-      <div class="step"><b>2</b><h4>Pakujemy na zimno</h4><p>Termobox + suchy lód utrzymują -18°C przez ponad 48 godzin.</p></div>
-      <div class="step"><b>3</b><h4>Kurier puka</h4><p>Dostawa w 24–48 h pod dowolny adres w Polsce. Wysyłka <%= zl(shipping.standardGr) %>, <strong>gratis od <%= zl(shipping.freeAboveGr) %></strong>.<% if (local.enabled) { %> W Płocku i okolicy <a href="#lokalnie">dowozimy sami</a>.<% } %></p></div>
-      <div class="step"><b>4</b><h4>Do zamrażarki → airfryer</h4><p>10 minut i masz w domu prawdziwą holenderską frytkownię. Eet smakelijk!</p></div>
+      <% dict.steps.forEach((s, i) => { %>
+      <div class="step"><b><%= i + 1 %></b><h4><%= fill(s.t, V) %></h4><p><%- fill(s.p, V) %></p></div>
+      <% }) %>
     </div>
 
-    <% if (local.enabled) { %>
-    <!-- Pilot: dostawa własna Płock + 50 km -->
-    <div class="local-box" id="lokalnie">
+    <!-- Strefa dostawy: postcodecheck -->
+    <div class="local-box" id="strefa">
       <div class="local-copy">
-        <p class="local-kicker">🛵 Nowość · <%= local.city %> i okolice</p>
-        <h3>Mieszkasz do <%= local.radiusKm %> km od Płocka?<br><em>Dowozimy sami.</em></h3>
-        <p>Bez kuriera — przywozimy zamówienie własnym transportem, prosto z mroźni, <%= local.eta %>. Dostawa <strong><%= zl(local.priceGr) %></strong>, <strong>gratis od <%= zl(local.freeAboveGr) %></strong>. Przed dostawą dzwonimy, żeby umówić godzinę.</p>
+        <p class="local-kicker"><%= t('zoneKicker', V) %></p>
+        <h3><%- t('zoneH3Html') %></h3>
+        <p><%- t('zonePHtml', V) %></p>
       </div>
       <form class="zone-form" data-zone-form data-source="sekcja">
-        <label for="zoneKod">Sprawdź, czy dowozimy do Ciebie</label>
+        <label for="zoneKod"><%= t('zoneLabel') %></label>
         <div class="zone-row">
-          <input id="zoneKod" data-zone-input inputmode="numeric" autocomplete="postal-code" placeholder="np. 09-400" maxlength="6" aria-label="Kod pocztowy">
-          <button class="btn btn-primary" type="submit">Sprawdź</button>
+          <input id="zoneKod" data-zone-input inputmode="numeric" autocomplete="postal-code" placeholder="<%= t('zonePlaceholder') %>" maxlength="6" aria-label="<%= t('zoneAria') %>">
+          <button class="btn btn-primary" type="submit"><%= t('zoneCheck') %></button>
         </div>
         <p class="zone-result" data-zone-result hidden></p>
       </form>
     </div>
-    <% } %>
   </div>
   <div class="check-strip"></div>
 </section>
 
 <!-- ======================= FAQ ======================= -->
 <section id="faq" class="faq">
-  <div class="section-head"><h2>Pytania? <em>Mamy odpowiedzi</em></h2></div>
-  <details><summary>Czym właściwie jest frikandel?</summary><p>Najpopularniejsza przekąska w Holandii: podłużny, smażony kotlecik z mieszanki mięs, o gładkiej konsystencji i lekko korzennym smaku. Holendrzy zjadają ich ponad 600 milionów rocznie. „Frikandel speciaal" = z curry ketchupem, fritessaus i surową cebulką.</p></details>
-  <details><summary>Czy produkty dojadą naprawdę zamrożone?</summary><p>Tak. Pakujemy w profesjonalny termobox z suchym lodem (-78°C), który utrzymuje głębokie mrożenie znacznie dłużej niż trwa transport. Po odbiorze włóż produkty od razu do zamrażarki.</p></details>
-  <details><summary>Jak przygotować przekąski?</summary><p>Najlepiej w airfryerze (ok. 8–10 min, 180°C) lub piekarniku (ok. 12–15 min, 200°C). Można też klasycznie we frytkownicy — 3–4 minuty w 180°C. Zawsze prosto z zamrażarki, bez rozmrażania.</p></details>
-  <details><summary>Jakie są metody płatności?</summary><p>BLIK, Przelewy24 i karty płatnicze — wszystko obsługiwane przez Stripe, bez zakładania konta.</p></details>
-  <% if (local.enabled) { %>
-  <details><summary>Mieszkam w Płocku lub okolicy — dowozicie sami?</summary><p>Tak! W promieniu <%= local.radiusKm %> km od Płocka testujemy dostawę własnym transportem: <%= zl(local.priceGr) %>, gratis od <%= zl(local.freeAboveGr) %>, <%= local.eta %>. Wpisz kod pocztowy w koszyku lub w sekcji <a href="#lokalnie">Dostawa</a> — jeśli jesteś w strefie, przy płatności pojawi się opcja „Dowozimy sami”. Przed dostawą kontaktujemy się telefonicznie.</p></details>
+  <div class="section-head"><h2><%- t('faqH2Html') %></h2></div>
+  <% for (const f of dict.faq) { %>
+  <details><summary><%= fill(f.q, V) %></summary><p><%= fill(f.a, V) %></p></details>
   <% } %>
-  <details><summary>Co jeśli nie będzie mnie w domu?</summary><p>Kurier podejmie drugą próbę doręczenia. Termobox spokojnie wytrzyma ten czas, ale zalecamy wybrać dzień, w którym ktoś odbierze paczkę.</p></details>
 </section>
 
 <!-- ======================= FOOTER ======================= -->
 <footer class="footer">
   <div class="footer-inner">
     <div>
-      <p class="footer-logo">Pan Frikandel</p>
-      <p>Holenderskie przekąski z dostawą<br>w całej Polsce<% if (local.enabled) { %> — w Płocku i okolicy dowozimy sami<% } %>. Echt lekker.</p>
+      <p class="footer-logo">PanFrikandel</p>
+      <p><%- t('footerTaglineHtml') %></p>
     </div>
     <div>
-      <p class="footer-head">Sklep</p>
-      <a href="#sklep">Wszystkie produkty</a>
-      <a href="#dostawa">Dostawa</a>
-      <a href="#faq">FAQ</a>
+      <p class="footer-head"><%= t('footerShop') %></p>
+      <a href="#sklep"><%= t('footerAll') %></a>
+      <a href="#dostawa"><%= t('navDelivery') %></a>
+      <a href="#faq"><%= t('navFaq') %></a>
     </div>
     <div>
-      <p class="footer-head">Informacje</p>
-      <a href="/regulamin">Regulamin</a>
-      <a href="/prywatnosc">Polityka prywatności</a>
+      <p class="footer-head"><%= t('footerInfo') %></p>
+      <a href="/regulamin"><%= t('footerTerms') %></a>
+      <a href="/prywatnosc"><%= t('footerPrivacy') %></a>
       <a href="mailto:hallo@panfrikandel.pl">hallo@panfrikandel.pl</a>
     </div>
   </div>
-  <div class="footer-pay" aria-label="Dostępne metody płatności">
-    <span class="footer-pay-label">Bezpieczne płatności przez Stripe:</span>
+  <div class="footer-pay" aria-label="<%= t('footerPayAria') %>">
+    <span class="footer-pay-label"><%= t('footerPayLabel') %></span>
     <span class="pay-chip pay-blik" title="BLIK">blik</span>
     <span class="pay-chip pay-p24" title="Przelewy24">Przelewy<b>24</b></span>
     <span class="pay-chip pay-visa" title="Visa">VISA</span>
@@ -210,51 +206,49 @@
       </svg>
     </span>
   </div>
-  <p class="footer-note">© <%= new Date().getFullYear() %> Pan Frikandel · Echt lekker.</p>
+  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %></p>
 </footer>
 
 <!-- ======================= CART DRAWER ======================= -->
 <div class="cart-overlay" id="cartOverlay" hidden></div>
-<aside class="cart" id="cartDrawer" aria-label="Koszyk" hidden>
+<aside class="cart" id="cartDrawer" aria-label="<%= t('navCart') %>" hidden>
   <div class="cart-head">
-    <h3>Twój koszyk</h3>
-    <button class="cart-close" id="cartClose" aria-label="Zamknij">✕</button>
+    <h3><%= t('cartTitle') %></h3>
+    <button class="cart-close" id="cartClose" aria-label="<%= t('close') %>">✕</button>
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-foot">
-    <% if (local.enabled) { %>
     <form class="cart-zone" data-zone-form data-source="koszyk">
-      <span class="cart-zone-label">🛵 <%= local.city %> +<%= local.radiusKm %> km? Sprawdź kod — dowozimy sami od <%= zl(local.priceGr) %></span>
-      <input data-zone-input inputmode="numeric" autocomplete="postal-code" placeholder="09-400" maxlength="6" aria-label="Kod pocztowy">
-      <button type="submit" class="btn btn-add">Sprawdź</button>
+      <span class="cart-zone-label"><%= t('cartZoneLabel', V) %></span>
+      <input data-zone-input inputmode="numeric" autocomplete="postal-code" placeholder="<%= t('cartZonePlaceholder') %>" maxlength="6" aria-label="<%= t('zoneAria') %>">
+      <button type="submit" class="btn btn-add"><%= t('zoneCheck') %></button>
       <p class="zone-result" data-zone-result hidden></p>
     </form>
-    <% } %>
     <p class="cart-ship" id="cartShip"></p>
-    <div class="cart-total"><span>Razem</span><b id="cartTotal">0,00 zł</b></div>
-    <button class="btn btn-primary btn-checkout" id="checkoutBtn">Przejdź do płatności →</button>
-    <p class="cart-pay">💳 BLIK · Przelewy24 · karta — przez Stripe</p>
+    <div class="cart-total"><span><%= t('cartTotal') %></span><b id="cartTotal">0,00 zł</b></div>
+    <button class="btn btn-primary btn-checkout" id="checkoutBtn" disabled><%= t('checkout') %></button>
+    <p class="cart-pay"><%= t('cartPay') %></p>
   </div>
 </aside>
 
 <!-- ======================= AI ASSISTENT ======================= -->
-<button class="ai-fab" id="aiFab" aria-label="Zapytaj Pana Frikandela">
+<button class="ai-fab" id="aiFab" aria-label="<%= t('aiFab') %>">
   <svg viewBox="0 0 100 100" width="30" height="30"><rect x="14" y="38" width="72" height="24" rx="12" fill="#A0522D" stroke="#2A1503" stroke-width="7"/><path d="M24 48 Q50 41 76 48" stroke="#7B3A16" stroke-width="5" fill="none"/></svg>
-  <span>Zapytaj Pana Frikandela</span>
+  <span><%= t('aiFab') %></span>
 </button>
-<aside class="ai-panel" id="aiPanel" hidden aria-label="Asystent Pan Frikandel">
+<aside class="ai-panel" id="aiPanel" hidden aria-label="<%= t('aiName') %>">
   <div class="ai-head">
     <div>
-      <b>Pan Frikandel</b>
-      <small>Twój holenderski doradca 🍟</small>
+      <b><%= t('aiName') %></b>
+      <small><%= t('aiSub') %></small>
     </div>
-    <button class="cart-close" id="aiClose" aria-label="Zamknij">✕</button>
+    <button class="cart-close" id="aiClose" aria-label="<%= t('close') %>">✕</button>
   </div>
   <div class="ai-msgs" id="aiMsgs">
-    <div class="ai-msg ai-msg-bot">Cześć! Jestem Pan Frikandel. Powiedz, na co masz ochotę — impreza ze znajomymi, szybki obiad, coś wege, coś bardzo ostrego? Doradzę jak stary znajomy z frytkowni. 🧡</div>
+    <div class="ai-msg ai-msg-bot"><%= t('aiWelcome') %></div>
   </div>
   <form class="ai-form" id="aiForm">
-    <input type="text" id="aiInput" placeholder="np. coś ostrego na imprezę dla 8 osób…" maxlength="500" autocomplete="off">
+    <input type="text" id="aiInput" placeholder="<%= t('aiPlaceholder') %>" maxlength="500" autocomplete="off">
     <button type="submit" class="btn btn-primary ai-send" id="aiSend">➤</button>
   </form>
 </aside>
@@ -262,15 +256,16 @@
 <!-- ======================= PRODUCT MODAL ======================= -->
 <div class="modal-overlay" id="pdOverlay" hidden>
   <div class="modal" role="dialog" aria-modal="true">
-    <button class="modal-close" id="pdClose" aria-label="Zamknij">✕</button>
+    <button class="modal-close" id="pdClose" aria-label="<%= t('close') %>">✕</button>
     <div class="modal-body" id="pdBody"></div>
   </div>
 </div>
 
 <script>
+  window.LANG = <%- JSON.stringify(lang) %>;
+  window.T = <%- JSON.stringify(dict.client) %>;
+  window.DELIVERY = <%- JSON.stringify(delivery) %>;
   window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon, img: p.img || null }))) %>;
-  window.SHIPPING = <%- JSON.stringify(shipping) %>;
-  window.LOCAL = <%- JSON.stringify(local) %>;
 </script>
 <script src="/shop.js?v=<%= v %>"></script>
 </body>

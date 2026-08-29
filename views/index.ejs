@@ -21,10 +21,7 @@
 </div>
 
 <header class="nav">
-  <a href="/" class="logo">
-    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/><path d="M28 50 Q50 44 72 50" stroke="#7B3A16" stroke-width="4" fill="none"/></svg>
-    <span translate="no">PanFrikandel</span>
-  </a>
+  <%- include('partials/logo') %>
   <nav class="nav-links">
     <a href="#sklep"><%= t('navShop') %></a>
     <a href="#dostawa"><%= t('navDelivery') %></a>
@@ -278,7 +275,7 @@
 
 <!-- ======================= AI ASSISTENT ======================= -->
 <button class="ai-fab" id="aiFab" aria-label="<%= t('aiFab') %>">
-  <svg viewBox="0 0 100 100" width="30" height="30"><rect x="14" y="38" width="72" height="24" rx="12" fill="#A0522D" stroke="#2A1503" stroke-width="7"/><path d="M24 48 Q50 41 76 48" stroke="#7B3A16" stroke-width="5" fill="none"/></svg>
+  <svg viewBox="0 0 100 100" width="32" height="32" aria-hidden="true"><rect x="8" y="46" width="84" height="28" rx="14" fill="#8E4A22" stroke="#2A1503" stroke-width="7"/><path d="M16 48 Q30 38 44 48 T72 48 T90 46" stroke="#6E2A0D" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M20 39 Q34 29 48 39 T76 39 T92 37" stroke="#FFF0A6" stroke-width="8" fill="none" stroke-linecap="round"/><g fill="#FFF8EC" stroke="#2A1503" stroke-width="3"><rect x="26" y="22" width="13" height="13" rx="2" transform="rotate(15 32 28)"/><rect x="48" y="18" width="13" height="13" rx="2" transform="rotate(-18 54 24)"/><rect x="68" y="24" width="13" height="13" rx="2" transform="rotate(28 74 30)"/></g></svg>
   <span><%= t('aiFab') %></span>
 </button>
 <aside class="ai-panel" id="aiPanel" hidden aria-label="<%= t('aiName') %>">

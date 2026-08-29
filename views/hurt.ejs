@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="<%= t('hurtMetaDesc') %>">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF4D00'/><rect x='22' y='40' width='56' height='20' rx='10' fill='%23A0522D' stroke='%232A1503' stroke-width='5'/></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF4D00'/><rect x='12' y='50' width='76' height='26' rx='13' fill='%238E4A22' stroke='%232A1503' stroke-width='6'/><path d='M18 52 Q33 41 48 52 T84 50' stroke='%236E2A0D' stroke-width='8' fill='none' stroke-linecap='round'/><path d='M22 43 Q37 32 52 43 T86 41' stroke='%23FFF0A6' stroke-width='8' fill='none' stroke-linecap='round'/><g fill='%23FFF8EC' stroke='%232A1503' stroke-width='3'><rect x='28' y='26' width='13' height='13' rx='2'/><rect x='50' y='21' width='13' height='13' rx='2'/><rect x='68' y='28' width='13' height='13' rx='2'/></g></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -15,10 +15,7 @@
 <%- include('partials/snacks') %>
 
 <header class="nav">
-  <a href="/" class="logo">
-    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/><path d="M28 50 Q50 44 72 50" stroke="#7B3A16" stroke-width="4" fill="none"/></svg>
-    <span translate="no">PanFrikandel</span>
-  </a>
+  <%- include('partials/logo') %>
   <nav class="nav-links">
     <a href="/#sklep"><%= t('navShop') %></a>
     <a href="/#dostawa"><%= t('navDelivery') %></a>

@@ -27,6 +27,16 @@ const resend = process.env.RESEND_API_KEY
 const ORDER_EMAIL_FROM = process.env.ORDER_EMAIL_FROM || 'PanFrikandel <zamowienia@panfrikandel.pl>';
 const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null;
 
+// Bedrijfsgegevens (regulamin, privacybeleid, footer) — jednoosobowa działalność, wpis w CEIDG
+const COMPANY = {
+  name:    process.env.COMPANY_NAME    || 'Budomatch Daniel de Graaf',
+  address: process.env.COMPANY_ADDRESS || '',          // bv. "ul. Przykładowa 1, 09-400 Płock"
+  nip:     process.env.COMPANY_NIP     || '',
+  regon:   process.env.COMPANY_REGON   || '',
+  email:   process.env.COMPANY_EMAIL   || 'hallo@panfrikandel.pl',
+  phone:   process.env.COMPANY_PHONE   || ''
+};
+
 const ASSET_V = Date.now().toString(36);
 // Publieke URL: BASE_URL als die gezet is, anders afgeleid van het request (zodat Stripe nooit naar localhost terugstuurt)
 const siteUrl = req => process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
@@ -838,6 +848,7 @@ app.use((req, res, next) => {
   res.locals.zl = gr => money(gr, lang);
   res.locals.delivery = deliveryPublic(lang);
   res.locals.socials = SOCIALS;
+  res.locals.company = COMPANY;
   next();
 });
 

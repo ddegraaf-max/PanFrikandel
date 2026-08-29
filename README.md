@@ -175,6 +175,10 @@ Er is geen kurier. De klant moet eerst een postcode invullen (sectie
 - Regulamin en privacybeleid hebben eigen EN-views (`views/regulamin-en.ejs`,
   `views/prywatnosc-en.ejs`).
 
+- **Bedrijfsgegevens** (Budomatch Daniel de Graaf, CEIDG): env `COMPANY_NAME`,
+  `COMPANY_ADDRESS`, `COMPANY_NIP`, `COMPANY_REGON`, `COMPANY_EMAIL`, `COMPANY_PHONE` —
+  komen automatisch in regulamin, privacybeleid en de footer; lege velden worden weggelaten.
+
 ## Lokaal draaien
 
 ```bash

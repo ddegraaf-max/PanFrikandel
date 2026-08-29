@@ -232,7 +232,7 @@
       </svg>
     </span>
   </div>
-  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %><br><small><%= company.name %><% if (company.nip) { %> · NIP <%= company.nip %><% } %><% if (company.address) { %> · <%= company.address %><% } %></small></p>
+  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %><br><small><%= company.name %><% if (company.nip) { %> · NIP <%= company.nip %><% } %><% if (company.address) { %> · <%= company.address %><% } %> · <span class="version"><%= version %></span></small></p>
 </footer>
 
 <!-- ======================= CART DRAWER ======================= -->

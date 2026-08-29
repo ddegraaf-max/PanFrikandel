@@ -190,7 +190,7 @@
       <a href="mailto:hallo@panfrikandel.pl">hallo@panfrikandel.pl</a>
     </div>
   </div>
-  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %><br><small><%= company.name %><% if (company.nip) { %> · NIP <%= company.nip %><% } %><% if (company.address) { %> · <%= company.address %><% } %></small></p>
+  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %><br><small><%= company.name %><% if (company.nip) { %> · NIP <%= company.nip %><% } %><% if (company.address) { %> · <%= company.address %><% } %> · <span class="version"><%= version %></span></small></p>
 </footer>
 
 <script>

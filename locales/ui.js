@@ -14,7 +14,7 @@ UI.pl = {
   title: 'PanFrikandel — holenderskie przekąski Mora z dostawą w Płocku i okolicach',
   metaDesc: 'PanFrikandel — oryginalne holenderskie przekąski Mora: frikandel, bitterballen, kroket, kaassoufflé. Dowozimy sami w Płocku i w promieniu 50 km. Płatność BLIK, P24, karta.',
   marquee: ['FRIKANDEL', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: DOWOZIMY SAMI', 'LEKKER!'],
-  navShop: 'Sklep', navDelivery: 'Dostawa', navHurt: 'Hurt', navFaq: 'FAQ', navCart: 'Koszyk', langLabel: 'Język',
+  navShop: 'Sklep', navDelivery: 'Dostawa', navHurt: 'Hurt', navTruck: 'Food truck', navFaq: 'FAQ', navCart: 'Koszyk', langLabel: 'Język',
 
   heroKicker: '🇳🇱 Prosto z Holandii → 🇵🇱 Płock i okolice',
   heroH1Html: 'Tęsknisz za <em>frikandelem</em>?<br>My go przywozimy.',
@@ -63,7 +63,7 @@ UI.pl = {
   ],
 
   footerTaglineHtml: 'Holenderskie przekąski Mora z dostawą<br>w Płocku i okolicach. Echt lekker.',
-  footerShop: 'Sklep', footerAll: 'Wszystkie produkty', footerHurt: 'Hurt — cena na zapytanie', footerInfo: 'Informacje', footerTerms: 'Regulamin', footerPrivacy: 'Polityka prywatności',
+  footerShop: 'Sklep', footerAll: 'Wszystkie produkty', footerHurt: 'Hurt — cena na zapytanie', footerTruck: 'Food truck — gdzie stoimy', footerFollow: 'Obserwuj nas', footerInfo: 'Informacje', footerTerms: 'Regulamin', footerPrivacy: 'Polityka prywatności',
   footerPayAria: 'Dostępne metody płatności', footerPayLabel: 'Bezpieczne płatności przez Stripe:', footerNote: 'Echt lekker.',
 
   cartTitle: 'Twój koszyk', close: 'Zamknij',
@@ -93,6 +93,37 @@ UI.pl = {
   hurtFormPlace: 'Miejscowość / kod pocztowy', hurtFormMessage: 'Wiadomość — ilości, termin, pytania',
   hurtSend: 'Wyślij zapytanie →', hurtBackShop: '← Sklep detaliczny',
   hurtNoteHtml: 'Pełny skład, alergeny i wartości odżywcze znajdziesz w szczegółach każdego produktu. Ceny zależą od ilości i terminu — dlatego pytamy, zamiast zgadywać.',
+
+  // ---- /foodtruck: frytkownia na kółkach ----
+  truckTitle: 'Food truck PanFrikandel — holenderska frytkownia na kółkach',
+  truckMetaDesc: 'Food truck PanFrikandel: frytki w rożku, frikandel speciaal, bitterballen i kroket na bułce. Sprawdź, gdzie stoimy, obserwuj nas w socialach lub zaproś nas na swoje wydarzenie.',
+  truckKicker: '🚚 Nowość · frytkownia na kółkach',
+  truckH1Html: 'Frikandel prosto z okienka?<br><em>Jedziemy do Ciebie.</em>',
+  truckIntro: 'PanFrikandel rusza w trasę: holenderska frytkownia na kółkach — frytki w rożku z fritessaus, frikandel speciaal, bitterballen, kroket na bułce. Sprawdź, gdzie stoimy, obserwuj nas w socialach albo zaproś nas na swoje wydarzenie.',
+  truckLaunch: 'Start: {launch}', truckLaunchSoon: 'wkrótce',
+  truckCtaWhere: 'Gdzie stoimy?', truckCtaEvent: 'Zaproś nas',
+  truckStickerHtml: 'Nowość!',
+  truckWhereH2Html: 'Gdzie <em>stoimy</em>?',
+  truckWhereP: 'Aktualny grafik i mapa. Nowe lokalizacje ogłaszamy najpierw w socialach — tam też dajemy znać, gdy jesteśmy na miejscu.',
+  truckNoStops: 'Pierwsze lokalizacje ogłosimy wkrótce — obserwuj nas, żeby niczego nie przegapić.',
+  truckHours: 'godz.', truckToday: 'dziś', truckMapAria: 'Mapa lokalizacji food trucka',
+  truckSocialH2Html: 'Obserwuj <em>nas</em>',
+  truckSocialP: 'Zdjęcia prosto z okienka, grafik na tydzień, konkursy i to, co akurat skwierczy w oleju.',
+  truckEventH2Html: 'Zaproś nas na <em>swoje wydarzenie</em>',
+  truckEventP: 'Festyn, urodziny, impreza firmowa, targi, mecz, wesele — przyjeżdżamy z frytkownią i całym holenderskim menu. Napisz, kiedy i gdzie, a odezwiemy się z propozycją.',
+  eventFormName: 'Imię i nazwisko', eventFormEmail: 'E-mail', eventFormPhone: 'Telefon',
+  eventFormEvent: 'Nazwa wydarzenia (np. festyn w Gąbinie)', eventFormDate: 'Data', eventFormPlace: 'Miejsce (miejscowość, adres)',
+  eventFormGuests: 'Orientacyjna liczba gości', eventFormMessage: 'Wiadomość — godziny, menu, pytania',
+  eventSend: 'Wyślij zgłoszenie →',
+  truckBannerKicker: '🚚 Nowość',
+  truckBannerH3Html: 'Frytkownia na kółkach.<br><em>Sprawdź, gdzie stoimy.</em>',
+  truckBannerP: 'Food truck PanFrikandel rusza w trasę — grafik, mapa i zaproszenia na wydarzenia.',
+  truckBannerCta: 'Zobacz food truck →',
+  errEventForm: 'Podaj imię, e-mail lub telefon oraz datę i miejsce wydarzenia.',
+  errEventSend: 'Nie udało się wysłać zgłoszenia. Napisz do nas na hallo@panfrikandel.pl.',
+  eventMailSubject: 'Otrzymaliśmy Twoje zgłoszenie — food truck PanFrikandel',
+  eventMailBody: 'Dziękujemy za zgłoszenie wydarzenia! Sprawdzimy termin i odezwiemy się z propozycją — zwykle w ciągu 1–2 dni roboczych.',
+  eventMailDetails: 'Szczegóły zgłoszenia',
 
   // sukces
   successTitle: 'Dziękujemy! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Zamówienie przyjęte! 🍟',
@@ -146,7 +177,11 @@ UI.pl = {
     hurtEmptyHtml: 'Nic tu jeszcze nie ma…<br>dodaj produkty z katalogu 📦', hurtRemove: 'Usuń', hurtQty: 'Ilość',
     hurtSending: 'Wysyłanie…', hurtSend: 'Wyślij zapytanie →',
     hurtSentHtml: '✅ <b>Dziękujemy!</b> Odezwiemy się z ofertą — zwykle w ciągu 1 dnia roboczego.',
-    hurtErrForm: 'Podaj imię oraz e-mail lub telefon.', hurtErrEmpty: 'Dodaj przynajmniej jeden produkt albo napisz wiadomość.'
+    hurtErrForm: 'Podaj imię oraz e-mail lub telefon.', hurtErrEmpty: 'Dodaj przynajmniej jeden produkt albo napisz wiadomość.',
+    // food truck
+    eventSending: 'Wysyłanie…', eventSend: 'Wyślij zgłoszenie →',
+    eventSentHtml: '✅ <b>Dziękujemy!</b> Sprawdzimy termin i odezwiemy się z propozycją — zwykle w ciągu 1–2 dni roboczych.',
+    eventErrForm: 'Podaj imię, e-mail lub telefon oraz datę i miejsce wydarzenia.'
   }
 };
 
@@ -155,7 +190,7 @@ UI.en = {
   title: 'PanFrikandel — Dutch Mora snacks delivered in and around Płock',
   metaDesc: 'PanFrikandel — authentic Dutch Mora snacks: frikandel, bitterballen, kroket, kaassoufflé. We deliver ourselves in Płock and within 50 km. Pay with BLIK, P24 or card.',
   marquee: ['FRIKANDEL', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: WE DELIVER OURSELVES', 'LEKKER!'],
-  navShop: 'Shop', navDelivery: 'Delivery', navHurt: 'Wholesale', navFaq: 'FAQ', navCart: 'Cart', langLabel: 'Language',
+  navShop: 'Shop', navDelivery: 'Delivery', navHurt: 'Wholesale', navTruck: 'Food truck', navFaq: 'FAQ', navCart: 'Cart', langLabel: 'Language',
 
   heroKicker: '🇳🇱 Straight from Holland → 🇵🇱 Płock and surroundings',
   heroH1Html: 'Missing your <em>frikandel</em>?<br>We bring it to you.',
@@ -203,7 +238,7 @@ UI.en = {
   ],
 
   footerTaglineHtml: 'Dutch Mora snacks delivered<br>in and around Płock. Echt lekker.',
-  footerShop: 'Shop', footerAll: 'All products', footerHurt: 'Wholesale — price on request', footerInfo: 'Information', footerTerms: 'Terms & conditions', footerPrivacy: 'Privacy policy',
+  footerShop: 'Shop', footerAll: 'All products', footerHurt: 'Wholesale — price on request', footerTruck: 'Food truck — where we are', footerFollow: 'Follow us', footerInfo: 'Information', footerTerms: 'Terms & conditions', footerPrivacy: 'Privacy policy',
   footerPayAria: 'Available payment methods', footerPayLabel: 'Secure payments via Stripe:', footerNote: 'Echt lekker.',
 
   cartTitle: 'Your cart', close: 'Close',
@@ -232,6 +267,36 @@ UI.en = {
   hurtFormPlace: 'Town / postcode', hurtFormMessage: 'Message — quantities, timing, questions',
   hurtSend: 'Send request →', hurtBackShop: '← Retail shop',
   hurtNoteHtml: 'Full ingredients, allergens and nutrition are in each product\'s details. Prices depend on quantity and timing — so we ask rather than guess.',
+
+  truckTitle: 'PanFrikandel food truck — the Dutch snack bar on wheels',
+  truckMetaDesc: 'PanFrikandel food truck: fries in a cone, frikandel speciaal, bitterballen and kroket on a roll. See where we are, follow us on social media or invite us to your event.',
+  truckKicker: '🚚 New · the snack bar on wheels',
+  truckH1Html: 'A frikandel straight from the hatch?<br><em>We\'re coming to you.</em>',
+  truckIntro: 'PanFrikandel hits the road: a Dutch snack bar on wheels — fries in a cone with fritessaus, frikandel speciaal, bitterballen, kroket on a roll. See where we are, follow us on social media or invite us to your event.',
+  truckLaunch: 'Launch: {launch}', truckLaunchSoon: 'soon',
+  truckCtaWhere: 'Where are we?', truckCtaEvent: 'Invite us',
+  truckStickerHtml: 'New!',
+  truckWhereH2Html: 'Where <em>are we</em>?',
+  truckWhereP: 'The current schedule and map. New locations are announced on social media first — that\'s also where we post when we\'ve arrived.',
+  truckNoStops: 'We\'ll announce the first locations soon — follow us so you don\'t miss anything.',
+  truckHours: 'hours', truckToday: 'today', truckMapAria: 'Map of food truck locations',
+  truckSocialH2Html: 'Follow <em>us</em>',
+  truckSocialP: 'Photos straight from the hatch, the week\'s schedule, giveaways and whatever is sizzling in the oil right now.',
+  truckEventH2Html: 'Invite us to <em>your event</em>',
+  truckEventP: 'Village fair, birthday, company party, trade show, match, wedding — we come with the fryer and the full Dutch menu. Tell us when and where and we\'ll come back with a proposal.',
+  eventFormName: 'Name', eventFormEmail: 'E-mail', eventFormPhone: 'Phone',
+  eventFormEvent: 'Event name (e.g. summer fair in Gąbin)', eventFormDate: 'Date', eventFormPlace: 'Location (town, address)',
+  eventFormGuests: 'Approximate number of guests', eventFormMessage: 'Message — hours, menu, questions',
+  eventSend: 'Send request →',
+  truckBannerKicker: '🚚 New',
+  truckBannerH3Html: 'The snack bar on wheels.<br><em>See where we are.</em>',
+  truckBannerP: 'The PanFrikandel food truck hits the road — schedule, map and event bookings.',
+  truckBannerCta: 'See the food truck →',
+  errEventForm: 'Please give your name, an e-mail or phone number, and the date and location of the event.',
+  errEventSend: 'Could not send the request. Please e-mail us at hallo@panfrikandel.pl.',
+  eventMailSubject: 'We\'ve received your request — PanFrikandel food truck',
+  eventMailBody: 'Thanks for your event request! We\'ll check the date and get back to you with a proposal — usually within 1–2 working days.',
+  eventMailDetails: 'Request details',
 
   successTitle: 'Thank you! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Order received! 🍟',
   successMail: 'We\'ve sent a confirmation to',
@@ -282,7 +347,10 @@ UI.en = {
     hurtEmptyHtml: 'Nothing here yet…<br>add products from the catalogue 📦', hurtRemove: 'Remove', hurtQty: 'Quantity',
     hurtSending: 'Sending…', hurtSend: 'Send request →',
     hurtSentHtml: '✅ <b>Thank you!</b> We\'ll get back to you with a quote — usually within 1 working day.',
-    hurtErrForm: 'Please give your name and an e-mail or phone number.', hurtErrEmpty: 'Add at least one product or write a message.'
+    hurtErrForm: 'Please give your name and an e-mail or phone number.', hurtErrEmpty: 'Add at least one product or write a message.',
+    eventSending: 'Sending…', eventSend: 'Send request →',
+    eventSentHtml: '✅ <b>Thank you!</b> We\'ll check the date and get back to you with a proposal — usually within 1–2 working days.',
+    eventErrForm: 'Please give your name, an e-mail or phone number, and the date and location of the event.'
   }
 };
 

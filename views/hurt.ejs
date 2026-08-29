@@ -23,6 +23,7 @@
     <a href="/#sklep"><%= t('navShop') %></a>
     <a href="/#dostawa"><%= t('navDelivery') %></a>
     <a href="/hurt" class="on"><%= t('navHurt') %></a>
+    <a href="/foodtruck"><%= t('navTruck') %></a>
     <a href="/#faq"><%= t('navFaq') %></a>
   </nav>
   <%- include('partials/lang') %>
@@ -128,11 +129,14 @@
     <div>
       <p class="footer-logo">PanFrikandel</p>
       <p><%- t('footerTaglineHtml') %></p>
+      <p class="footer-head" style="margin-top:14px"><%= t('footerFollow') %></p>
+      <%- include('partials/socials') %>
     </div>
     <div>
       <p class="footer-head"><%= t('footerShop') %></p>
       <a href="/#sklep"><%= t('footerAll') %></a>
       <a href="/hurt"><%= t('footerHurt') %></a>
+      <a href="/foodtruck"><%= t('footerTruck') %></a>
       <a href="/#dostawa"><%= t('navDelivery') %></a>
     </div>
     <div>

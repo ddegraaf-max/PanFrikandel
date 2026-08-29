@@ -4,6 +4,7 @@
   <title>Admin — PanFrikandel</title>
   <%- include('partials/head') %>
   <meta name="robots" content="noindex,nofollow">
+  <% if (authed) { %><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"><% } %>
 </head>
 <body>
 <header class="nav">
@@ -115,6 +116,60 @@
   <% } %>
   <% } %>
 
+  <h1 class="admin-section" id="foodtruck">Food truck — standplaatsen</h1>
+  <p style="color:var(--muted);font-weight:700">Waar en wanneer staat de frietkar? Dit vult de kaart en het schema op <a href="/foodtruck" target="_blank">/foodtruck</a>. Klik op de kaart om de plek te prikken (of vul lat/lon in). Standplaatsen in het verleden blijven bewaard maar verdwijnen van de site.</p>
+  <div class="truck-admin">
+    <form method="POST" action="/admin/foodtruck" class="truck-form">
+      <input name="name" class="wide" placeholder="Naam van de plek (bv. Stary Rynek, Płock)" required maxlength="120">
+      <input name="address" class="wide" placeholder="Adres (optioneel)" maxlength="200">
+      <label>Van <input type="date" name="dateFrom" required></label>
+      <label>Tot <input type="date" name="dateTo"></label>
+      <input name="hours" placeholder="Uren (bv. 12:00–20:00)" maxlength="60">
+      <input name="note" placeholder="Notitie (bv. festyn parafialny)" maxlength="300">
+      <input name="lat" id="stopLat" placeholder="lat (klik op de kaart)" inputmode="decimal">
+      <input name="lon" id="stopLon" placeholder="lon" inputmode="decimal">
+      <button class="btn btn-primary" type="submit">Standplaats toevoegen</button>
+    </form>
+    <div id="adminMap" class="truck-map truck-map-admin"></div>
+  </div>
+  <% if (stops.length) { const today = new Date().toISOString().slice(0, 10); %>
+  <table class="admin-table">
+    <thead><tr><th>Van – tot</th><th>Plek</th><th>Uren</th><th>Notitie</th><th>Kaart</th><th></th></tr></thead>
+    <tbody>
+    <% for (const s of stops) { %>
+      <tr class="<%= s.dateTo < today ? 'past' : '' %>">
+        <td class="admin-unit"><%= s.dateFrom %><% if (s.dateTo !== s.dateFrom) { %> – <%= s.dateTo %><% } %></td>
+        <td><b><%= s.name %></b><% if (s.address) { %><br><small class="admin-unit"><%= s.address %></small><% } %></td>
+        <td class="admin-unit"><%= s.hours || '–' %></td>
+        <td class="admin-unit"><%= s.note || '' %></td>
+        <td class="admin-unit"><%= s.lat != null ? '📍' : '—' %></td>
+        <td><form method="POST" action="/admin/foodtruck/usun" onsubmit="return confirm('Standplaats verwijderen?')"><input type="hidden" name="id" value="<%= s.id %>"><button class="btn btn-danger" type="submit">✕</button></form></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p style="color:var(--muted);font-weight:700">Nog geen standplaatsen — de site toont nu „Pierwsze lokalizacje ogłosimy wkrótce”.</p>
+  <% } %>
+
+  <% if (events.length) { %>
+  <h2 style="margin:18px 0 8px">Evenement-aanvragen (food truck)</h2>
+  <table class="admin-table">
+    <thead><tr><th>Ontvangen</th><th>Wie</th><th>Evenement</th><th>Datum · plek · gasten</th><th>Bericht</th></tr></thead>
+    <tbody>
+    <% for (const e of events) { %>
+      <tr>
+        <td class="admin-unit"><%= e.at.toLocaleDateString('nl-NL') %></td>
+        <td><b><%= e.name %></b><br><small class="admin-unit"><%= e.email %><% if (e.phone) { %> · <%= e.phone %><% } %></small></td>
+        <td class="admin-unit"><%= e.event || '–' %></td>
+        <td class="admin-unit"><%= e.date %><br><%= e.place %><% if (e.guests) { %><br>~<%= e.guests %> gasten<% } %></td>
+        <td class="admin-unit"><%= e.message %></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } %>
+
   <h1 class="admin-section">Producten & prijzen</h1>
   <div class="admin-note">
     Prijs = inkoop (Vomar, €) × koers <b><%= pricing.eurPln %></b> × opslag <b>×<%= pricing.markup %></b>, afgerond op ,90 zł
@@ -207,6 +262,25 @@
     }
     status.hidden = false;
     saveBtn.textContent = 'Opslaan';
+  });
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  // Admin-kaart: klik prikt de standplaats (lat/lon in het formulier); bestaande standplaatsen als pins
+  const el = document.getElementById('adminMap');
+  if (!el || !window.L) return;
+  const stops = <%- JSON.stringify(stops.filter(s => s.lat != null).map(s => ({ name: s.name, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo }))) %>;
+  const map = L.map(el).setView([52.5464, 19.7065], 11);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
+  const icon = L.divIcon({ className: 'pf-pin', html: '🍟', iconSize: [36, 36], iconAnchor: [18, 34], popupAnchor: [0, -30] });
+  for (const s of stops) L.marker([s.lat, s.lon], { icon }).addTo(map).bindPopup('<b>' + s.name.replace(/</g, '&lt;') + '</b><br>' + s.dateFrom + (s.dateTo !== s.dateFrom ? ' – ' + s.dateTo : ''));
+  let pin = null;
+  map.on('click', e => {
+    document.getElementById('stopLat').value = e.latlng.lat.toFixed(5);
+    document.getElementById('stopLon').value = e.latlng.lng.toFixed(5);
+    if (pin) pin.setLatLng(e.latlng); else pin = L.marker(e.latlng, { icon }).addTo(map);
   });
 })();
 </script>

@@ -158,6 +158,15 @@ const DELIVERY = {
   eta: { pl: 'zwykle następnego dnia', en: 'usually the next day' }
 };
 
+// ---- Socials (footer, /foodtruck) + food truck ----
+const SOCIALS = {
+  instagram: process.env.SOCIAL_INSTAGRAM || 'https://www.instagram.com/panfrikandel',
+  facebook:  process.env.SOCIAL_FACEBOOK  || 'https://www.facebook.com/panfrikandel',
+  tiktok:    process.env.SOCIAL_TIKTOK    || 'https://www.tiktok.com/@panfrikandel'
+};
+// Starttekst op /foodtruck (bv. "wiosna 2027" / "spring 2027"); leeg = "wkrótce" / "soon"
+const FOODTRUCK_LAUNCH = { pl: process.env.FOODTRUCK_LAUNCH_PL || '', en: process.env.FOODTRUCK_LAUNCH_EN || '' };
+
 // Kody pocztowe → przybliżone współrzędne (centrum miejscowości / gminy).
 // Dokładny kod ma pierwszeństwo, potem prefiks "NN-N" (główne miasto podregionu).
 // Odległość liczona w linii prostej od centrum Płocka; strefa = DELIVERY.radiusKm.
@@ -303,7 +312,7 @@ const deliveryPublic = lang => ({
 //      PostgreSQL (DATABASE_URL) of fallback data/local-stats.json
 //      (tabelnamen local_* zijn historisch; niet hernoemen zonder migratie)
 const STATS_FILE = path.join(__dirname, 'data', 'local-stats.json');
-let statsMem = { checks: [], orders: [], quotes: [] };
+let statsMem = { checks: [], orders: [], quotes: [], events: [] };
 
 async function initStats() {
   try {
@@ -322,6 +331,7 @@ async function initStats() {
       statsMem.checks = statsMem.checks || [];
       statsMem.orders = statsMem.orders || [];
       statsMem.quotes = statsMem.quotes || [];
+      statsMem.events = statsMem.events || [];
     }
   } catch (err) {
     console.error('Statistieken init mislukt:', err.message);
@@ -396,6 +406,83 @@ async function getQuotes(days = 30) {
   } else {
     rows = statsMem.quotes.filter(q => q.at >= since).slice().reverse().slice(0, 50);
   }
+  return rows.map(r => ({ ...r, at: new Date(r.at) }));
+}
+
+// ---- Food truck: standplaatsen (beheer in /admin) + evenement-aanvragen ----
+//      Datums als TEXT 'YYYY-MM-DD' (geen tijdzone-gedoe met DATE)
+const STOPS_FILE = path.join(__dirname, 'data', 'truck-stops.json');
+let stopsMem = [];
+
+async function initTruck() {
+  try {
+    if (pool) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS truck_stops (
+        id SERIAL PRIMARY KEY, name TEXT NOT NULL, address TEXT, lat DOUBLE PRECISION, lon DOUBLE PRECISION,
+        date_from TEXT NOT NULL, date_to TEXT NOT NULL, hours TEXT, note TEXT, created_at TIMESTAMPTZ DEFAULT now())`);
+      await pool.query(`CREATE TABLE IF NOT EXISTS event_requests (
+        id SERIAL PRIMARY KEY, name TEXT, email TEXT, phone TEXT, event TEXT, date TEXT, place TEXT, guests TEXT,
+        message TEXT, lang TEXT, created_at TIMESTAMPTZ DEFAULT now())`);
+    } else if (fs.existsSync(STOPS_FILE)) {
+      stopsMem = JSON.parse(fs.readFileSync(STOPS_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Food truck init mislukt:', err.message);
+  }
+}
+function saveStopsMem() {
+  try {
+    fs.mkdirSync(path.dirname(STOPS_FILE), { recursive: true });
+    fs.writeFileSync(STOPS_FILE, JSON.stringify(stopsMem, null, 2));
+  } catch (e) {}
+}
+const stopRow = r => ({
+  id: r.id, name: r.name, address: r.address || '',
+  lat: r.lat != null ? Number(r.lat) : null, lon: r.lon != null ? Number(r.lon) : null,
+  dateFrom: r.date_from || r.dateFrom, dateTo: r.date_to || r.dateTo, hours: r.hours || '', note: r.note || ''
+});
+async function getStops(upcomingOnly) {
+  const today = new Date().toISOString().slice(0, 10);
+  const rows = pool ? (await pool.query('SELECT * FROM truck_stops ORDER BY date_from, id')).rows
+                    : stopsMem.slice().sort((a, b) => (a.dateFrom + a.id).localeCompare(b.dateFrom + b.id));
+  return rows.map(stopRow).filter(s => !upcomingOnly || s.dateTo >= today);
+}
+async function addStop(s) {
+  if (pool) {
+    await pool.query(
+      'INSERT INTO truck_stops (name, address, lat, lon, date_from, date_to, hours, note) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [s.name, s.address, s.lat, s.lon, s.dateFrom, s.dateTo, s.hours, s.note]
+    );
+  } else {
+    stopsMem.push({ ...s, id: Date.now() });
+    saveStopsMem();
+  }
+}
+async function deleteStop(id) {
+  if (pool) await pool.query('DELETE FROM truck_stops WHERE id = $1', [parseInt(id, 10) || 0]);
+  else { stopsMem = stopsMem.filter(s => String(s.id) !== String(id)); saveStopsMem(); }
+}
+async function logEvent(e) {
+  try {
+    if (pool) {
+      await pool.query(
+        'INSERT INTO event_requests (name, email, phone, event, date, place, guests, message, lang) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+        [e.name, e.email, e.phone, e.event, e.date, e.place, e.guests, e.message, e.lang]
+      );
+    } else {
+      statsMem.events.push({ ...e, at: Date.now() });
+      statsMem.events = statsMem.events.slice(-500);
+      saveStatsMem();
+    }
+  } catch (err) {
+    console.error('Evenement-aanvraag loggen mislukt:', err.message);
+  }
+}
+async function getEvents(days = 60) {
+  const since = Date.now() - days * 86400000;
+  const rows = pool
+    ? (await pool.query('SELECT name, email, phone, event, date, place, guests, message, lang, created_at AS at FROM event_requests WHERE created_at >= $1 ORDER BY created_at DESC LIMIT 50', [new Date(since)])).rows
+    : statsMem.events.filter(e => e.at >= since).slice().reverse().slice(0, 50);
   return rows.map(r => ({ ...r, at: new Date(r.at) }));
 }
 
@@ -528,6 +615,7 @@ app.use((req, res, next) => {
   res.locals.dict = UI[lang] || UI.pl;
   res.locals.zl = gr => money(gr, lang);
   res.locals.delivery = deliveryPublic(lang);
+  res.locals.socials = SOCIALS;
   next();
 });
 
@@ -543,20 +631,29 @@ app.get('/hurt', (req, res) => {
   res.render('hurt', { products: wholesaleCatalog(req.lang), v: ASSET_V });
 });
 
+app.get('/foodtruck', async (req, res) => {
+  let stops = [];
+  try { stops = await getStops(true); } catch (err) { console.error('Standplaatsen:', err.message); }
+  res.render('foodtruck', { stops, launch: FOODTRUCK_LAUNCH[req.lang] || '', v: ASSET_V });
+});
+
 app.get('/regulamin',   (req, res) => res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }));
 app.get('/prywatnosc',  (req, res) => res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }));
 
 // ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
-const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], error: null, ...extra });
+const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], error: null, ...extra });
 
 app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
   const authed = isAdmin(req);
-  let stats = null, quotes = [];
+  let stats = null, quotes = [], stops = [], events = [];
   if (authed) {
-    try { stats = await getStats(30); quotes = await getQuotes(30); } catch (err) { console.error('Statistieken:', err.message); }
+    try {
+      stats = await getStats(30); quotes = await getQuotes(30);
+      stops = await getStops(false); events = await getEvents(60);
+    } catch (err) { console.error('Statistieken:', err.message); }
   }
-  res.render('admin', adminLocals({ authed, stats, quotes }));
+  res.render('admin', adminLocals({ authed, stats, quotes, stops, events }));
 });
 
 app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
@@ -605,6 +702,29 @@ app.post('/admin/prices', async (req, res) => {
   }
 });
 
+// ---- Admin: food truck standplaatsen ----
+app.post('/admin/foodtruck', express.urlencoded({ extended: false }), async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).send('Niet ingelogd.');
+  const s = (v, n) => String(v || '').trim().slice(0, n);
+  const num = v => { const n = parseFloat(String(v || '').replace(',', '.')); return Number.isFinite(n) ? n : null; };
+  const stop = {
+    name: s(req.body.name, 120), address: s(req.body.address, 200),
+    lat: num(req.body.lat), lon: num(req.body.lon),
+    dateFrom: s(req.body.dateFrom, 10), dateTo: s(req.body.dateTo, 10) || s(req.body.dateFrom, 10),
+    hours: s(req.body.hours, 60), note: s(req.body.note, 300)
+  };
+  if (stop.name && /^\d{4}-\d{2}-\d{2}$/.test(stop.dateFrom)) {
+    if (stop.dateTo < stop.dateFrom) stop.dateTo = stop.dateFrom;
+    try { await addStop(stop); } catch (err) { console.error('Standplaats opslaan mislukt:', err.message); }
+  }
+  res.redirect('/admin#foodtruck');
+});
+app.post('/admin/foodtruck/usun', express.urlencoded({ extended: false }), async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).send('Niet ingelogd.');
+  try { await deleteStop(req.body.id); } catch (err) { console.error('Standplaats verwijderen mislukt:', err.message); }
+  res.redirect('/admin#foodtruck');
+});
+
 // ---- AI-assistent (PanFrikandel) ----
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
 
@@ -615,6 +735,7 @@ const CATALOG_FOR_AI = lang => catalog(lang).map(p =>
 const ASSISTANT_SYSTEM = lang => `Jesteś "PanFrikandel" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami.
 Dostawa: dowozimy sami WYŁĄCZNIE w promieniu ${DELIVERY.radiusKm} km od Płocka (${DELIVERY.eta.pl}), koszt ${money(DELIVERY.priceGr, 'pl')}, gratis od ${money(DELIVERY.freeAboveGr, 'pl')}. Klient sprawdza kod pocztowy w koszyku. Poza strefą na razie nie dowozimy — zapisujemy zainteresowanie i rozszerzamy zasięg tam, gdzie jest popyt.
 Sklep sprzedaje konsumenckie opakowania Mora (najpopularniejsza holenderska marka snacków). Większe ilości (kartony horeca, sosy 900 ml, olej, frytkownice) są w katalogu hurtowym na stronie /hurt — tam cena jest na zapytanie; kieruj tam klientów pytających o duże ilości, firmy lub gastronomię.
+Mamy też food trucka (frytkownia na kółkach — frytki, frikandel speciaal, bitterballen): grafik, mapa lokalizacji, socials i zgłoszenia wydarzeń są na stronie /foodtruck.
 
 Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
 
@@ -755,6 +876,66 @@ app.post('/api/zapytanie', async (req, res) => {
   } catch (err) {
     console.error('Offerte-aanvraag mislukt:', err.message);
     res.status(500).json({ error: t('errQuoteSend') });
+  }
+});
+
+// ---- Food truck: zgłoszenie wydarzenia → mail eigenaar + bevestiging + log ----
+app.post('/api/wydarzenie', async (req, res) => {
+  const t = res.locals.t, lang = req.lang;
+  try {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+    if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
+    const s = (v, n) => String(v || '').trim().slice(0, n);
+    const e = {
+      name: s(req.body.name, 120), email: s(req.body.email, 160), phone: s(req.body.phone, 40),
+      event: s(req.body.event, 160), date: s(req.body.date, 10), place: s(req.body.place, 200),
+      guests: s(req.body.guests, 20), message: s(req.body.message, 2000), lang
+    };
+    if (!e.name || !(e.email || e.phone) || !e.date || !e.place) return res.status(400).json({ error: t('errEventForm') });
+    quoteHits.get(ip).push(Date.now());
+    logEvent(e);   // fire-and-forget
+
+    const details = [
+      e.event && ['Wydarzenie', e.event], ['Data', e.date], ['Miejsce', e.place],
+      e.guests && ['Goście', e.guests]
+    ].filter(Boolean).map(([k, v]) => `<li><b>${k}:</b> ${escHtml(v)}</li>`).join('');
+
+    if (resend && QUOTE_EMAIL_TO) {
+      await resend.emails.send({
+        from: ORDER_EMAIL_FROM, to: QUOTE_EMAIL_TO,
+        ...(e.email ? { reply_to: e.email } : {}),
+        subject: `Food truck aanvraag: ${e.event || e.place} (${e.date})`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:600px;color:#2a1503">
+          <h2 style="margin:0 0 12px">Nieuwe evenement-aanvraag (/foodtruck)</h2>
+          <p><b>${escHtml(e.name)}</b><br>${e.email ? 'E-mail: ' + escHtml(e.email) + '<br>' : ''}${e.phone ? 'Tel: ' + escHtml(e.phone) + '<br>' : ''}Taal: ${lang}</p>
+          <ul>${details}</ul>
+          ${e.message ? '<p><b>Bericht</b><br>' + escHtml(e.message).replace(/\n/g, '<br>') + '</p>' : ''}
+        </div>`
+      });
+      if (e.email) {
+        await resend.emails.send({
+          from: ORDER_EMAIL_FROM, to: e.email,
+          subject: t('eventMailSubject'),
+          html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
+            <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
+              <h1 style="margin:0;font-size:26px">${t('mailThanks', { name: escHtml(e.name) })}</h1>
+            </div>
+            <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
+              <p>${t('eventMailBody')}</p>
+              <p><b>${t('eventMailDetails')}</b></p><ul>${details}</ul>
+              ${e.message ? '<p>' + escHtml(e.message).replace(/\n/g, '<br>') + '</p>' : ''}
+              <p style="color:#8a6a4f;font-size:13px">${t('mailFooterHtml')}</p>
+            </div>
+          </div>`
+        });
+      }
+    } else {
+      console.log('🚚 Evenement-aanvraag (geen mail geconfigureerd):', JSON.stringify(e));
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Evenement-aanvraag mislukt:', err.message);
+    res.status(500).json({ error: t('errEventSend') });
   }
 });
 
@@ -901,6 +1082,6 @@ app.get('/sukces', async (req, res) => {
 
 app.use((req, res) => res.redirect('/'));
 
-Promise.all([loadPrices(), loadFlags(), initStats()]).then(() => {
+Promise.all([loadPrices(), loadFlags(), initStats(), initTruck()]).then(() => {
   app.listen(PORT, () => console.log(`🍟 PanFrikandel draait op ${BASE_URL}`));
 });

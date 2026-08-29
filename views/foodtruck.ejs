@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <title><%= t('truckTitle') %></title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= t('truckMetaDesc') %>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF4D00'/><rect x='22' y='40' width='56' height='20' rx='10' fill='%23A0522D' stroke='%232A1503' stroke-width='5'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Hanken+Grotesk:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="/style.css?v=<%= v %>">
+</head>
+<body>
+<%- include('partials/snacks') %>
+<% const fmtDate = d => new Date(d).toLocaleDateString(lang === 'en' ? 'en-GB' : 'pl-PL', { day: 'numeric', month: 'short' }); %>
+
+<header class="nav">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/><path d="M28 50 Q50 44 72 50" stroke="#7B3A16" stroke-width="4" fill="none"/></svg>
+    <span translate="no">PanFrikandel</span>
+  </a>
+  <nav class="nav-links">
+    <a href="/#sklep"><%= t('navShop') %></a>
+    <a href="/hurt"><%= t('navHurt') %></a>
+    <a href="/foodtruck" class="on"><%= t('navTruck') %></a>
+    <a href="/#faq"><%= t('navFaq') %></a>
+  </nav>
+  <%- include('partials/lang') %>
+</header>
+
+<!-- ======================= HERO ======================= -->
+<section class="hero hero-truck">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="hero-kicker"><%= t('truckKicker') %></p>
+      <h1><%- t('truckH1Html') %></h1>
+      <p class="hero-sub"><%= t('truckIntro') %></p>
+      <div class="hero-cta">
+        <a href="#gdzie" class="btn btn-primary"><%= t('truckCtaWhere') %></a>
+        <a href="#wydarzenie" class="btn btn-ghost"><%= t('truckCtaEvent') %></a>
+      </div>
+      <div class="hero-badges">
+        <span>🍟 Frikandel speciaal · bitterballen · kroket</span>
+        <span>📍 <%= t('truckLaunch', { launch: launch || t('truckLaunchSoon') }) %></span>
+      </div>
+    </div>
+    <div class="hero-art hero-art-truck">
+      <div class="hero-sticker"><%- t('truckStickerHtml') %></div>
+      <%- include('partials/truck-svg') %>
+    </div>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
+<!-- ======================= GDZIE STOIMY ======================= -->
+<section id="gdzie" class="shop truck-where">
+  <div class="section-head">
+    <h2><%- t('truckWhereH2Html') %></h2>
+    <p><%= t('truckWhereP') %></p>
+  </div>
+  <% if (stops.length) { %>
+  <div class="where-grid">
+    <div id="map" class="truck-map" role="region" aria-label="<%= t('truckMapAria') %>"></div>
+    <div class="stops">
+      <% for (const s of stops) { const today = new Date().toISOString().slice(0, 10); const isToday = s.dateFrom <= today && s.dateTo >= today; %>
+      <article class="stop<%= isToday ? ' stop-today' : '' %>" data-lat="<%= s.lat || '' %>" data-lon="<%= s.lon || '' %>">
+        <div class="stop-date"><b><%= fmtDate(s.dateFrom) %><% if (s.dateTo !== s.dateFrom) { %> – <%= fmtDate(s.dateTo) %><% } %></b><% if (isToday) { %> <i><%= t('truckToday') %></i><% } %></div>
+        <h4><%= s.name %></h4>
+        <% if (s.address) { %><p class="stop-addr">📍 <%= s.address %></p><% } %>
+        <% if (s.hours) { %><p class="stop-hours">🕒 <%= s.hours %></p><% } %>
+        <% if (s.note) { %><p class="stop-note"><%= s.note %></p><% } %>
+      </article>
+      <% } %>
+    </div>
+  </div>
+  <% } else { %>
+  <div class="local-box local-box-light">
+    <div class="local-copy">
+      <p class="local-kicker"><%= t('truckKicker') %></p>
+      <h3><%- t('truckWhereH2Html') %></h3>
+      <p><%= t('truckNoStops') %></p>
+    </div>
+    <%- include('partials/socials') %>
+  </div>
+  <% } %>
+</section>
+
+<!-- ======================= SOCIALS ======================= -->
+<section class="delivery">
+  <div class="check-strip"></div>
+  <div class="delivery-inner">
+    <h2><%- t('truckSocialH2Html') %></h2>
+    <p class="delivery-sub"><%= t('truckSocialP') %></p>
+    <%- include('partials/socials') %>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
+<!-- ======================= WYDARZENIE ======================= -->
+<section id="wydarzenie" class="faq event">
+  <div class="section-head">
+    <h2><%- t('truckEventH2Html') %></h2>
+    <p><%= t('truckEventP') %></p>
+  </div>
+  <form class="zone-form event-form" id="eventForm">
+    <div class="ask-grid">
+      <input name="name" placeholder="<%= t('eventFormName') %>" maxlength="120" autocomplete="name" required>
+      <input name="event" placeholder="<%= t('eventFormEvent') %>" maxlength="160">
+      <input name="email" type="email" placeholder="<%= t('eventFormEmail') %>" maxlength="160" autocomplete="email">
+      <input name="phone" type="tel" placeholder="<%= t('eventFormPhone') %>" maxlength="40" autocomplete="tel">
+      <input name="date" type="date" aria-label="<%= t('eventFormDate') %>" title="<%= t('eventFormDate') %>">
+      <input name="guests" inputmode="numeric" placeholder="<%= t('eventFormGuests') %>" maxlength="20">
+      <input name="place" placeholder="<%= t('eventFormPlace') %>" maxlength="200" class="ask-wide">
+      <textarea name="message" placeholder="<%= t('eventFormMessage') %>" maxlength="2000" rows="4" class="ask-wide"></textarea>
+    </div>
+    <p class="zone-result" id="eventStatus" hidden></p>
+    <button type="submit" class="btn btn-primary" id="eventSend"><%= t('eventSend') %></button>
+  </form>
+</section>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-logo">PanFrikandel</p>
+      <p><%- t('footerTaglineHtml') %></p>
+      <p class="footer-head" style="margin-top:14px"><%= t('footerFollow') %></p>
+      <%- include('partials/socials') %>
+    </div>
+    <div>
+      <p class="footer-head"><%= t('footerShop') %></p>
+      <a href="/#sklep"><%= t('footerAll') %></a>
+      <a href="/hurt"><%= t('footerHurt') %></a>
+      <a href="/foodtruck"><%= t('footerTruck') %></a>
+    </div>
+    <div>
+      <p class="footer-head"><%= t('footerInfo') %></p>
+      <a href="/regulamin"><%= t('footerTerms') %></a>
+      <a href="/prywatnosc"><%= t('footerPrivacy') %></a>
+      <a href="mailto:hallo@panfrikandel.pl">hallo@panfrikandel.pl</a>
+    </div>
+  </div>
+  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %></p>
+</footer>
+
+<script>
+  window.LANG = <%- JSON.stringify(lang) %>;
+  window.T = <%- JSON.stringify(dict.client) %>;
+  window.STOPS = <%- JSON.stringify(stops.map(s => ({ name: s.name, address: s.address, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo, hours: s.hours }))) %>;
+</script>
+<% if (stops.length) { %><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><% } %>
+<script src="/foodtruck.js?v=<%= v %>"></script>
+</body>
+</html>

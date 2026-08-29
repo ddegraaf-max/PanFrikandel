@@ -31,6 +31,8 @@ Twee catalogi:
 | `DELIVERY_RADIUS_KM` | straal van de bezorgzone rond Płock in km (optioneel, standaard 50) |
 | `PRICING_EUR_PLN` | koers EUR→PLN voor het prijsmodel (optioneel, standaard 4.35) |
 | `PRICING_MARKUP` | opslag op de inkoopprijs (optioneel, standaard 2.2) |
+| `SOCIAL_INSTAGRAM` / `SOCIAL_FACEBOOK` / `SOCIAL_TIKTOK` | links naar de socials (optioneel, standaard `…/panfrikandel`) |
+| `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN` | starttekst food truck, bv. `wiosna 2027` / `spring 2027` (optioneel) |
 
 ## Stripe-instellingen
 
@@ -70,6 +72,24 @@ odżywcze/przygotowanie van mora.nl (`mora`-veld = bronpagina). 10 staan aan,
   `data/local-stats.json`). Max. 5 aanvragen per IP per uur. Zonder Resend
   wordt de aanvraag in de serverlog geprint.
 - Aanvragen van de laatste 30 dagen staan onderaan de statistieken in `/admin`.
+
+## Food truck (`/foodtruck`) — frietkar, kaart, socials, evenementen
+
+- Pagina in de huisstijl: aankondiging, **kaart + schema van standplaatsen**
+  (Leaflet + OpenStreetMap), socials en een **aanmeldformulier voor
+  evenementen**.
+- **Standplaatsen** beheer je in `/admin` (sectie "Food truck"): naam, adres,
+  van/tot, uren, notitie; klik op de kaart om de plek te prikken (lat/lon).
+  Tabel `truck_stops` / `data/truck-stops.json`. Alleen standplaatsen met een
+  einddatum ≥ vandaag verschijnen op de site; zonder standplaatsen toont de
+  pagina "Pierwsze lokalizacje ogłosimy wkrótce" + socials.
+- **Evenement-aanvraag**: `POST /api/wydarzenie` → mail naar `QUOTE_EMAIL_TO`
+  (reply-to = aanvrager) + bevestiging in de taal van de klant + log (tabel
+  `event_requests`), zichtbaar in `/admin`.
+- **Socials** in de footer van alle pagina's en op `/foodtruck`; URL's via env
+  `SOCIAL_INSTAGRAM`, `SOCIAL_FACEBOOK`, `SOCIAL_TIKTOK` (standaard
+  `…/panfrikandel`). Starttekst via `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN`
+  (bv. "wiosna 2027" / "spring 2027"; leeg = "wkrótce" / "soon").
 
 ## Bezorging: alleen eigen bezorging, Płock + 50 km
 

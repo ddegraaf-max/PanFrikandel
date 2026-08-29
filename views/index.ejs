@@ -29,6 +29,7 @@
     <a href="#sklep"><%= t('navShop') %></a>
     <a href="#dostawa"><%= t('navDelivery') %></a>
     <a href="/hurt"><%= t('navHurt') %></a>
+    <a href="/foodtruck"><%= t('navTruck') %></a>
     <a href="#faq"><%= t('navFaq') %></a>
   </nav>
   <%- include('partials/lang') %>
@@ -134,15 +135,25 @@
     </div>
   <% } %>
 
-  <!-- Większe ilości → /hurt (cena na zapytanie) -->
-  <a class="hurt-banner" href="/hurt">
-    <div>
-      <p class="local-kicker"><%= t('hurtBannerKicker') %></p>
-      <h3><%- t('hurtBannerH3Html') %></h3>
-      <p><%= t('hurtBannerP') %></p>
-    </div>
-    <span class="btn btn-primary"><%= t('hurtBannerCta') %></span>
-  </a>
+  <!-- Większe ilości → /hurt (cena na zapytanie) · Food truck → /foodtruck -->
+  <div class="banners">
+    <a class="hurt-banner" href="/hurt">
+      <div>
+        <p class="local-kicker"><%= t('hurtBannerKicker') %></p>
+        <h3><%- t('hurtBannerH3Html') %></h3>
+        <p><%= t('hurtBannerP') %></p>
+      </div>
+      <span class="btn btn-primary"><%= t('hurtBannerCta') %></span>
+    </a>
+    <a class="hurt-banner truck-banner" href="/foodtruck">
+      <div>
+        <p class="local-kicker"><%= t('truckBannerKicker') %></p>
+        <h3><%- t('truckBannerH3Html') %></h3>
+        <p><%= t('truckBannerP') %></p>
+      </div>
+      <span class="btn btn-primary"><%= t('truckBannerCta') %></span>
+    </a>
+  </div>
 </main>
 
 <!-- ======================= DOSTAWA ======================= -->
@@ -190,11 +201,14 @@
     <div>
       <p class="footer-logo">PanFrikandel</p>
       <p><%- t('footerTaglineHtml') %></p>
+      <p class="footer-head" style="margin-top:14px"><%= t('footerFollow') %></p>
+      <%- include('partials/socials') %>
     </div>
     <div>
       <p class="footer-head"><%= t('footerShop') %></p>
       <a href="#sklep"><%= t('footerAll') %></a>
       <a href="/hurt"><%= t('footerHurt') %></a>
+      <a href="/foodtruck"><%= t('footerTruck') %></a>
       <a href="#dostawa"><%= t('navDelivery') %></a>
       <a href="#faq"><%= t('navFaq') %></a>
     </div>

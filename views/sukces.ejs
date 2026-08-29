@@ -3,6 +3,7 @@
 <head>
   <title><%= t('successTitle') %></title>
   <%- include('partials/head') %>
+  <meta name="robots" content="noindex">
 </head>
 <body>
 <%- include('partials/snacks') %>
@@ -15,25 +16,55 @@
 </header>
 
 <div class="success-hero">
-  <div class="hero-sticker"><%- t('successStickerHtml') %></div>
-  <h1 style="font-family:'Shrikhand';font-size:clamp(30px,5vw,48px)"><%= t('successH1') %></h1>
-  <p style="max-width:52ch;margin:16px auto 32px">
-    <% if (order && order.email) { %><%= t('successMail') %> <strong><%= order.email %></strong>. <% } %>
-    <%- t('successHtml', { eta: order ? order.eta : delivery.eta }) %>
-  </p>
+  <div class="hero-sticker"><%- order && order.pending ? '⏳' : t('successStickerHtml') %></div>
 
-  <% if (order && order.items.length) { %>
-    <div class="order-box">
-      <% for (const i of order.items) { %>
-        <div class="ci"><div class="ci-name"><%= i.qty %> × <%= i.name %></div><b><%= i.total %></b></div>
-      <% } %>
-      <div class="cart-total" style="margin-top:14px"><span><%= t('cartTotal') %></span><b><%= order.total %></b></div>
+  <% if (order) { %>
+    <h1 class="success-h1"><%= order.pending ? t('successPendingH1') : t('successH1') %></h1>
+    <p class="success-lead">
+      <strong><%= t('successThanks', { name: order.name || t('mailGuest') }) %></strong>
+      <% if (order.pending) { %><%- t('successPendingHtml') %><% } else if (order.email) { %><%= t('successMail') %> <strong><%= order.email %></strong>.<% } %>
+    </p>
+    <p class="success-meta">
+      <span><%= t('successOrderNo') %> <b><%= order.orderNo %></b></span>
+      <% if (order.payMethod) { %><span><%= t('successPaid') %> <b><%= dict.payMethods[order.payMethod] || order.payMethod %></b></span><% } %>
+    </p>
+
+    <div class="success-grid">
+      <div class="order-box">
+        <h3><%= t('successItems') %></h3>
+        <% for (const i of order.items) { %>
+          <div class="ci"><div class="ci-name"><%= i.qty %> × <%= i.name %></div><b><%= i.total %></b></div>
+        <% } %>
+        <div class="ci ci-sum"><div class="ci-name"><%= t('successSubtotal') %></div><b><%= order.subtotal %></b></div>
+        <% if (order.discount) { %>
+          <div class="ci ci-sum ci-discount"><div class="ci-name"><%= t('successDiscount', { code: order.code }) %></div><b>−<%= order.discount %></b></div>
+        <% } %>
+        <div class="ci ci-sum"><div class="ci-name">🛵 <%= order.place ? t('successDelivery', { place: order.place, km: order.km }) : t('navDelivery') %></div><b><%= order.shippingGr ? order.shipping : t('successFree') %></b></div>
+        <div class="cart-total" style="margin-top:14px"><span><%= t('cartTotal') %></span><b><%= order.total %></b></div>
+      </div>
+
+      <div class="order-box next-box">
+        <h3><%= t('successNextH') %></h3>
+        <ol class="next-steps">
+          <% dict.successSteps.forEach(s => { %><li><%= s.split('{eta}').join(order.eta) %></li><% }) %>
+        </ol>
+        <% if (order.address) { %><p class="next-meta">📍 <b><%= t('successAddress') %>:</b> <%= order.address %></p><% } %>
+        <% if (order.phone) { %><p class="next-meta">📞 <b><%= t('successPhone') %>:</b> <%= order.phone %></p><% } %>
+      </div>
     </div>
+  <% } else { %>
+    <h1 class="success-h1"><%= t('successH1') %></h1>
+    <p class="success-lead"><%- t('successHtml', { eta: delivery.eta }) %></p>
   <% } %>
 
-  <p style="margin-top:36px"><a class="btn btn-primary" href="/#sklep"><%= t('backToShop') %></a></p>
+  <div class="success-cta">
+    <a class="btn btn-primary" href="/#sklep"><%= t('backToShop') %></a>
+    <a class="btn btn-ghost btn-ghost-dark" href="/foodtruck"><%= t('successCtaTruck') %></a>
+  </div>
+  <p class="success-follow"><%= t('footerFollow') %></p>
+  <%- include('partials/socials') %>
 </div>
 
-<script>try { localStorage.removeItem('pf_cart_v1'); } catch (e) {}</script>
+<script>try { localStorage.removeItem('pf_cart_v1'); localStorage.removeItem('pf_code_v1'); } catch (e) {}</script>
 </body>
 </html>

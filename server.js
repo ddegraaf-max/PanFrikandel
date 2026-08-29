@@ -28,7 +28,10 @@ const ORDER_EMAIL_FROM = process.env.ORDER_EMAIL_FROM || 'PanFrikandel <zamowien
 const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null;
 
 const ASSET_V = Date.now().toString(36);
+// Publieke URL: BASE_URL als die gezet is, anders afgeleid van het request (zodat Stripe nooit naar localhost terugstuurt)
+const siteUrl = req => process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
+app.set('trust proxy', 1);   // Railway/proxy: juiste protocol en host voor redirect-URL's
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.json());
@@ -1223,7 +1226,7 @@ app.post('/api/subskrypcja', async (req, res) => {
     quoteHits.get(ip).push(Date.now());
     const r = await subUpsert(email, lang, String(req.body.place || '').trim().slice(0, 120));
     if (r.confirmed) return res.json({ ok: true, confirmed: true });
-    const url = `${BASE_URL}/subskrypcja/potwierdz?e=${encodeURIComponent(email)}&t=${subToken(email)}`;
+    const url = `${siteUrl(req)}/subskrypcja/potwierdz?e=${encodeURIComponent(email)}&t=${subToken(email)}`;
     if (resend) {
       await resend.emails.send({
         from: ORDER_EMAIL_FROM, to: email, subject: t('subMailSubject'),
@@ -1344,8 +1347,8 @@ app.post('/api/checkout', async (req, res) => {
         kod_rabatowy: disc ? disc.code : '',
         lang
       },
-      success_url: `${BASE_URL}/sukces?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${BASE_URL}/?anulowano=1#sklep`
+      success_url: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${siteUrl(req)}/?anulowano=1#sklep`
     });
 
     res.json({ url: session.url });
@@ -1364,60 +1367,77 @@ app.get('/sukces', async (req, res) => {
   try {
     if (stripe && req.query.session_id) {
       const session = await stripe.checkout.sessions.retrieve(req.query.session_id, {
-        expand: ['line_items']
+        expand: ['line_items', 'payment_intent.payment_method']
       });
-      if (session.payment_status === 'paid') {
+      const paid = session.payment_status === 'paid';
+      // BLIK/P24 kunnen even "in behandeling" zijn: sessie compleet, betaling nog niet bevestigd
+      if (paid || session.status === 'complete') {
         // Taal van de bestelling = taal waarin de klant afrekende (metadata), niet de huidige cookie
         const lang = LANGS.includes(session.metadata?.lang) ? session.metadata.lang : 'pl';
         const t = makeT(lang);
+        const m = session.metadata || {};
         const addr = (session.shipping_details || session.collected_information?.shipping_details)?.address || null;
+        const pm = session.payment_intent && typeof session.payment_intent === 'object' ? session.payment_intent.payment_method : null;
+        const shippingGr = session.shipping_cost?.amount_total || 0;
+        const discountGr = session.total_details?.amount_discount || 0;
         order = {
+          paid, pending: !paid,
+          orderNo: 'PF-' + session.id.slice(-8).toUpperCase(),
           email: session.customer_details?.email || null,
           name: session.customer_details?.name || '',
-          total: money(session.amount_total, lang),
+          phone: session.customer_details?.phone || '',
           eta: DELIVERY.eta[lang],
           address: addr ? [addr.line1, addr.line2, ((addr.postal_code || '') + ' ' + (addr.city || '')).trim()].filter(Boolean).join(', ') : '',
           items: (session.line_items?.data || []).map(li => ({
             name: li.description, qty: li.quantity, total: money(li.amount_total, lang)
-          }))
+          })),
+          subtotal: money(session.amount_subtotal, lang),
+          discount: discountGr ? money(discountGr, lang) : null,
+          code: m.kod_rabatowy ? 'PF-' + m.kod_rabatowy : null,
+          shippingGr, shipping: money(shippingGr, lang),
+          place: m.miejscowosc || '', km: m.odleglosc_km || '',
+          total: money(session.amount_total, lang),
+          payMethod: pm && typeof pm === 'object' ? pm.type : null
         };
 
-        // Statistiek: bestelling registreren + checken of het afleveradres echt in de zone ligt
-        if (!loggedSessions.has(session.id)) {
-          loggedSessions.add(session.id);
-          if (session.metadata?.kod_rabatowy) codeUse(session.metadata.kod_rabatowy);
-          const z = checkZone(addr?.postal_code || session.metadata?.kod_pocztowy);
-          if (!z.inZone) console.warn(`⚠️ Bestelling buiten de zone: ${session.id}, kod ${addr?.postal_code || '?'}`);
-          logOrder({
-            sessionId: session.id, code: z.code || addr?.postal_code || null, place: z.place, km: z.km,
-            amountGr: session.amount_total, outOfZone: !z.inZone
-          });
-        }
+        if (paid) {
+          // Statistiek: bestelling registreren + checken of het afleveradres echt in de zone ligt
+          if (!loggedSessions.has(session.id)) {
+            loggedSessions.add(session.id);
+            if (m.kod_rabatowy) codeUse(m.kod_rabatowy);
+            const z = checkZone(addr?.postal_code || m.kod_pocztowy);
+            if (!z.inZone) console.warn(`⚠️ Bestelling buiten de zone: ${session.id}, kod ${addr?.postal_code || '?'}`);
+            logOrder({
+              sessionId: session.id, code: z.code || addr?.postal_code || null, place: z.place, km: z.km,
+              amountGr: session.amount_total, outOfZone: !z.inZone
+            });
+          }
 
-        if (resend && order.email && !emailedSessions.has(session.id)) {
-          emailedSessions.add(session.id);
-          const rows = order.items.map(i =>
-            `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${escHtml(i.name)}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`
-          ).join('');
-          await resend.emails.send({
-            from: ORDER_EMAIL_FROM,
-            to: order.email,
-            ...(ORDER_EMAIL_BCC ? { bcc: ORDER_EMAIL_BCC } : {}),
-            subject: t('mailSubject'),
-            html: `
-              <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
-                <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
-                  <h1 style="margin:0;font-size:26px">${t('mailThanks', { name: escHtml(order.name || t('mailGuest')) })}</h1>
-                  <p style="margin:8px 0 0">${t('mailPacking')}</p>
-                </div>
-                <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
-                  <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}</table>
-                  <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">${t('mailTotal')}: ${order.total}</p>
-                  <p>${t('mailDeliveryHtml', { eta: order.eta })}${order.address ? '<br>' + t('mailAddress') + escHtml(order.address) : ''}</p>
-                  <p style="color:#8a6a4f;font-size:13px">${t('mailFooterHtml')}</p>
-                </div>
-              </div>`
-          });
+          if (resend && order.email && !emailedSessions.has(session.id)) {
+            emailedSessions.add(session.id);
+            const rows = order.items.map(i =>
+              `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${escHtml(i.name)}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`
+            ).join('');
+            const sumRow = (label, val) => `<tr><td style="padding:4px 12px 4px 0;color:#8a6a4f">${label}</td><td style="padding:4px 0;text-align:right;color:#8a6a4f">${val}</td></tr>`;
+            await resend.emails.send({
+              from: ORDER_EMAIL_FROM,
+              to: order.email,
+              ...(ORDER_EMAIL_BCC ? { bcc: ORDER_EMAIL_BCC } : {}),
+              subject: t('mailSubject') + ' · ' + order.orderNo,
+              html: mailHtml(
+                t('mailThanks', { name: escHtml(order.name || t('mailGuest')) }),
+                `<p style="margin:0 0 12px">${t('mailPacking')} <span style="color:#8a6a4f">${t('successOrderNo')} ${order.orderNo}</span></p>
+                 <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}
+                   ${sumRow(t('successSubtotal'), order.subtotal)}
+                   ${order.discount ? sumRow(t('successDiscount', { code: order.code }), '−' + order.discount) : ''}
+                   ${sumRow(order.place ? t('successDelivery', { place: escHtml(order.place), km: order.km }) : t('navDelivery'), shippingGr ? order.shipping : t('successFree'))}
+                 </table>
+                 <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">${t('mailTotal')}: ${order.total}</p>
+                 <p>${t('mailDeliveryHtml', { eta: order.eta })}${order.address ? '<br>' + t('mailAddress') + escHtml(order.address) : ''}</p>`,
+                t('mailFooterHtml')
+              )
+            });
+          }
         }
       }
     }

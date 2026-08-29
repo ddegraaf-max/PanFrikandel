@@ -14,7 +14,13 @@ const { Resend } = require('resend');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+// BASE_URL normaliseren: spaties en slash aan het eind weg, https:// erbij als het schema ontbreekt
+const normalizeBase = u => {
+  u = String(u || '').trim().replace(/\/+$/, '');
+  if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+  return u;
+};
+const BASE_URL = normalizeBase(process.env.BASE_URL) || `http://localhost:${PORT}`;
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
@@ -45,11 +51,7 @@ const BUILD = String(process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMI
 const VERSION_LABEL = 'v' + VERSION + (BUILD ? ' · ' + BUILD : '');
 const STARTED_AT = new Date();
 // Publieke URL: BASE_URL als die gezet is, anders afgeleid van het request (zodat Stripe nooit naar localhost terugstuurt)
-const siteUrl = req => {
-  let u = String(process.env.BASE_URL || '').trim().replace(/\/+$/, '');
-  if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
-  return u || `${req.protocol}://${req.get('host')}`;
-};
+const siteUrl = req => normalizeBase(process.env.BASE_URL) || `${req.protocol}://${req.get('host')}`;
 
 app.set('trust proxy', 1);   // Railway/proxy: juiste protocol en host voor redirect-URL's
 app.set('view engine', 'ejs');
@@ -851,7 +853,7 @@ app.use((req, res, next) => {
   const lang = pickLang(req);
   if (req.method === 'GET' && LANGS.includes(String(req.query.lang || '').toLowerCase())) {
     res.setHeader('Set-Cookie', `pf_lang=${lang}; Path=/; Max-Age=${365 * 86400}; SameSite=Lax${COOKIE_SECURE}`);
-    const url = new URL(req.originalUrl, BASE_URL);
+    const url = new URL(req.originalUrl, 'http://localhost');   // alleen pad + query zijn nodig
     url.searchParams.delete('lang');
     return res.redirect(url.pathname + url.search);
   }

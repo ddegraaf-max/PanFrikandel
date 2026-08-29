@@ -137,7 +137,7 @@ onder *Variables*.
 - **Socials** in de footer van alle pagina's en op `/foodtruck`; URL's via env
   `SOCIAL_INSTAGRAM`, `SOCIAL_FACEBOOK`, `SOCIAL_TIKTOK` (standaard
   `…/panfrikandel`). Starttekst via `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN`
-  (bv. "wiosna 2027" / "spring 2027"; leeg = "wkrótce" / "soon").
+  (standaard "2027"; bv. "wiosna 2027" / "spring 2027").
 
 ## Bezorging: alleen eigen bezorging, Płock + 50 km
 

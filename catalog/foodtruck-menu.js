@@ -18,11 +18,12 @@ module.exports = [
     desc: { pl: 'Frytki z curry ketchupem, majonezem i cebulką.', en: 'Fries with curry ketchup, mayo and onion.' }, price: 1600 },
 
   // ---- Snacki z frytkownicy ----
-  { cat: 'snacki', name: { pl: 'Frikandel', en: 'Frikandel' }, price: 900 },
+  { cat: 'snacki', name: { pl: 'Frikandel', en: 'Frikandel' },
+    desc: { pl: 'Holenderski kuzyn kiełbasy i hot doga — bez skórki, gładki, lekko korzenny.', en: 'The Dutch cousin of the sausage and the hot dog — skinless, smooth, lightly spiced.' }, price: 900 },
   { cat: 'snacki', name: { pl: 'Frikandel speciaal', en: 'Frikandel speciaal' },
     desc: { pl: 'Z curry ketchupem, majonezem i cebulką.', en: 'With curry ketchup, mayo and onion.' }, price: 1200 },
   { cat: 'snacki', name: { pl: 'Broodje frikandel speciaal', en: 'Broodje frikandel speciaal' },
-    desc: { pl: 'Frikandel w miękkiej bułce z curry ketchupem, majonezem i surową cebulką — kanapka nr 1 w Holandii.', en: 'Frikandel in a soft roll with curry ketchup, mayo and raw onion — the number one sandwich in the Netherlands.' }, price: 1400 },
+    desc: { pl: 'Holenderski hot dog: frikandel w miękkiej bułce z curry ketchupem, majonezem i surową cebulką — kanapka nr 1 w Holandii.', en: 'The Dutch hot dog: frikandel in a soft roll with curry ketchup, mayo and raw onion — the number one sandwich in the Netherlands.' }, price: 1400 },
   { cat: 'snacki', name: { pl: 'Kroket wołowy', en: 'Beef kroket' }, price: 1000 },
   { cat: 'snacki', name: { pl: 'Broodje kroket', en: 'Broodje kroket' },
     desc: { pl: 'Kroket na miękkiej bułce z musztardą.', en: 'Kroket on a soft roll with mustard.' }, price: 1400 },

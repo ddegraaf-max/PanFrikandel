@@ -13,7 +13,7 @@ UI.pl = {
   langName: 'Polski',
   title: 'PanFrikandel — holenderskie przekąski Mora z dostawą w Płocku i okolicach',
   metaDesc: 'PanFrikandel — oryginalne holenderskie przekąski Mora: frikandel, bitterballen, kroket, kaassoufflé. Dowozimy sami w Płocku i w promieniu 50 km. Płatność BLIK, P24, karta.',
-  marquee: ['FRIKANDEL', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: DOWOZIMY SAMI', 'LEKKER!'],
+  marquee: ['FRIKANDEL', 'HOLENDERSKI HOT DOG', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: DOWOZIMY SAMI', 'LEKKER!'],
   navShop: 'Sklep', navDelivery: 'Dostawa', navHurt: 'Hurt', navTruck: 'Food truck', navFaq: 'FAQ', navCart: 'Koszyk', langLabel: 'Język',
 
   heroKicker: '🇳🇱 Prosto z Holandii → 🇵🇱 Płock i okolice',
@@ -36,8 +36,8 @@ UI.pl = {
 
   // tip: frikandel z grilla → broodje frikandel (homepage)
   tipKicker: '🔥 Porada PanFrikandela',
-  tipH3Html: 'Frikandel z grilla?<br><em>Tak — i to jak!</em>',
-  tipP: 'Polska to kraj grillowania, a frikandel na grillu wychodzi wybitnie: prosto z zamrażarki, ok. 14 minut, często obracać, aż skórka złapie kolor. Potem do miękkiej bułki z curry ketchupem, majonezem i garścią posiekanej surowej cebuli — i masz broodje frikandel speciaal, najsłynniejszą kanapkę holenderskich frytkowni.',
+  tipH3Html: 'Frikandel z grilla?<br><em>Holenderski hot dog!</em>',
+  tipP: 'Kochacie kiełbasę z grilla i hot dogi? Frikandel to ich holenderski kuzyn: bez skórki, gładki, lekko korzenny — i na grillu wychodzi wybitnie: prosto z zamrażarki, ok. 14 minut, często obracać, aż złapie kolor. Potem do miękkiej bułki z curry ketchupem, majonezem i garścią posiekanej surowej cebuli — i masz broodje frikandel speciaal: holenderski hot dog, najsłynniejszą kanapkę holenderskich frytkowni.',
   tipCta: 'Zobacz frikandele →',
 
   // hurt-banner op de homepage
@@ -60,7 +60,7 @@ UI.pl = {
 
   faqH2Html: 'Pytania? <em>Mamy odpowiedzi</em>',
   faq: [
-    { q: 'Czym właściwie jest frikandel?', a: 'Najpopularniejsza przekąska w Holandii: podłużny, smażony kotlecik z mieszanki mięs, o gładkiej konsystencji i lekko korzennym smaku. Holendrzy zjadają ich ponad 600 milionów rocznie. „Frikandel speciaal" = z curry ketchupem, fritessaus i surową cebulką.' },
+    { q: 'Czym właściwie jest frikandel?', a: 'Najprościej: holenderski kuzyn kiełbasy i hot doga — podłużny, smażony, bez skórki, o gładkiej konsystencji i lekko korzennym smaku. Najpopularniejsza przekąska w Holandii: Holendrzy zjadają ich ponad 600 milionów rocznie. W bułce z curry ketchupem, majonezem i surową cebulką („frikandel speciaal”) to po prostu holenderski hot dog.' },
     { q: 'Dlaczego Mora?', a: 'Mora to najbardziej znana marka snacków w Holandii — od 1962 roku. To dokładnie te same opakowania, które Holendrzy wrzucają do koszyka w supermarkecie. Zaczynamy od małego, sprawdzonego wyboru i rozszerzamy asortyment, gdy widzimy, na co jest apetyt.' },
     { q: 'Czy produkty dojadą naprawdę zamrożone?', a: 'Tak. Przywozimy je prosto z mroźni (-18°C) w torbie termicznej i przekazujemy z ręki do ręki. Po odbiorze włóż produkty od razu do zamrażarki.' },
     { q: 'Jak przygotować przekąski?', a: 'Produkty „Oven & Airfryer” są stworzone do piekarnika (220°C) i airfryera (200°C) — bez frytkownicy. Klasyczne (Classics) najlepiej smażyć we frytkownicy w 175°C, część z nich zrobisz też w airfryerze lub na patelni. Frikandele Classics możesz też rzucić na grilla (ok. 14 min, często obracać) i podać w bułce z cebulką — broodje frikandel. Dokładne czasy znajdziesz przy każdym produkcie.' },
@@ -272,7 +272,7 @@ UI.en = {
   langName: 'English',
   title: 'PanFrikandel — Dutch Mora snacks delivered in and around Płock',
   metaDesc: 'PanFrikandel — authentic Dutch Mora snacks: frikandel, bitterballen, kroket, kaassoufflé. We deliver ourselves in Płock and within 50 km. Pay with BLIK, P24 or card.',
-  marquee: ['FRIKANDEL', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: WE DELIVER OURSELVES', 'LEKKER!'],
+  marquee: ['FRIKANDEL', 'THE DUTCH HOT DOG', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: WE DELIVER OURSELVES', 'LEKKER!'],
   navShop: 'Shop', navDelivery: 'Delivery', navHurt: 'Wholesale', navTruck: 'Food truck', navFaq: 'FAQ', navCart: 'Cart', langLabel: 'Language',
 
   heroKicker: '🇳🇱 Straight from Holland → 🇵🇱 Płock and surroundings',
@@ -294,8 +294,8 @@ UI.en = {
   pdPrep: 'Preparation', pdSpecs: 'Specifications', pdIngredients: 'Ingredients', pdAllergens: 'Allergens', pdNutrition: 'Nutrition (per 100 g)', pdStorage: 'Storage',
 
   tipKicker: '🔥 PanFrikandel\'s tip',
-  tipH3Html: 'A frikandel on the barbecue?<br><em>Absolutely.</em>',
-  tipP: 'Poland is barbecue country, and a frikandel on the grill turns out brilliantly: straight from the freezer, about 14 minutes, turn often, until the skin takes colour. Then into a soft roll with curry ketchup, mayo and a handful of chopped raw onion — that\'s broodje frikandel speciaal, the most famous sandwich of the Dutch snackbar.',
+  tipH3Html: 'A frikandel on the barbecue?<br><em>The Dutch hot dog!</em>',
+  tipP: 'Love grilled sausage and hot dogs? The frikandel is their Dutch cousin: skinless, smooth, lightly spiced — and brilliant on the grill: straight from the freezer, about 14 minutes, turn often, until it takes colour. Then into a soft roll with curry ketchup, mayo and a handful of chopped raw onion — that\'s broodje frikandel speciaal: the Dutch hot dog, the most famous sandwich of the Dutch snackbar.',
   tipCta: 'See the frikandels →',
 
   hurtBannerKicker: '🏭 Larger volumes',
@@ -317,7 +317,7 @@ UI.en = {
 
   faqH2Html: 'Questions? <em>We have answers</em>',
   faq: [
-    { q: 'What exactly is a frikandel?', a: 'The most popular snack in the Netherlands: a long, deep-fried sausage of minced meats with a smooth texture and a lightly spiced flavour. The Dutch eat over 600 million of them a year. "Frikandel speciaal" = with curry ketchup, fritessaus and raw onion.' },
+    { q: 'What exactly is a frikandel?', a: 'Simply put: the Dutch cousin of the sausage and the hot dog — long, deep-fried, skinless, with a smooth texture and a lightly spiced flavour. The most popular snack in the Netherlands: the Dutch eat over 600 million of them a year. In a roll with curry ketchup, mayo and raw onion ("frikandel speciaal") it\'s basically the Dutch hot dog.' },
     { q: 'Why Mora?', a: 'Mora is the best-known snack brand in the Netherlands — since 1962. These are exactly the packs the Dutch put in their supermarket basket. We start with a small, proven selection and expand the range as we see what people have an appetite for.' },
     { q: 'Will the products really arrive frozen?', a: 'Yes. We bring them straight from the freezer (-18°C) in a thermal bag and hand them over in person. Put them in your freezer right away.' },
     { q: 'How do I prepare the snacks?', a: '"Oven & Airfryer" products are made for the oven (220°C) and air fryer (200°C) — no deep fryer needed. The Classics are best deep-fried at 175°C; some also work in an air fryer or a pan. The Classics frikandels also love the barbecue (about 14 min, turn often) — serve them in a roll with onion: broodje frikandel. Exact times are listed with each product.' },

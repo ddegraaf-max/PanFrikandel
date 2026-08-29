@@ -12,7 +12,7 @@ const nutri = (kj, kcal, fat, sat, carb, sug, fib, prot, salt) => [
 
 module.exports = {
   'mora-frikandellen-5': { name: 'Mora Frikandellen Classics · 5 pcs', unit: '5 × 70 g (350 g)', badge: 'THE CLASSIC',
-    desc: 'The frikandel. Mora\'s original recipe since 1962 — exactly what the Dutch put in their supermarket basket. Deep fryer, pan or barbecue — then into a roll with curry, mayo and onion: broodje frikandel!',
+    desc: 'The frikandel. Mora\'s original recipe since 1962 — the Dutch cousin of the sausage and the hot dog: skinless, smooth, lightly spiced. Deep fryer, pan or barbecue — then into a roll with curry, mayo and onion: broodje frikandel, the Dutch hot dog!',
     details: {
       prep: [['🍟 Deep fryer', '175°C · 4 min from frozen (2 min thawed)'], ['🍳 Pan', 'a dash of oil, medium heat · 9 min from frozen (5 min thawed), turn regularly'], ['💨 Air fryer', '200°C (preheated) · approx. 6 min from frozen (4 min thawed)'], ['🔥 Grill / BBQ', '14 min from frozen (10 min thawed), turn often']],
       ingredients: 'Mechanically separated chicken meat, water, pork fat, breadcrumbs (flour (contains WHEAT), salt, yeast), salt, onion, spices, dextrose, maltodextrin, glucose syrup, yeast extract, emulsifier: E450, antioxidant: ascorbic acid, stabiliser: E452, natural flavouring, acidity regulator: citric acid, spice extract.',

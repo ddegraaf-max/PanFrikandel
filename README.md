@@ -129,6 +129,29 @@ onder *Variables*.
 - **Menukaart**: `catalog/foodtruck-menu.js` (PL/EN, prijzen in grosze —
   startwaarden zijn aannames), categorieën in `locales/ui.js` → `menuCats`.
 
+## Catering & degustaties (`/degustacja`)
+
+Proeverijen voor bedrijven en catering op feesten — kan nu al, los van de
+food truck. Drie pakketten (teksten en richtprijzen in `locales/ui.js` →
+`cateringPackages`: 39 zł/os., 49 zł/os., maatwerk — aannames), stappen,
+FAQ en een aanvraagformulier dat dezelfde flow gebruikt als de food truck
+(`POST /api/wydarzenie` met `source=degustacja`, `type`, `company` → mail naar
+`QUOTE_EMAIL_TO`, bevestiging aan de aanvrager, lijst in `/admin`).
+
+## SEO
+
+- `robots.txt` en dynamische `sitemap.xml` (alle pagina's + productpagina's);
+  `/admin`, `/api`, `/kierowca`, `/sukces` uitgesloten.
+- Elke pagina: canonical, `og:*`/`twitter:*`, eigen titel/omschrijving
+  (`res.locals.meta`); `noindex` op bedankpagina en chauffeurspagina.
+- JSON-LD: `LocalBusiness` op de homepage (adres, bezorggebied, socials),
+  `Product` + `Offer` + `BreadcrumbList` op `/produkt/<id>` (prijs, voorraad),
+  `Service` op `/degustacja`.
+- Productpagina's (`/produkt/<id>`, PL/EN) met "Dodaj do koszyka" via
+  `/?dodaj=<id>`; kaarten en productvenster linken ernaartoe.
+- Volgende stappen (buiten de code): Google Search Console + Business Profile,
+  een OG-afbeelding van 1200×630 (nu de frikandel-packshot).
+
 ## Food truck (`/foodtruck`) — frietkar, kaart, socials, evenementen
 
 - Pagina in de huisstijl: aankondiging, **kaart + schema van standplaatsen**

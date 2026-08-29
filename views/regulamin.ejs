@@ -16,7 +16,7 @@
   <h1>Regulamin sklepu</h1>
 
   <h2>§1 Postanowienia ogólne</h2>
-  <p>Sklep internetowy panfrikandel.pl prowadzony jest przez: <strong>Creditline B.V.</strong> (działającą pod marką PanFrikandel), Torenlaan 5A/5B, Bussum, Niderlandy, nr rej. KvK: 59683198, VAT: NL853603108B01. Kontakt: hallo@panfrikandel.pl.</p>
+  <p>Sklep internetowy panfrikandel.pl prowadzony jest przez: <strong><%= company.name %></strong> (marka PanFrikandel)<% if (company.address) { %>, <%= company.address %><% } %><% if (company.nip) { %>, NIP: <%= company.nip %><% } %><% if (company.regon) { %>, REGON: <%= company.regon %><% } %> — przedsiębiorca wpisany do Centralnej Ewidencji i Informacji o Działalności Gospodarczej (CEIDG). Kontakt: <%= company.email %><% if (company.phone) { %>, tel. <%= company.phone %><% } %>.</p>
 
   <h2>§2 Produkty</h2>
   <p>Sklep oferuje mrożone produkty spożywcze. Produkty są dostarczane w stanie głęboko zamrożonym i po odbiorze należy je niezwłocznie umieścić w zamrażarce (-18°C). Terminy przydatności podane są na opakowaniach.</p>

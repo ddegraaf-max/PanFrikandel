@@ -17,7 +17,7 @@
   <p style="color:var(--muted);font-weight:700">This is a courtesy translation. In case of doubt, the <a href="/prywatnosc?lang=pl">Polish version</a> prevails.</p>
 
   <h2>1. Data controller</h2>
-  <p>The controller of your personal data is <strong>Creditline B.V.</strong> (trading as PanFrikandel), Torenlaan 5A/5B, Bussum, the Netherlands, KvK 59683198, contact: hallo@panfrikandel.pl.</p>
+  <p>The controller of your personal data is <strong><%= company.name %></strong> (trading as PanFrikandel)<% if (company.address) { %>, <%= company.address %><% } %><% if (company.nip) { %>, tax ID (NIP): <%= company.nip %><% } %>, contact: <%= company.email %>.</p>
 
   <h2>2. What data we process and why</h2>
   <ul>

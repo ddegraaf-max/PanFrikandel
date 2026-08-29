@@ -16,7 +16,7 @@
   <h1>Polityka prywatności</h1>
 
   <h2>1. Administrator danych</h2>
-  <p>Administratorem danych osobowych jest <strong>Creditline B.V.</strong> (marka PanFrikandel), Torenlaan 5A/5B, Bussum, Niderlandy, KvK 59683198, kontakt: hallo@panfrikandel.pl.</p>
+  <p>Administratorem danych osobowych jest <strong><%= company.name %></strong> (marka PanFrikandel)<% if (company.address) { %>, <%= company.address %><% } %><% if (company.nip) { %>, NIP: <%= company.nip %><% } %>, kontakt: <%= company.email %>.</p>
 
   <h2>2. Jakie dane przetwarzamy i po co</h2>
   <ul>

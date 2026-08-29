@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <title><%= meta.title %></title>
+  <%- include('partials/head') %>
+</head>
+<body>
+<%- include('partials/snacks') %>
+<% const d = p.details || {}; const stock = p.stock == null ? null : p.stock; %>
+
+<header class="nav">
+  <%- include('partials/logo') %>
+  <nav class="nav-links">
+    <a href="/#sklep"><%= t('navShop') %></a>
+    <a href="/#dostawa"><%= t('navDelivery') %></a>
+    <a href="/hurt"><%= t('navHurt') %></a>
+    <a href="/foodtruck"><%= t('navTruck') %></a>
+    <a href="/#faq"><%= t('navFaq') %></a>
+  </nav>
+  <%- include('partials/lang') %>
+</header>
+
+<main class="page product-page">
+  <nav class="crumbs" aria-label="breadcrumb"><a href="/">PanFrikandel</a> › <a href="/#sklep"><%= t('navShop') %></a> › <span><%= dict.cats[p.cat] || p.cat %></span></nav>
+
+  <article class="product-hero">
+    <div class="product-media">
+      <% if (p.img) { %><img src="/img/<%= p.img %>" alt="<%= p.name %>"><% } else { %><svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg><% } %>
+      <% if (p.badge) { %><span class="badge"><%= p.badge %></span><% } %>
+    </div>
+    <div class="product-copy">
+      <h1><%= p.name %></h1>
+      <p class="pd-unit"><%= p.unit %></p>
+      <p class="product-price"><%= zl(p.price) %></p>
+      <% if (stock !== null) { %>
+        <p class="stock <%= stock <= 0 ? 'stock-out' : (stock <= 3 ? 'stock-low' : '') %>"><%= stock <= 0 ? t('stockOut', { eta: delivery.backorderEta }) : (stock <= 3 ? t('stockLow', { n: stock }) : t('stockIn', { n: stock })) %></p>
+      <% } %>
+      <p class="product-desc"><%= p.desc %></p>
+      <div class="hero-cta">
+        <a href="/?dodaj=<%= p.id %>#sklep" class="btn btn-primary"><%= t('productAdd') %></a>
+        <a href="/#sklep" class="btn btn-ghost btn-ghost-dark"><%= t('backToShop') %></a>
+      </div>
+      <p class="product-delivery">🛵 <%= t('productDelivery', { radius: delivery.radiusKm, price: zl(delivery.priceGr), free: zl(delivery.freeAboveGr), eta: delivery.eta }) %></p>
+    </div>
+  </article>
+
+  <section class="product-details">
+    <% if (d.prep) { %>
+      <h2><%= t('pdPrep') %></h2>
+      <table class="pd-table"><% for (const [k, v2] of d.prep) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
+    <% } %>
+    <% if (d.specs) { %>
+      <h2><%= t('pdSpecs') %></h2>
+      <table class="pd-table"><% for (const [k, v2] of d.specs) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
+    <% } %>
+    <% if (d.ingredients) { %>
+      <h2><%= t('pdIngredients') %></h2>
+      <p class="pd-small"><%= d.ingredients %></p>
+    <% } %>
+    <% if (d.allergens) { %>
+      <h2><%= t('pdAllergens') %></h2>
+      <p class="pd-small"><strong><%= d.allergens %></strong></p>
+    <% } %>
+    <% if (d.nutrition) { %>
+      <h2><%= t('pdNutrition') %></h2>
+      <table class="pd-table pd-table-nutri"><% for (const [k, v2] of d.nutrition) { %><tr><th><%= k %></th><td><%= v2 %></td></tr><% } %></table>
+    <% } %>
+    <% if (d.storage) { %>
+      <h2><%= t('pdStorage') %></h2>
+      <p class="pd-small"><%= d.storage %></p>
+    <% } %>
+  </section>
+
+  <% if (others.length) { %>
+  <section class="product-others">
+    <h2><%= t('productOthers') %></h2>
+    <div class="grid">
+      <% for (const o of others) { %><%- include('partials/card', { p: o }) %><% } %>
+    </div>
+  </section>
+  <% } %>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-logo">PanFrikandel</p>
+      <p><%- t('footerTaglineHtml') %></p>
+      <p class="footer-head" style="margin-top:14px"><%= t('footerFollow') %></p>
+      <%- include('partials/socials') %>
+    </div>
+    <div>
+      <p class="footer-head"><%= t('footerShop') %></p>
+      <a href="/#sklep"><%= t('footerAll') %></a>
+      <a href="/hurt"><%= t('footerHurt') %></a>
+      <a href="/foodtruck"><%= t('footerTruck') %></a>
+    </div>
+    <div>
+      <p class="footer-head"><%= t('footerInfo') %></p>
+      <a href="/regulamin"><%= t('footerTerms') %></a>
+      <a href="/prywatnosc"><%= t('footerPrivacy') %></a>
+      <a href="mailto:<%= company.email %>"><%= company.email %></a>
+    </div>
+  </div>
+  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %><br><small><%= company.name %><% if (company.nip) { %> · NIP <%= company.nip %><% } %><% if (company.address) { %> · <%= company.address %><% } %> · <span class="version"><%= version %></span></small></p>
+</footer>
+</body>
+</html>

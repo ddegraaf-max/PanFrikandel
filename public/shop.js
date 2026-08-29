@@ -297,7 +297,16 @@
   }
 
   // na sukces-pagina wordt de cart geleegd; hier: als ?anulowano=1 open drawer weer
-  if (new URLSearchParams(location.search).get('anulowano')) open();
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('anulowano')) open();
+  // ?dodaj=<id> (vanaf een productpagina): in de mand leggen en de mand openen
+  const addId = qs.get('dodaj');
+  if (addId && byId[addId]) {
+    if (canAdd(addId)) { cart[addId] = (cart[addId] || 0) + 1; toast(T.added); }
+    qs.delete('dodaj');
+    history.replaceState(null, '', location.pathname + (qs.toString() ? '?' + qs : '') + location.hash);
+    open();
+  }
 
   render();
 })();

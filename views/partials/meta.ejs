@@ -1,0 +1,15 @@
+<% const m = (typeof meta !== 'undefined' && meta) || {}; %>
+<link rel="canonical" href="<%= m.url %>">
+<meta property="og:type" content="<%= m.type || 'website' %>">
+<meta property="og:site_name" content="PanFrikandel">
+<meta property="og:locale" content="<%= lang === 'en' ? 'en_GB' : 'pl_PL' %>">
+<meta property="og:title" content="<%= m.title %>">
+<meta property="og:description" content="<%= m.description %>">
+<meta property="og:url" content="<%= m.url %>">
+<meta property="og:image" content="<%= m.image %>">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<%= m.title %>">
+<meta name="twitter:description" content="<%= m.description %>">
+<meta name="twitter:image" content="<%= m.image %>">
+<% if (m.noindex) { %><meta name="robots" content="noindex,nofollow"><% } %>
+<% if (typeof jsonld !== 'undefined' && jsonld) { %><script type="application/ld+json"><%- JSON.stringify(jsonld) %></script><% } %>

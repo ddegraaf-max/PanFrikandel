@@ -1,6 +1,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="<%= t('metaDesc') %>">
+<meta name="description" content="<%= (typeof meta !== 'undefined' && meta && meta.description) || t('metaDesc') %>">
+<%- include('meta') %>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23FF4D00'/><rect x='12' y='50' width='76' height='26' rx='13' fill='%238E4A22' stroke='%232A1503' stroke-width='6'/><path d='M18 52 Q33 41 48 52 T84 50' stroke='%236E2A0D' stroke-width='8' fill='none' stroke-linecap='round'/><path d='M22 43 Q37 32 52 43 T86 41' stroke='%23FFF0A6' stroke-width='8' fill='none' stroke-linecap='round'/><g fill='%23FFF8EC' stroke='%232A1503' stroke-width='3'><rect x='28' y='26' width='13' height='13' rx='2'/><rect x='50' y='21' width='13' height='13' rx='2'/><rect x='68' y='28' width='13' height='13' rx='2'/></g></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

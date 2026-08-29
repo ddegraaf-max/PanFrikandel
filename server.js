@@ -920,6 +920,12 @@ app.use((req, res, next) => {
   res.locals.socials = SOCIALS;
   res.locals.company = COMPANY;
   res.locals.version = VERSION_LABEL;
+  const base = siteUrl(req);
+  res.locals.siteUrl = base;
+  res.locals.meta = {
+    title: res.locals.t('title'), description: res.locals.t('metaDesc'),
+    url: base + req.path.replace(/\/+$/, '') || base + '/', image: base + '/img/mora-frikandellen-5.png', type: 'website'
+  };
   next();
 });
 
@@ -927,21 +933,84 @@ app.use((req, res, next) => {
 //  ROUTES
 // ============================================================
 
+// Structured data: het bedrijf (LocalBusiness) — op de homepage
+const businessJsonLd = (req) => ({
+  '@context': 'https://schema.org', '@type': 'LocalBusiness', name: 'PanFrikandel', legalName: COMPANY.name,
+  url: siteUrl(req), image: siteUrl(req) + '/img/mora-frikandellen-5.png', description: res_t(req, 'metaDesc'),
+  email: COMPANY.email, ...(COMPANY.phone ? { telephone: COMPANY.phone } : {}),
+  address: { '@type': 'PostalAddress', streetAddress: 'Białka 15', postalCode: '09-550', addressLocality: 'Białka', addressRegion: 'mazowieckie', addressCountry: 'PL' },
+  areaServed: { '@type': 'GeoCircle', geoMidpoint: { '@type': 'GeoCoordinates', latitude: DELIVERY.center.lat, longitude: DELIVERY.center.lon }, geoRadius: DELIVERY.radiusKm * 1000 },
+  priceRange: 'zł', currenciesAccepted: 'PLN', paymentAccepted: 'BLIK, Przelewy24, karta',
+  sameAs: Object.values(SOCIALS)
+});
+const res_t = (req, key, vars) => makeT(req.lang)(key, vars);
+const productUrl = (req, p) => `${siteUrl(req)}/produkt/${p.id}`;
+const productJsonLd = (req, p) => ({
+  '@context': 'https://schema.org', '@type': 'Product', name: p.name, sku: p.id, description: p.desc,
+  image: p.img ? [siteUrl(req) + '/img/' + p.img] : undefined,
+  brand: { '@type': 'Brand', name: 'Mora' },
+  offers: {
+    '@type': 'Offer', url: productUrl(req, p), priceCurrency: 'PLN', price: (p.price / 100).toFixed(2),
+    availability: (p.stock == null || p.stock > 0) ? 'https://schema.org/InStock' : 'https://schema.org/BackOrder',
+    itemCondition: 'https://schema.org/NewCondition',
+    seller: { '@type': 'Organization', name: 'PanFrikandel' },
+    areaServed: { '@type': 'GeoCircle', geoMidpoint: { '@type': 'GeoCoordinates', latitude: DELIVERY.center.lat, longitude: DELIVERY.center.lon }, geoRadius: DELIVERY.radiusKm * 1000 }
+  }
+});
+
 app.get('/', (req, res) => {
-  res.render('index', { products: catalog(req.lang), v: ASSET_V });
+  res.render('index', { products: catalog(req.lang), v: ASSET_V, jsonld: businessJsonLd(req) });
+});
+
+// Productpagina's (eigen URL per product → indexeerbaar, met Product/Offer-JSON-LD)
+app.get('/produkt/:id', (req, res) => {
+  const base = productById[req.params.id];
+  if (!base || base.active === false) return res.redirect('/#sklep');
+  const p = localizeProduct(base, req.lang);
+  const others = catalog(req.lang).filter(o => o.cat === p.cat && o.id !== p.id).slice(0, 3);
+  res.locals.meta = {
+    ...res.locals.meta, type: 'product',
+    title: `${p.name} — ${money(p.price, req.lang)} — PanFrikandel`,
+    description: p.desc, url: productUrl(req, p), image: p.img ? siteUrl(req) + '/img/' + p.img : res.locals.meta.image
+  };
+  res.render('produkt', { p, others, v: ASSET_V, jsonld: [productJsonLd(req, p), {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'PanFrikandel', item: siteUrl(req) + '/' },
+      { '@type': 'ListItem', position: 2, name: res_t(req, 'navShop'), item: siteUrl(req) + '/#sklep' },
+      { '@type': 'ListItem', position: 3, name: p.name, item: productUrl(req, p) }
+    ] }] });
+});
+
+// robots.txt + sitemap.xml (dynamisch, met de publieke URL)
+app.get('/robots.txt', (req, res) => {
+  res.type('text/plain').send([
+    'User-agent: *', 'Allow: /', 'Disallow: /admin', 'Disallow: /api/', 'Disallow: /kierowca', 'Disallow: /sukces', 'Disallow: /subskrypcja/',
+    '', `Sitemap: ${siteUrl(req)}/sitemap.xml`
+  ].join('\n'));
+});
+app.get('/sitemap.xml', (req, res) => {
+  const base = siteUrl(req), today = new Date().toISOString().slice(0, 10);
+  const urls = [
+    ['/', '1.0', 'daily'], ['/hurt', '0.7', 'weekly'], ['/foodtruck', '0.8', 'weekly'], ['/regulamin', '0.2', 'yearly'], ['/prywatnosc', '0.2', 'yearly'],
+    ...activeProducts().map(p => ['/produkt/' + p.id, '0.8', 'weekly'])
+  ];
+  res.type('application/xml').send('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+    urls.map(([u, pr, f]) => `  <url><loc>${base}${u}</loc><lastmod>${today}</lastmod><changefreq>${f}</changefreq><priority>${pr}</priority></url>`).join('\n') + '\n</urlset>');
 });
 
 app.get('/hurt', (req, res) => {
+  res.locals.meta = { ...res.locals.meta, title: res_t(req, 'hurtTitle'), description: res_t(req, 'hurtMetaDesc') };
   res.render('hurt', { products: wholesaleCatalog(req.lang), v: ASSET_V });
 });
 
 app.get('/foodtruck', async (req, res) => {
   let stops = [];
   try { stops = await getStops(true); } catch (err) { console.error('Standplaatsen:', err.message); }
+  res.locals.meta = { ...res.locals.meta, title: res_t(req, 'truckTitle'), description: res_t(req, 'truckMetaDesc') };
   res.render('foodtruck', { stops, menu: FOODTRUCK_MENU, launch: FOODTRUCK_LAUNCH[req.lang] || '', v: ASSET_V });
 });
 
-app.get('/kierowca', (req, res) => res.render('kierowca', { v: ASSET_V, gpsConfigured: !!GPS_TOKEN }));
+app.get('/kierowca', (req, res) => { res.locals.meta.noindex = true; res.render('kierowca', { v: ASSET_V, gpsConfigured: !!GPS_TOKEN }); });
 
 app.get('/api/version', (req, res) => res.json({
   version: VERSION, build: BUILD || null, startedAt: STARTED_AT.toISOString(),
@@ -949,8 +1018,8 @@ app.get('/api/version', (req, res) => res.json({
   successUrl: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`
 }));
 
-app.get('/regulamin',   (req, res) => res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }));
-app.get('/prywatnosc',  (req, res) => res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }));
+app.get('/regulamin',   (req, res) => { res.locals.meta.title = res_t(req, 'termsTitle');   res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }); });
+app.get('/prywatnosc',  (req, res) => { res.locals.meta.title = res_t(req, 'privacyTitle'); res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }); });
 
 // ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
 const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], subs: [], live: publicLive(), truck: truckState, gpsToken: GPS_TOKEN, subDiscount: SUB_DISCOUNT, error: null, ...extra });
@@ -1552,6 +1621,7 @@ app.get('/sukces', async (req, res) => {
   } catch (err) {
     console.error('Success page error:', err.message);
   }
+  res.locals.meta = { ...res.locals.meta, title: res_t(req, 'successTitle'), noindex: true };
   res.render('sukces', { order, v: ASSET_V });
 });
 

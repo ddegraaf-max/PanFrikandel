@@ -31,6 +31,8 @@ UI.pl = {
   showAllHtml: 'Pokaż wszystkie <span class="more-count">{n}</span> produktów ▾',
   cardSpecs: 'Specyfikacja', cardIngredients: 'Składniki i przygotowanie', addToCart: '+ Do koszyka', productDetails: 'Szczegóły produktu',
   stockIn: 'Na stanie: {n} szt.', stockLow: 'Zostały tylko {n} szt.!', stockOut: 'Na zamówienie — dostawa {eta}',
+  productFull: 'Pełna strona produktu →', productAdd: '+ Dodaj do koszyka', productOthers: 'Z tej samej półki',
+  productDelivery: 'Dowozimy sami w promieniu {radius} km od Płocka — {price}, gratis od {free}, {eta}.',
   backorderNoteHtml: '⏳ <strong>Część produktów mamy na zamówienie</strong> — dostawa potrwa {eta}. Damy znać, gdy będziemy w drodze.',
   pdPrep: 'Przygotowanie', pdSpecs: 'Specyfikacja', pdIngredients: 'Składniki', pdAllergens: 'Alergeny', pdNutrition: 'Wartości odżywcze (na 100 g)', pdStorage: 'Przechowywanie',
 
@@ -290,6 +292,8 @@ UI.en = {
   showAllHtml: 'Show all <span class="more-count">{n}</span> products ▾',
   cardSpecs: 'Specifications', cardIngredients: 'Ingredients & preparation', addToCart: '+ Add to cart', productDetails: 'Product details',
   stockIn: 'In stock: {n}', stockLow: 'Only {n} left!', stockOut: 'Made to order — delivery {eta}',
+  productFull: 'Full product page →', productAdd: '+ Add to cart', productOthers: 'From the same shelf',
+  productDelivery: 'We deliver ourselves within {radius} km of Płock — {price}, free from {free}, {eta}.',
   backorderNoteHtml: '⏳ <strong>Some products are made to order</strong> — delivery will take {eta}. We\'ll let you know when we\'re on our way.',
   pdPrep: 'Preparation', pdSpecs: 'Specifications', pdIngredients: 'Ingredients', pdAllergens: 'Allergens', pdNutrition: 'Nutrition (per 100 g)', pdStorage: 'Storage',
 

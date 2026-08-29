@@ -142,6 +142,7 @@
       <% } %>
       <% if (p.stock != null) { %><p class="stock <%= p.stock <= 0 ? 'stock-out' : (p.stock <= 3 ? 'stock-low' : '') %>" style="margin-top:14px"><%= p.stock <= 0 ? t('stockOut', { eta: delivery.backorderEta }) : (p.stock <= 3 ? t('stockLow', { n: p.stock }) : t('stockIn', { n: p.stock })) %></p><% } %>
       <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:10px"><%= t('addToCart') %> · <%= zl(p.price) %></button>
+      <p class="pd-small" style="margin-top:10px;text-align:center"><a href="/produkt/<%= p.id %>"><%= t('productFull') %></a></p>
     </div>
   <% } %>
 

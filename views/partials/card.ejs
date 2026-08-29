@@ -8,7 +8,7 @@
       <svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg>
     <% } %>
   </div>
-  <h4><%= p.name %></h4>
+  <h4><a class="card-link" href="/produkt/<%= p.id %>"><%= p.name %></a></h4>
   <p class="card-unit"><%= p.unit %></p>
   <p class="card-desc"><%= p.desc %></p>
   <% if (p.details) { %><button class="card-more" data-details="<%= p.id %>"><%= p.details.specs ? t('cardSpecs') : t('cardIngredients') %> →</button><% } %>

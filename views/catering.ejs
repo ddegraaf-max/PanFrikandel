@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <title><%= t('cateringTitle') %></title>
+  <%- include('partials/head') %>
+</head>
+<body>
+<%- include('partials/snacks') %>
+
+<header class="nav">
+  <%- include('partials/logo') %>
+  <nav class="nav-links">
+    <a href="/#sklep"><%= t('navShop') %></a>
+    <a href="/hurt"><%= t('navHurt') %></a>
+    <a href="/foodtruck"><%= t('navTruck') %></a>
+    <a href="/degustacja" class="on"><%= t('navCatering') %></a>
+    <a href="/#faq"><%= t('navFaq') %></a>
+  </nav>
+  <%- include('partials/lang') %>
+</header>
+
+<!-- ======================= HERO ======================= -->
+<section class="hero hero-catering">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="hero-kicker"><%= t('cateringKicker') %></p>
+      <h1><%- t('cateringH1Html') %></h1>
+      <p class="hero-sub"><%= t('cateringIntro') %></p>
+      <div class="hero-cta">
+        <a href="#zgloszenie" class="btn btn-primary"><%= t('cateringCtaForm') %></a>
+        <a href="#pakiety" class="btn btn-ghost"><%= t('cateringCtaPackages') %></a>
+      </div>
+      <div class="hero-badges">
+        <span><svg class="txt-snack" aria-hidden="true"><use href="#snack-frikandel"/></svg> Frikandel speciaal · bitterballen · kroket · frytki</span>
+        <span>📍 Płock +<%= delivery.radiusKm %> km</span>
+        <span>🧾 Faktura VAT</span>
+      </div>
+    </div>
+    <div class="hero-art">
+      <div class="hero-sticker">Lekker<br>razem</div>
+      <svg viewBox="0 0 140 140" class="hero-snack"><use href="#snack-bitterbal"/></svg>
+      <svg viewBox="0 0 140 140" class="hero-snack hero-snack-2"><use href="#snack-kroket"/></svg>
+    </div>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
+<!-- ======================= PAKIETY ======================= -->
+<main id="pakiety" class="shop">
+  <div class="section-head">
+    <h2><%- t('cateringPackagesH2Html') %></h2>
+    <p><%= t('cateringPriceNote') %></p>
+  </div>
+  <div class="packages">
+    <% dict.cateringPackages.forEach((pk, i) => { %>
+    <article class="package<%= i === 1 ? ' package-hot' : '' %>">
+      <span class="badge"><%= pk.tag %></span>
+      <h3><%= pk.name %></h3>
+      <p class="package-who"><%= pk.who %></p>
+      <p class="package-price"><%= pk.price %></p>
+      <ul>
+        <% for (const line of pk.includes) { %><li><%= line %></li><% } %>
+      </ul>
+      <a href="#zgloszenie" class="btn <%= i === 1 ? 'btn-primary' : 'btn-add' %>" data-type="<%= ['firma', 'impreza', 'wesele'][i] %>"><%= t('cateringCtaForm') %></a>
+    </article>
+    <% }) %>
+  </div>
+</main>
+
+<!-- ======================= JAK TO DZIAŁA ======================= -->
+<section class="delivery">
+  <div class="check-strip"></div>
+  <div class="delivery-inner">
+    <h2><%- t('cateringStepsH2Html') %></h2>
+    <div class="steps">
+      <% dict.cateringSteps.forEach((s, i) => { %>
+      <div class="step"><b><%= i + 1 %></b><h4><%= s.t %></h4><p><%= s.p %></p></div>
+      <% }) %>
+    </div>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
+<!-- ======================= ZGŁOSZENIE ======================= -->
+<section id="zgloszenie" class="faq event">
+  <div class="section-head">
+    <h2><%- t('cateringFormH2Html') %></h2>
+    <p><%= t('cateringFormP') %></p>
+  </div>
+  <form class="zone-form event-form" id="eventForm">
+    <input type="hidden" name="source" value="degustacja">
+    <div class="ask-grid">
+      <input name="name" placeholder="<%= t('eventFormName') %>" maxlength="120" autocomplete="name" required>
+      <input name="company" placeholder="<%= t('cateringFormCompany') %>" maxlength="120" autocomplete="organization">
+      <input name="email" type="email" placeholder="<%= t('eventFormEmail') %>" maxlength="160" autocomplete="email">
+      <input name="phone" type="tel" placeholder="<%= t('eventFormPhone') %>" maxlength="40" autocomplete="tel">
+      <select name="type" id="eventType" aria-label="<%= t('cateringFormType') %>">
+        <% for (const [k, label] of Object.entries(dict.cateringTypes)) { %><option value="<%= k %>"><%= label %></option><% } %>
+      </select>
+      <input name="date" type="date" aria-label="<%= t('eventFormDate') %>" title="<%= t('eventFormDate') %>">
+      <input name="place" placeholder="<%= t('eventFormPlace') %>" maxlength="200">
+      <input name="guests" inputmode="numeric" placeholder="<%= t('eventFormGuests') %>" maxlength="20">
+      <textarea name="message" placeholder="<%= t('eventFormMessage') %>" maxlength="2000" rows="4" class="ask-wide"></textarea>
+    </div>
+    <p class="zone-result" id="eventStatus" hidden></p>
+    <button type="submit" class="btn btn-primary" id="eventSend"><%= t('eventSend') %></button>
+  </form>
+</section>
+
+<!-- ======================= FAQ ======================= -->
+<section class="faq">
+  <div class="section-head"><h2><%- t('cateringFaqH2Html') %></h2></div>
+  <% for (const f of dict.cateringFaq) { %>
+  <details><summary><%= f.q %></summary><p><%= f.a %></p></details>
+  <% } %>
+</section>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div>
+      <p class="footer-logo">PanFrikandel</p>
+      <p><%- t('footerTaglineHtml') %></p>
+      <p class="footer-head" style="margin-top:14px"><%= t('footerFollow') %></p>
+      <%- include('partials/socials') %>
+    </div>
+    <div>
+      <p class="footer-head"><%= t('footerShop') %></p>
+      <a href="/#sklep"><%= t('footerAll') %></a>
+      <a href="/hurt"><%= t('footerHurt') %></a>
+      <a href="/foodtruck"><%= t('footerTruck') %></a>
+      <a href="/degustacja"><%= t('footerCatering') %></a>
+    </div>
+    <div>
+      <p class="footer-head"><%= t('footerInfo') %></p>
+      <a href="/regulamin"><%= t('footerTerms') %></a>
+      <a href="/prywatnosc"><%= t('footerPrivacy') %></a>
+      <a href="mailto:<%= company.email %>"><%= company.email %></a>
+    </div>
+  </div>
+  <p class="footer-note">© <%= new Date().getFullYear() %> PanFrikandel · <%= t('footerNote') %><br><small><%= company.name %><% if (company.nip) { %> · NIP <%= company.nip %><% } %><% if (company.address) { %> · <%= company.address %><% } %> · <span class="version"><%= version %></span></small></p>
+</footer>
+
+<script>
+  window.LANG = <%- JSON.stringify(lang) %>;
+  window.T = <%- JSON.stringify(dict.client) %>;
+  window.STOPS = [];
+  // pakketknop → juiste type in het formulier
+  document.querySelectorAll('[data-type]').forEach(a => a.addEventListener('click', () => { const s = document.getElementById('eventType'); if (s) s.value = a.dataset.type; }));
+</script>
+<script src="/foodtruck.js?v=<%= v %>"></script>
+</body>
+</html>

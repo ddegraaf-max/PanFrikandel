@@ -27,6 +27,7 @@
     <a href="#dostawa"><%= t('navDelivery') %></a>
     <a href="/hurt"><%= t('navHurt') %></a>
     <a href="/foodtruck"><%= t('navTruck') %></a>
+    <a href="/degustacja"><%= t('navCatering') %></a>
     <a href="#faq"><%= t('navFaq') %></a>
   </nav>
   <%- include('partials/lang') %>
@@ -164,6 +165,14 @@
       </div>
       <span class="btn btn-primary"><%= t('truckBannerCta') %></span>
     </a>
+    <a class="hurt-banner catering-banner" href="/degustacja">
+      <div>
+        <p class="local-kicker"><%= t('cateringBannerKicker') %></p>
+        <h3><%- t('cateringBannerH3Html') %></h3>
+        <p><%= t('cateringBannerP') %></p>
+      </div>
+      <span class="btn btn-primary"><%= t('cateringBannerCta') %></span>
+    </a>
   </div>
 </main>
 
@@ -220,6 +229,7 @@
       <a href="#sklep"><%= t('footerAll') %></a>
       <a href="/hurt"><%= t('footerHurt') %></a>
       <a href="/foodtruck"><%= t('footerTruck') %></a>
+      <a href="/degustacja"><%= t('footerCatering') %></a>
       <a href="#dostawa"><%= t('navDelivery') %></a>
       <a href="#faq"><%= t('navFaq') %></a>
     </div>

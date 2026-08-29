@@ -991,7 +991,7 @@ app.get('/robots.txt', (req, res) => {
 app.get('/sitemap.xml', (req, res) => {
   const base = siteUrl(req), today = new Date().toISOString().slice(0, 10);
   const urls = [
-    ['/', '1.0', 'daily'], ['/hurt', '0.7', 'weekly'], ['/foodtruck', '0.8', 'weekly'], ['/regulamin', '0.2', 'yearly'], ['/prywatnosc', '0.2', 'yearly'],
+    ['/', '1.0', 'daily'], ['/hurt', '0.7', 'weekly'], ['/foodtruck', '0.8', 'weekly'], ['/degustacja', '0.9', 'weekly'], ['/regulamin', '0.2', 'yearly'], ['/prywatnosc', '0.2', 'yearly'],
     ...activeProducts().map(p => ['/produkt/' + p.id, '0.8', 'weekly'])
   ];
   res.type('application/xml').send('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
@@ -1017,6 +1017,16 @@ app.get('/api/version', (req, res) => res.json({
   baseUrl: process.env.BASE_URL || null,
   successUrl: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`
 }));
+
+app.get('/degustacja', (req, res) => {
+  res.locals.meta = { ...res.locals.meta, title: res_t(req, 'cateringTitle'), description: res_t(req, 'cateringMetaDesc') };
+  res.render('catering', { v: ASSET_V, jsonld: {
+    '@context': 'https://schema.org', '@type': 'Service', name: res_t(req, 'cateringTitle').split(' — ')[0], serviceType: 'Catering',
+    provider: { '@type': 'LocalBusiness', name: 'PanFrikandel', url: siteUrl(req) },
+    areaServed: { '@type': 'GeoCircle', geoMidpoint: { '@type': 'GeoCoordinates', latitude: DELIVERY.center.lat, longitude: DELIVERY.center.lon }, geoRadius: DELIVERY.radiusKm * 1000 },
+    description: res_t(req, 'cateringMetaDesc'), url: siteUrl(req) + '/degustacja'
+  } });
+});
 
 app.get('/regulamin',   (req, res) => { res.locals.meta.title = res_t(req, 'termsTitle');   res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }); });
 app.get('/prywatnosc',  (req, res) => { res.locals.meta.title = res_t(req, 'privacyTitle'); res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }); });
@@ -1129,7 +1139,8 @@ const CATALOG_FOR_AI = lang => catalog(lang).map(p =>
 const ASSISTANT_SYSTEM = lang => `Jesteś "PanFrikandel" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami.
 Dostawa: dowozimy sami WYŁĄCZNIE w promieniu ${DELIVERY.radiusKm} km od Płocka (${DELIVERY.eta.pl}), koszt ${money(DELIVERY.priceGr, 'pl')}, gratis od ${money(DELIVERY.freeAboveGr, 'pl')}. Klient sprawdza kod pocztowy w koszyku. Poza strefą na razie nie dowozimy — zapisujemy zainteresowanie i rozszerzamy zasięg tam, gdzie jest popyt.
 Sklep sprzedaje konsumenckie opakowania Mora (najpopularniejsza holenderska marka snacków). Większe ilości (kartony horeca, sosy 900 ml, olej, frytkownice) są w katalogu hurtowym na stronie /hurt — tam cena jest na zapytanie; kieruj tam klientów pytających o duże ilości, firmy lub gastronomię.
-Mamy też food trucka (frytkownia na kółkach — frytki, frikandel speciaal, bitterballen): grafik, mapa lokalizacji, socials i zgłoszenia wydarzeń są na stronie /foodtruck. Kto zapisze się tam na powiadomienia e-mail o lokalizacji, dostaje osobisty kod rabatowy ${SUB_DISCOUNT.percent}% (PF-XXXXXX) na zamówienie w sklepie lub przy okienku.
+Mamy też food trucka (frytkownia na kółkach — frytki, frikandel speciaal, bitterballen): grafik, mapa lokalizacji, socials i zgłoszenia wydarzeń są na stronie /foodtruck.
+Degustacje i catering (już teraz): przyjeżdżamy z frytkownicą do firm (integracja, przerwa lunchowa), na urodziny, wesela i festyny; pakiety od 39 zł/os., wycena w 1 dzień roboczy — kieruj na stronę /degustacja i zachęcaj do wysłania zgłoszenia. Kto zapisze się tam na powiadomienia e-mail o lokalizacji, dostaje osobisty kod rabatowy ${SUB_DISCOUNT.percent}% (PF-XXXXXX) na zamówienie w sklepie lub przy okienku.
 
 Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
 
@@ -1282,9 +1293,14 @@ app.post('/api/wydarzenie', async (req, res) => {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
     const s = (v, n) => String(v || '').trim().slice(0, n);
+    const TYPES = { firma: 'Degustacja/integracja w firmie', impreza: 'Impreza prywatna', wesele: 'Wesele', festyn: 'Festyn/event', inne: 'Inne' };
+    const type = TYPES[String(req.body.type || '')] || '';
+    const company = s(req.body.company, 120);
+    const source = String(req.body.source || '') === 'degustacja' ? 'catering' : 'food truck';
     const e = {
       name: s(req.body.name, 120), email: s(req.body.email, 160), phone: s(req.body.phone, 40),
-      event: s(req.body.event, 160), date: s(req.body.date, 10), place: s(req.body.place, 200),
+      event: [type, company, s(req.body.event, 160)].filter(Boolean).join(' — ').slice(0, 300) || source,
+      date: s(req.body.date, 10), place: s(req.body.place, 200),
       guests: s(req.body.guests, 20), message: s(req.body.message, 2000), lang
     };
     if (!e.name || !(e.email || e.phone) || !e.date || !e.place) return res.status(400).json({ error: t('errEventForm') });
@@ -1300,9 +1316,9 @@ app.post('/api/wydarzenie', async (req, res) => {
       await resend.emails.send({
         from: ORDER_EMAIL_FROM, to: QUOTE_EMAIL_TO,
         ...(e.email ? { reply_to: e.email } : {}),
-        subject: `Food truck aanvraag: ${e.event || e.place} (${e.date})`,
+        subject: `${source === 'catering' ? 'Catering/degustatie' : 'Food truck'} aanvraag: ${e.event || e.place} (${e.date})`,
         html: `<div style="font-family:Arial,sans-serif;max-width:600px;color:#2a1503">
-          <h2 style="margin:0 0 12px">Nieuwe evenement-aanvraag (/foodtruck)</h2>
+          <h2 style="margin:0 0 12px">Nieuwe aanvraag: ${source} (${source === 'catering' ? '/degustacja' : '/foodtruck'})</h2>
           <p><b>${escHtml(e.name)}</b><br>${e.email ? 'E-mail: ' + escHtml(e.email) + '<br>' : ''}${e.phone ? 'Tel: ' + escHtml(e.phone) + '<br>' : ''}Taal: ${lang}</p>
           <ul>${details}</ul>
           ${e.message ? '<p><b>Bericht</b><br>' + escHtml(e.message).replace(/\n/g, '<br>') + '</p>' : ''}

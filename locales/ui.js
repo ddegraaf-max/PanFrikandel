@@ -14,7 +14,50 @@ UI.pl = {
   title: 'PanFrikandel — holenderskie przekąski Mora z dostawą w Płocku i okolicach',
   metaDesc: 'PanFrikandel — oryginalne holenderskie przekąski Mora: frikandel, bitterballen, kroket, kaassoufflé. Dowozimy sami w Płocku i w promieniu 50 km. Płatność BLIK, P24, karta.',
   marquee: ['FRIKANDEL', 'HOLENDERSKI HOT DOG', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: DOWOZIMY SAMI', 'LEKKER!'],
-  navShop: 'Sklep', navDelivery: 'Dostawa', navHurt: 'Hurt', navTruck: 'Food truck', navFaq: 'FAQ', navCart: 'Koszyk', langLabel: 'Język',
+  navShop: 'Sklep', navDelivery: 'Dostawa', navHurt: 'Hurt', navTruck: 'Food truck', navCatering: 'Catering', navFaq: 'FAQ', navCart: 'Koszyk', langLabel: 'Język',
+
+  // ---- /degustacja: degustacje i catering dla firm, na imprezy i wesela ----
+  cateringTitle: 'Degustacja i catering — holenderska frytkownia na Twojej imprezie — PanFrikandel',
+  cateringMetaDesc: 'Integracja firmowa, urodziny, wesele, festyn — przyjeżdżamy z frytkownicą i holenderskim menu: frikandel speciaal, bitterballen, kroket, frytki. Płock i okolice. Wycena w 1 dzień.',
+  cateringKicker: '🎉 Dla firm · imprezy · wesela · festyny',
+  cateringH1Html: 'Holenderska frytkownia<br><em>na Twojej imprezie.</em>',
+  cateringIntro: 'Integracja w firmie, urodziny, wesele, festyn, dzień otwarty — przyjeżdżamy z frytkownicą i całym holenderskim menu, smażymy na miejscu i podajemy prosto z ręki. Degustacja dla 10 osób czy catering dla 300: napisz, kiedy i gdzie, a wycenę masz w 1 dzień roboczy.',
+  cateringCtaForm: 'Zapytaj o termin', cateringCtaPackages: 'Pakiety',
+  cateringPackagesH2Html: 'Trzy <em>pakiety</em> — albo coś po swojemu',
+  cateringPackages: [
+    { name: 'Degustacja w firmie', who: '10–30 osób · ok. 1,5 h', price: 'od 39 zł / os.', tag: 'Integracja · przerwa lunchowa',
+      includes: ['4 klasyki: frikandel speciaal, bitterballen, kroket, kaassoufflé', 'Frytki w rożku z 3 sosami (fritessaus, curry, joppie)', 'Krótka opowieść o holenderskiej frytkowni — po polsku', 'Smażymy i podajemy na miejscu, sprzątamy po sobie'] },
+    { name: 'Impreza / urodziny', who: '30–100 osób · 3 h', price: 'od 49 zł / os.', tag: 'Najczęściej wybierany',
+      includes: ['Pełne menu z okienka: frytki, frikandel speciaal, broodje kroket, bitterballen, kaassoufflé', 'Opcje wege (kaassoufflé, kroket wegetariański)', 'Sosy bez limitu, napoje na życzenie', 'Własny sprzęt, obsługa, sprzątanie'] },
+    { name: 'Wesele · festyn · firma XL', who: '100+ osób · cały dzień', price: 'wycena indywidualna', tag: 'Stoisko z okienkiem',
+      includes: ['Stoisko lub food truck (od 2027) w Waszej scenografii', 'Menu ustalone razem, także późna „przekąska o północy” na weselu', 'Obsługa kilku punktów wydawania', 'Faktura VAT, umowa, zaliczka'] }
+  ],
+  cateringPriceNote: 'Ceny orientacyjne przy dojeździe do 50 km od Płocka; dalej — doliczamy dojazd. Ostateczną wycenę dostajesz mailem po zgłoszeniu.',
+  cateringStepsH2Html: 'Jak to <em>działa</em>?',
+  cateringSteps: [
+    { t: 'Wysyłasz zgłoszenie', p: 'Rodzaj imprezy, data, miejsce, liczba gości — 2 minuty.' },
+    { t: 'Oddzwaniamy z wyceną', p: 'W ciągu 1 dnia roboczego: menu, cena za osobę, co potrzebujemy na miejscu.' },
+    { t: 'Potwierdzasz', p: 'Zaliczka i krótkie potwierdzenie mailem — termin jest Twój.' },
+    { t: 'Przyjeżdżamy i smażymy', p: 'Własny sprzęt, obsługa, sprzątanie. Wy tylko jecie. Eet smakelijk!' }
+  ],
+  cateringFormH2Html: 'Zapytaj o <em>termin</em>',
+  cateringFormP: 'Bez zobowiązań — odpowiadamy z wyceną w 1 dzień roboczy.',
+  cateringFormCompany: 'Firma / organizator (opcjonalnie)',
+  cateringFormType: 'Rodzaj wydarzenia',
+  cateringTypes: { firma: 'Degustacja / integracja w firmie', impreza: 'Impreza prywatna, urodziny', wesele: 'Wesele', festyn: 'Festyn, dzień otwarty, event miejski', inne: 'Inne' },
+  cateringFaqH2Html: 'Pytania <em>o catering</em>',
+  cateringFaq: [
+    { q: 'Czego potrzebujecie na miejscu?', a: 'Gniazdka 230 V (frytkownice i airfryery) i ok. 3 × 2 m miejsca. Wodę i resztę przywozimy sami. Na zewnątrz stawiamy namiot.' },
+    { q: 'Jak daleko dojeżdżacie?', a: 'Standardowo do 50 km od Płocka (Gostynin, Sierpc, Płońsk, Kutno, Włocławek). Dalej też — doliczamy dojazd, napisz.' },
+    { q: 'Macie opcje wegetariańskie i dla dzieci?', a: 'Tak: kaassoufflé (ser), kroket wegetariański, frytki z sosami. Dla dzieci mini frikandelle i nuggetsy z kurczaka.' },
+    { q: 'Wystawiacie faktury?', a: 'Tak, faktura VAT na firmę. Przy większych imprezach podpisujemy krótką umowę i pobieramy zaliczkę.' }
+  ],
+  cateringBannerKicker: '🎉 Dla firm i na imprezy',
+  cateringBannerH3Html: 'Degustacja w firmie?<br><em>Wynajmij frytkownię.</em>',
+  cateringBannerP: 'Integracja, urodziny, wesele, festyn — przyjeżdżamy, smażymy na miejscu, sprzątamy. Wycena w 1 dzień.',
+  cateringBannerCta: 'Zapytaj o termin →',
+  footerCatering: 'Catering i degustacje',
+  truckCateringNowHtml: 'Nie chcesz czekać do 2027? Już dziś przyjeżdżamy z frytkownicą na imprezy i do firm — <a href="/degustacja">degustacje i catering</a>.',
 
   heroKicker: '🇳🇱 Prosto z Holandii → 🇵🇱 Płock i okolice',
   heroH1Html: 'Tęsknisz za <em>frikandelem</em>?<br>My go przywozimy.',
@@ -68,6 +111,7 @@ UI.pl = {
     { q: 'Jak przygotować przekąski?', a: 'Produkty „Oven & Airfryer” są stworzone do piekarnika (220°C) i airfryera (200°C) — bez frytkownicy. Klasyczne (Classics) najlepiej smażyć we frytkownicy w 175°C, część z nich zrobisz też w airfryerze lub na patelni. Frikandele Classics możesz też rzucić na grilla (ok. 14 min, często obracać) i podać w bułce z cebulką — broodje frikandel. Dokładne czasy znajdziesz przy każdym produkcie.' },
     { q: 'Jakie są metody płatności?', a: 'BLIK, Przelewy24 i karty płatnicze — wszystko obsługiwane przez Stripe, bez zakładania konta.' },
     { q: 'Potrzebuję większych ilości — na imprezę, do firmy lub lokalu.', a: 'Mamy osobny katalog hurtowy: kartony horeca (np. 40 frikandeli), bitterballen w kartonach, sosy 900 ml, olej i sprzęt. Ceny na zapytanie — zobacz zakładkę „Hurt”.' },
+    { q: 'Robicie degustacje w firmach albo catering na imprezy?', a: 'Tak! Przyjeżdżamy z frytkownicą do firm (integracja, przerwa lunchowa), na urodziny, wesela i festyny — smażymy na miejscu i sprzątamy. Pakiety od 39 zł/os., wycena w 1 dzień: zobacz zakładkę „Catering”.' },
     { q: 'Mieszkam dalej niż {radius} km od Płocka — co teraz?', a: 'Na razie dowozimy tylko w promieniu {radius} km od Płocka. Sprawdź swój kod — każde sprawdzenie zapisujemy i jeśli w Twojej okolicy będzie zainteresowanie, rozszerzymy strefę. Możesz też napisać na hallo@panfrikandel.pl.' },
     { q: 'Co jeśli nie będzie mnie w domu?', a: 'Przed dostawą dzwonimy i umawiamy godzinę. Jeśli plany się zmienią, daj znać — przełożymy dostawę na inny dzień.' }
   ],
@@ -275,7 +319,49 @@ UI.en = {
   title: 'PanFrikandel — Dutch Mora snacks delivered in and around Płock',
   metaDesc: 'PanFrikandel — authentic Dutch Mora snacks: frikandel, bitterballen, kroket, kaassoufflé. We deliver ourselves in Płock and within 50 km. Pay with BLIK, P24 or card.',
   marquee: ['FRIKANDEL', 'THE DUTCH HOT DOG', 'BITTERBALLEN', 'KROKET', 'KAASSOUFFLÉ', 'PŁOCK +{radius} KM: WE DELIVER OURSELVES', 'LEKKER!'],
-  navShop: 'Shop', navDelivery: 'Delivery', navHurt: 'Wholesale', navTruck: 'Food truck', navFaq: 'FAQ', navCart: 'Cart', langLabel: 'Language',
+  navShop: 'Shop', navDelivery: 'Delivery', navHurt: 'Wholesale', navTruck: 'Food truck', navCatering: 'Catering', navFaq: 'FAQ', navCart: 'Cart', langLabel: 'Language',
+
+  cateringTitle: 'Tastings & catering — the Dutch snackbar at your event — PanFrikandel',
+  cateringMetaDesc: 'Company events, birthdays, weddings, fairs — we come with the fryer and the Dutch menu: frikandel speciaal, bitterballen, kroket, fries. Płock and surroundings. Quote within 1 day.',
+  cateringKicker: '🎉 Companies · parties · weddings · fairs',
+  cateringH1Html: 'The Dutch snackbar<br><em>at your event.</em>',
+  cateringIntro: 'Team event at the office, birthday, wedding, village fair, open day — we come with the fryer and the full Dutch menu, cook on the spot and serve it fresh. A tasting for 10 or catering for 300: tell us when and where and you\'ll have a quote within 1 working day.',
+  cateringCtaForm: 'Ask for a date', cateringCtaPackages: 'Packages',
+  cateringPackagesH2Html: 'Three <em>packages</em> — or something your way',
+  cateringPackages: [
+    { name: 'Office tasting', who: '10–30 people · about 1.5 h', price: 'from 39 zł / person', tag: 'Team event · lunch break',
+      includes: ['4 classics: frikandel speciaal, bitterballen, kroket, kaassoufflé', 'Fries in a cone with 3 sauces (fritessaus, curry, joppie)', 'A short story about the Dutch snackbar — in Polish or English', 'We cook and serve on site and clean up after ourselves'] },
+    { name: 'Party / birthday', who: '30–100 people · 3 h', price: 'from 49 zł / person', tag: 'Most popular',
+      includes: ['The full hatch menu: fries, frikandel speciaal, broodje kroket, bitterballen, kaassoufflé', 'Veggie options (kaassoufflé, vegetarian kroket)', 'Unlimited sauces, drinks on request', 'Own equipment, staff, clean-up'] },
+    { name: 'Wedding · fair · company XL', who: '100+ people · all day', price: 'custom quote', tag: 'Stand with a hatch',
+      includes: ['A stand or the food truck (from 2027) in your setting', 'Menu agreed together, including the late-night wedding snack', 'Several serving points if needed', 'VAT invoice, contract, deposit'] }
+  ],
+  cateringPriceNote: 'Indicative prices within 50 km of Płock; further away we add travel. You get the final quote by e-mail after your request.',
+  cateringStepsH2Html: 'How does it <em>work</em>?',
+  cateringSteps: [
+    { t: 'Send a request', p: 'Type of event, date, location, number of guests — 2 minutes.' },
+    { t: 'We call back with a quote', p: 'Within 1 working day: menu, price per person, what we need on site.' },
+    { t: 'You confirm', p: 'A deposit and a short confirmation by e-mail — the date is yours.' },
+    { t: 'We come and cook', p: 'Own equipment, staff, clean-up. You just eat. Eet smakelijk!' }
+  ],
+  cateringFormH2Html: 'Ask for a <em>date</em>',
+  cateringFormP: 'No obligation — we reply with a quote within 1 working day.',
+  cateringFormCompany: 'Company / organiser (optional)',
+  cateringFormType: 'Type of event',
+  cateringTypes: { firma: 'Office tasting / team event', impreza: 'Private party, birthday', wesele: 'Wedding', festyn: 'Fair, open day, town event', inne: 'Other' },
+  cateringFaqH2Html: 'Questions <em>about catering</em>',
+  cateringFaq: [
+    { q: 'What do you need on site?', a: 'A 230 V socket (fryers and air fryers) and about 3 × 2 m of space. We bring water and everything else. Outdoors we set up a tent.' },
+    { q: 'How far do you travel?', a: 'Normally up to 50 km from Płock (Gostynin, Sierpc, Płońsk, Kutno, Włocławek). Further is possible too — we add travel, just ask.' },
+    { q: 'Vegetarian options and something for kids?', a: 'Yes: kaassoufflé (cheese), vegetarian kroket, fries with sauces. For kids: mini frikandels and chicken nuggets.' },
+    { q: 'Do you issue invoices?', a: 'Yes, a VAT invoice to your company. For larger events we sign a short contract and take a deposit.' }
+  ],
+  cateringBannerKicker: '🎉 For companies and parties',
+  cateringBannerH3Html: 'A tasting at the office?<br><em>Hire the snackbar.</em>',
+  cateringBannerP: 'Team events, birthdays, weddings, fairs — we come, cook on the spot and clean up. Quote within 1 day.',
+  cateringBannerCta: 'Ask for a date →',
+  footerCatering: 'Catering & tastings',
+  truckCateringNowHtml: 'Don\'t want to wait until 2027? We already come to parties and companies with the fryer today — <a href="/degustacja">tastings & catering</a>.',
 
   heroKicker: '🇳🇱 Straight from Holland → 🇵🇱 Płock and surroundings',
   heroH1Html: 'Missing your <em>frikandel</em>?<br>We bring it to you.',
@@ -327,6 +413,7 @@ UI.en = {
     { q: 'How do I prepare the snacks?', a: '"Oven & Airfryer" products are made for the oven (220°C) and air fryer (200°C) — no deep fryer needed. The Classics are best deep-fried at 175°C; some also work in an air fryer or a pan. The Classics frikandels also love the barbecue (about 14 min, turn often) — serve them in a roll with onion: broodje frikandel. Exact times are listed with each product.' },
     { q: 'Which payment methods do you accept?', a: 'BLIK, Przelewy24 and payment cards — all handled by Stripe, no account needed.' },
     { q: 'I need larger quantities — for a party, a company or a restaurant.', a: 'We have a separate wholesale catalogue: catering boxes (e.g. 40 frikandels), bitterballen by the box, 900 ml sauces, oil and equipment. Prices on request — see the "Wholesale" tab.' },
+    { q: 'Do you do office tastings or catering for parties?', a: 'Yes! We come with the fryer to companies (team events, lunch breaks), birthdays, weddings and fairs — we cook on the spot and clean up. Packages from 39 zł per person, quote within 1 day: see the "Catering" tab.' },
     { q: 'I live more than {radius} km from Płock — what now?', a: 'For now we only deliver within {radius} km of Płock. Check your postcode anyway — we log every check, and if there\'s interest in your area we\'ll extend the zone. You can also e-mail hallo@panfrikandel.pl.' },
     { q: 'What if I\'m not at home?', a: 'We call before delivery to agree a time. If your plans change, let us know — we\'ll move the delivery to another day.' }
   ],

@@ -23,6 +23,7 @@
     <a href="/#sklep"><%= t('navShop') %></a>
     <a href="/hurt"><%= t('navHurt') %></a>
     <a href="/foodtruck" class="on"><%= t('navTruck') %></a>
+    <a href="/degustacja"><%= t('navCatering') %></a>
     <a href="/#faq"><%= t('navFaq') %></a>
   </nav>
   <%- include('partials/lang') %>
@@ -149,6 +150,7 @@
   <div class="section-head">
     <h2><%- t('truckEventH2Html') %></h2>
     <p><%= t('truckEventP') %></p>
+    <p class="catering-now"><%- t('truckCateringNowHtml') %></p>
   </div>
   <form class="zone-form event-form" id="eventForm">
     <div class="ask-grid">

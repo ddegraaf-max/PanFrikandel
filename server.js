@@ -1,6 +1,6 @@
 // ============================================================
 //  PAN FRIKANDEL — server.js
-//  Holenderskie przekąski · dostawa w całej Polsce
+//  Holenderskie przekąski · dostawa w całej Polsce · Płock +50 km: dowozimy sami
 //  Stack: Express + EJS + Stripe Checkout + Resend
 // ============================================================
 
@@ -702,6 +702,265 @@ async function savePrices(changes) {
 }
 
 // ============================================================
+//  DOSTAWA LOKALNA — Płock + 50 km (własny transport, pilotaż)
+//  Uitzetten: env LOCAL_DELIVERY=off · straal: env LOCAL_RADIUS_KM (default 50)
+//  Prijs, gratis-drempel en levertekst hieronder aanpassen.
+// ============================================================
+
+const LOCAL_DELIVERY = {
+  enabled: process.env.LOCAL_DELIVERY !== 'off',
+  radiusKm: parseInt(process.env.LOCAL_RADIUS_KM, 10) || 50,
+  center: { name: 'Płock', lat: 52.5464, lon: 19.7065 },
+  priceGr: 1900,             // 19 zł — dowozimy sami
+  freeAboveGr: 15000,        // gratis powyżej 150 zł
+  eta: 'zwykle następnego dnia'
+};
+
+// Kody pocztowe → przybliżone współrzędne (centrum miejscowości / gminy).
+// Dokładny kod ma pierwszeństwo, potem prefiks "NN-N" (główne miasto podregionu).
+// Odległość liczona w linii prostej od centrum Płocka; strefa = LOCAL_DELIVERY.radiusKm.
+// Brakuje kodu? Dodaj wiersz — admin pokazuje sprawdzane kody, których nie ma w tabeli.
+const LOCAL_POSTCODES = [
+  // powiat płocki (09-4xx; samo miasto Płock 09-400…09-410 → prefiks)
+  ['09-411', 'Stara Biała', 52.585, 19.624],
+  ['09-414', 'Brudzeń Duży', 52.643, 19.544],
+  ['09-440', 'Staroźreby', 52.632, 19.920],
+  ['09-450', 'Wyszogród', 52.389, 20.193],
+  ['09-451', 'Radzanowo', 52.584, 19.854],
+  ['09-454', 'Bulkowo', 52.592, 20.113],
+  ['09-460', 'Mała Wieś', 52.484, 20.095],
+  ['09-470', 'Bodzanów', 52.511, 20.016],
+  ['09-472', 'Słupno', 52.539, 19.826],
+  // powiat gostyniński (09-5xx)
+  ['09-500', 'Gostynin', 52.430, 19.460],
+  ['09-505', 'Nowy Duninów', 52.585, 19.497],
+  ['09-520', 'Łąck', 52.470, 19.632],
+  ['09-530', 'Gąbin', 52.399, 19.736],
+  ['09-540', 'Sanniki', 52.338, 19.926],
+  ['09-541', 'Pacyna', 52.321, 19.703],
+  ['09-550', 'Szczawin Kościelny', 52.378, 19.554],
+  // powiat sierpecki (09-2xx)
+  ['09-200', 'Sierpc', 52.856, 19.670],
+  ['09-204', 'Rościszewo', 52.916, 19.761],
+  ['09-210', 'Drobin', 52.739, 19.981],
+  ['09-213', 'Gozdowo', 52.768, 19.595],
+  ['09-214', 'Mochowo', 52.752, 19.443],
+  ['09-226', 'Zawidz Kościelny', 52.831, 19.863],
+  ['09-227', 'Szczutowo', 52.920, 19.450],
+  ['09-230', 'Bielsk', 52.669, 19.803],
+  // powiat płoński (09-1xx)
+  ['09-100', 'Płońsk', 52.623, 20.376],
+  ['09-110', 'Sochocin', 52.698, 20.449],
+  ['09-120', 'Nowe Miasto', 52.652, 20.628],
+  ['09-130', 'Baboszewo', 52.727, 20.266],
+  ['09-131', 'Joniec', 52.635, 20.452],
+  ['09-135', 'Siemiątkowo', 52.896, 20.073],
+  ['09-140', 'Raciąż', 52.783, 20.117],
+  ['09-142', 'Załuski', 52.574, 20.474],
+  ['09-150', 'Czerwińsk nad Wisłą', 52.396, 20.313],
+  ['09-152', 'Naruszewo', 52.570, 20.241],
+  ['09-164', 'Dzierzążnia', 52.668, 20.243],
+  // powiat żuromiński (09-3xx) — tylko południowy skraj
+  ['09-317', 'Lutocin', 52.980, 19.563],
+  ['09-320', 'Bieżuń', 52.961, 19.887],
+  // Włocławek i powiat włocławski (87-8xx)
+  ['87-811', 'Fabianki', 52.683, 19.118],
+  ['87-820', 'Kowal', 52.534, 19.144],
+  ['87-821', 'Baruchowo', 52.488, 19.242],
+  ['87-840', 'Lubień Kujawski', 52.411, 19.173],
+  ['87-850', 'Choceń', 52.548, 19.036],
+  ['87-860', 'Chodecz', 52.403, 19.029],
+  ['87-880', 'Brześć Kujawski', 52.604, 18.899],
+  // powiat lipnowski (87-6xx)
+  ['87-600', 'Lipno', 52.847, 19.179],
+  ['87-603', 'Wielgie', 52.767, 19.250],
+  ['87-605', 'Tłuchowo', 52.741, 19.354],
+  ['87-610', 'Dobrzyń nad Wisłą', 52.639, 19.329],
+  ['87-617', 'Bobrowniki', 52.772, 19.012],
+  ['87-620', 'Kikół', 52.911, 19.101],
+  ['87-630', 'Skępe', 52.861, 19.358],
+  // Kutno i powiat kutnowski (99-3xx)
+  ['99-300', 'Kutno', 52.231, 19.362],
+  ['99-306', 'Łanięta', 52.368, 19.328],
+  ['99-307', 'Strzelce', 52.313, 19.426],
+  ['99-311', 'Bedlno', 52.242, 19.493],
+  ['99-314', 'Krzyżanów', 52.193, 19.454],
+  ['99-319', 'Dobrzelin', 52.239, 19.611],
+  ['99-320', 'Żychlin', 52.244, 19.623],
+  ['99-322', 'Oporów', 52.290, 19.488],
+  ['99-340', 'Krośniewice', 52.258, 19.175],
+  ['99-350', 'Nowe Ostrowy', 52.332, 19.259],
+  ['99-352', 'Dąbrowice', 52.317, 19.167],
+  // powiat łowicki (99-4xx) — północna część
+  ['99-412', 'Kiernozia', 52.270, 19.870],
+  ['99-413', 'Chąśno', 52.174, 19.909],
+  ['99-414', 'Kocierzew Południowy', 52.201, 20.037],
+  ['99-423', 'Bielawy', 52.096, 19.779],
+  ['99-440', 'Zduny', 52.141, 19.823],
+  // powiat sochaczewski (96-5xx) — zachodnia część
+  ['96-500', 'Sochaczew', 52.230, 20.238],
+  ['96-512', 'Młodzieszyn', 52.324, 20.176],
+  ['96-513', 'Nowa Sucha', 52.206, 20.186],
+  ['96-514', 'Rybno', 52.261, 20.124],
+  ['96-520', 'Iłów', 52.352, 20.052],
+  ['05-088', 'Brochów', 52.358, 20.363],
+  // powiat ciechanowski (06-4xx) — zachodni skraj
+  ['06-450', 'Glinojeck', 52.821, 20.277],
+  ['06-456', 'Ojrzeń', 52.784, 20.474]
+];
+const LOCAL_PREFIXES = {
+  '09-4': ['Płock', 52.5464, 19.7065],
+  '09-5': ['Gostynin', 52.430, 19.460],
+  '09-2': ['Sierpc', 52.856, 19.670],
+  '09-1': ['Płońsk', 52.623, 20.376],
+  '09-3': ['Żuromin', 53.066, 19.909],
+  '87-8': ['Włocławek', 52.648, 19.068],
+  '87-6': ['Lipno', 52.847, 19.179],
+  '87-5': ['Rypin', 53.065, 19.409],
+  '99-3': ['Kutno', 52.231, 19.362],
+  '99-4': ['Łowicz', 52.106, 19.945],
+  '96-5': ['Sochaczew', 52.230, 20.238],
+  '06-4': ['Ciechanów', 52.881, 20.619],
+  '05-1': ['Nowy Dwór Mazowiecki', 52.431, 20.716]
+};
+const postcodeByCode = Object.fromEntries(LOCAL_POSTCODES.map(r => [r[0], r.slice(1)]));
+
+// "09400", "09 400", "09-400" → "09-400"; anders null
+function normalizePostcode(raw) {
+  const d = String(raw || '').replace(/\D/g, '');
+  return d.length === 5 ? d.slice(0, 2) + '-' + d.slice(2) : null;
+}
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// → { code, known, place, km, inZone }
+function checkLocalZone(raw) {
+  const code = normalizePostcode(raw);
+  if (!code) return { code: null, known: false, place: null, km: null, inZone: false };
+  const hit = postcodeByCode[code] || LOCAL_PREFIXES[code.slice(0, 4)];
+  if (!hit) return { code, known: false, place: null, km: null, inZone: false };
+  const [place, lat, lon] = hit;
+  const km = Math.round(haversineKm(LOCAL_DELIVERY.center.lat, LOCAL_DELIVERY.center.lon, lat, lon));
+  return { code, known: true, place, km, inZone: LOCAL_DELIVERY.enabled && km <= LOCAL_DELIVERY.radiusKm };
+}
+
+const localPublic = () => ({
+  enabled: LOCAL_DELIVERY.enabled,
+  radiusKm: LOCAL_DELIVERY.radiusKm,
+  city: LOCAL_DELIVERY.center.name,
+  priceGr: LOCAL_DELIVERY.priceGr,
+  freeAboveGr: LOCAL_DELIVERY.freeAboveGr,
+  eta: LOCAL_DELIVERY.eta
+});
+
+// ---- Pilot-statistieken: postcodechecks + lokale bestellingen ----
+//      PostgreSQL (DATABASE_URL) of fallback data/local-stats.json
+const LOCAL_STATS_FILE = path.join(__dirname, 'data', 'local-stats.json');
+let localMem = { checks: [], orders: [] };
+
+async function initLocalStats() {
+  try {
+    if (pool) {
+      await pool.query(`CREATE TABLE IF NOT EXISTS local_zone_checks (
+        id SERIAL PRIMARY KEY, postal_code TEXT, place TEXT, km INTEGER, in_zone BOOLEAN NOT NULL,
+        source TEXT, created_at TIMESTAMPTZ DEFAULT now())`);
+      await pool.query(`CREATE TABLE IF NOT EXISTS local_orders (
+        session_id TEXT PRIMARY KEY, postal_code TEXT, place TEXT, km INTEGER, amount_gr INTEGER,
+        out_of_zone BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT now())`);
+    } else if (fs.existsSync(LOCAL_STATS_FILE)) {
+      localMem = JSON.parse(fs.readFileSync(LOCAL_STATS_FILE, 'utf8'));
+      localMem.checks = localMem.checks || [];
+      localMem.orders = localMem.orders || [];
+    }
+  } catch (err) {
+    console.error('Lokale statistieken init mislukt:', err.message);
+  }
+}
+
+function saveLocalMem() {
+  try {
+    localMem.checks = localMem.checks.slice(-3000);
+    fs.mkdirSync(path.dirname(LOCAL_STATS_FILE), { recursive: true });
+    fs.writeFileSync(LOCAL_STATS_FILE, JSON.stringify(localMem));
+  } catch (e) {}
+}
+
+async function logZoneCheck(z, source) {
+  try {
+    if (pool) {
+      await pool.query(
+        'INSERT INTO local_zone_checks (postal_code, place, km, in_zone, source) VALUES ($1, $2, $3, $4, $5)',
+        [z.code, z.place, z.km, z.inZone, source]
+      );
+    } else {
+      localMem.checks.push({ code: z.code, place: z.place, km: z.km, inZone: z.inZone, source, at: Date.now() });
+      saveLocalMem();
+    }
+  } catch (err) {
+    console.error('Postcodecheck loggen mislukt:', err.message);
+  }
+}
+
+async function logLocalOrder(o) {
+  try {
+    if (pool) {
+      await pool.query(
+        'INSERT INTO local_orders (session_id, postal_code, place, km, amount_gr, out_of_zone) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (session_id) DO NOTHING',
+        [o.sessionId, o.code, o.place, o.km, o.amountGr, o.outOfZone]
+      );
+    } else if (!localMem.orders.some(x => x.sessionId === o.sessionId)) {
+      localMem.orders.push({ ...o, at: Date.now() });
+      saveLocalMem();
+    }
+  } catch (err) {
+    console.error('Lokale bestelling loggen mislukt:', err.message);
+  }
+}
+
+async function getLocalStats(days = 30) {
+  const since = Date.now() - days * 86400000;
+  let checks, orders;
+  if (pool) {
+    checks = (await pool.query(
+      'SELECT postal_code AS code, place, km, in_zone AS "inZone" FROM local_zone_checks WHERE created_at >= $1',
+      [new Date(since)]
+    )).rows;
+    orders = (await pool.query(
+      'SELECT session_id AS "sessionId", postal_code AS code, place, km, amount_gr AS "amountGr", out_of_zone AS "outOfZone", created_at AS at FROM local_orders WHERE created_at >= $1 ORDER BY created_at DESC',
+      [new Date(since)]
+    )).rows;
+  } else {
+    checks = localMem.checks.filter(c => c.at >= since);
+    orders = localMem.orders.filter(o => o.at >= since).slice().reverse();
+  }
+  const byCode = {};
+  for (const c of checks) {
+    if (!c.code) continue;
+    const b = byCode[c.code] || (byCode[c.code] = { code: c.code, place: c.place, km: c.km, inZone: c.inZone, n: 0 });
+    b.n++;
+  }
+  return {
+    days,
+    checks: checks.length,
+    inZone: checks.filter(c => c.inZone).length,
+    unknown: checks.filter(c => !c.place).length,
+    uniqueCodes: Object.keys(byCode).length,
+    orders: orders.length,
+    revenueGr: orders.reduce((s, o) => s + (o.amountGr || 0), 0),
+    outOfZone: orders.filter(o => o.outOfZone).length,
+    topCodes: Object.values(byCode).sort((a, b) => b.n - a.n).slice(0, 12),
+    recentOrders: orders.slice(0, 10).map(o => ({ ...o, at: new Date(o.at) }))
+  };
+}
+
+const escHtml = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ============================================================
 //  ADMIN-AUTH  (cookie met HMAC-token, geen extra dependencies)
 // ============================================================
 
@@ -745,29 +1004,34 @@ function registerFail(ip) {
 // ============================================================
 
 app.get('/', (req, res) => {
-  res.render('index', { products: PRODUCTS, shipping: SHIPPING, v: ASSET_V, zl });
+  res.render('index', { products: PRODUCTS, shipping: SHIPPING, local: localPublic(), v: ASSET_V, zl });
 });
 
 app.get('/regulamin',   (req, res) => res.render('regulamin',   { v: ASSET_V }));
 app.get('/prywatnosc',  (req, res) => res.render('prywatnosc',  { v: ASSET_V }));
 
 // ---- Admin: prijzenbeheer ----
-app.get('/admin', (req, res) => {
+app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
-  res.render('admin', { authed: isAdmin(req), products: PRODUCTS, v: ASSET_V, zl, error: null });
+  const authed = isAdmin(req);
+  let localStats = null;
+  if (authed) {
+    try { localStats = await getLocalStats(30); } catch (err) { console.error('Lokale statistieken:', err.message); }
+  }
+  res.render('admin', { authed, products: PRODUCTS, v: ASSET_V, zl, error: null, local: localPublic(), localStats });
 });
 
 app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
   if (!ADMIN_PASSWORD || !loginAllowed(ip)) {
-    return res.status(429).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, error: 'Te veel pogingen — probeer het over 15 minuten opnieuw.' });
+    return res.status(429).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, local: localPublic(), localStats: null, error: 'Te veel pogingen — probeer het over 15 minuten opnieuw.' });
   }
   const given = String(req.body.password || '');
   const ok = given.length === ADMIN_PASSWORD.length &&
     crypto.timingSafeEqual(Buffer.from(given), Buffer.from(ADMIN_PASSWORD));
   if (!ok) {
     registerFail(ip);
-    return res.status(401).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, error: 'Onjuist wachtwoord.' });
+    return res.status(401).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, local: localPublic(), localStats: null, error: 'Onjuist wachtwoord.' });
   }
   res.setHeader('Set-Cookie', `pf_admin=${adminToken()}; HttpOnly; Path=/; Max-Age=${8 * 3600}; SameSite=Lax${BASE_URL.startsWith('https') ? '; Secure' : ''}`);
   res.redirect('/admin');
@@ -805,7 +1069,15 @@ const CATALOG_FOR_AI = () => PRODUCTS.map(p =>
   `${p.id} | ${p.name} | ${zl(p.price)} | ${p.unit} | kat: ${p.cat}${p.badge ? ' | ' + p.badge : ''} | ${p.desc}`
 ).join('\n');
 
-const ASSISTANT_SYSTEM = () => `Jesteś "Panem Frikandelem" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami (dostawa mrożonek kurierem w całej Polsce, 24-48h, darmowa dostawa od 250 zł, wysyłka 49 zł).
+const DELIVERY_FOR_AI = () => {
+  let s = `dostawa mrożonek kurierem w całej Polsce, 24-48h, wysyłka ${zl(SHIPPING.standardGr)}, darmowa dostawa od ${zl(SHIPPING.freeAboveGr)}`;
+  if (LOCAL_DELIVERY.enabled) {
+    s += `; NOWOŚĆ (pilotaż): w promieniu ${LOCAL_DELIVERY.radiusKm} km od Płocka dowozimy sami za ${zl(LOCAL_DELIVERY.priceGr)}, gratis od ${zl(LOCAL_DELIVERY.freeAboveGr)}, ${LOCAL_DELIVERY.eta} — klient sprawdza kod pocztowy w koszyku lub w sekcji "Dostawa" na stronie`;
+  }
+  return s;
+};
+
+const ASSISTANT_SYSTEM = () => `Jesteś "Panem Frikandelem" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami (${DELIVERY_FOR_AI()}).
 
 Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
 
@@ -816,6 +1088,7 @@ ZASADY:
 - Znasz się na holenderskiej kulturze frytkowni (frikandel speciaal, broodje kroket, patatje oorlog, bitterballen z musztardą przy piwie) i chętnie ją tłumaczysz.
 - Nie wymyślasz cen, składników ani produktów spoza katalogu. Przy pytaniach o alergeny odsyłaj do szczegółów produktu na stronie.
 - Nie odpowiadasz na pytania niezwiązane ze sklepem — uprzejmie wracasz do tematu przekąsek.
+- Pytania o dostawę lokalną (Płock i okolice): odsyłaj do sprawdzenia kodu pocztowego na stronie; nie obiecuj dostawy własnej poza strefą.
 
 KATALOG:
 ${CATALOG_FOR_AI()}`;
@@ -861,6 +1134,15 @@ app.post('/api/assistent', async (req, res) => {
   }
 });
 
+// ---- Strefa dostawy lokalnej: sprawdzenie kodu pocztowego ----
+app.post('/api/strefa', (req, res) => {
+  const z = checkLocalZone(req.body.kod);
+  if (!z.code) return res.status(400).json({ error: 'Podaj kod pocztowy w formacie 09-400.' });
+  const source = ['koszyk', 'sekcja'].includes(req.body.zrodlo) ? req.body.zrodlo : 'inne';
+  logZoneCheck(z, source);   // fire-and-forget (pilot-statistiek)
+  res.json({ ...z, ...localPublic() });
+});
+
 // ---- Stripe Checkout ----
 app.post('/api/checkout', async (req, res) => {
   try {
@@ -888,6 +1170,42 @@ app.post('/api/checkout', async (req, res) => {
     if (!lineItems.length) return res.status(400).json({ error: 'Koszyk jest pusty.' });
 
     const freeShipping = subtotal >= SHIPPING.freeAboveGr;
+    const courierOption = {
+      shipping_rate_data: {
+        type: 'fixed_amount',
+        fixed_amount: { amount: freeShipping ? 0 : SHIPPING.standardGr, currency: 'pln' },
+        display_name: freeShipping
+          ? 'Kurier z termoboxem — GRATIS'
+          : 'Kurier z termoboxem (24–48 h)',
+        delivery_estimate: {
+          minimum: { unit: 'business_day', value: 1 },
+          maximum: { unit: 'business_day', value: 2 }
+        },
+        metadata: { typ: 'kurier' }
+      }
+    };
+
+    // Dostawa lokalna: alleen aanbieden als de postcode uit de koszyk in de zone valt
+    // (Stripe Checkout kan opties niet op adres filteren, dus wij checken vooraf)
+    const zone = checkLocalZone(req.body.kod);
+    const shippingOptions = [courierOption];
+    if (zone.inZone) {
+      const freeLocal = subtotal >= LOCAL_DELIVERY.freeAboveGr;
+      shippingOptions.unshift({
+        shipping_rate_data: {
+          type: 'fixed_amount',
+          fixed_amount: { amount: freeLocal ? 0 : LOCAL_DELIVERY.priceGr, currency: 'pln' },
+          display_name: freeLocal
+            ? `Dowozimy sami — ${zone.place}, ${zone.km} km — GRATIS`
+            : `Dowozimy sami — ${zone.place}, ${zone.km} km`,
+          delivery_estimate: {
+            minimum: { unit: 'business_day', value: 1 },
+            maximum: { unit: 'business_day', value: 1 }
+          },
+          metadata: { typ: 'lokalna', kod: zone.code, km: String(zone.km) }
+        }
+      });
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -896,19 +1214,12 @@ app.post('/api/checkout', async (req, res) => {
       line_items: lineItems,
       shipping_address_collection: { allowed_countries: ['PL'] },
       phone_number_collection: { enabled: true },
-      shipping_options: [{
-        shipping_rate_data: {
-          type: 'fixed_amount',
-          fixed_amount: { amount: freeShipping ? 0 : SHIPPING.standardGr, currency: 'pln' },
-          display_name: freeShipping
-            ? 'Kurier z termoboxem — GRATIS'
-            : 'Kurier z termoboxem (24–48 h)',
-          delivery_estimate: {
-            minimum: { unit: 'business_day', value: 1 },
-            maximum: { unit: 'business_day', value: 2 }
-          }
-        }
-      }],
+      shipping_options: shippingOptions,
+      metadata: {
+        kod_pocztowy: zone.code || '',
+        strefa_lokalna: zone.inZone ? 'tak' : 'nie',
+        odleglosc_km: zone.km != null ? String(zone.km) : ''
+      },
       success_url: `${BASE_URL}/sukces?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}/?anulowano=1#sklep`
     });
@@ -922,33 +1233,58 @@ app.post('/api/checkout', async (req, res) => {
 
 // ---- Success page + orderbevestiging via Resend ----
 const emailedSessions = new Set();
+const localLoggedSessions = new Set();
 
 app.get('/sukces', async (req, res) => {
   let order = null;
   try {
     if (stripe && req.query.session_id) {
       const session = await stripe.checkout.sessions.retrieve(req.query.session_id, {
-        expand: ['line_items']
+        expand: ['line_items', 'shipping_cost.shipping_rate']
       });
       if (session.payment_status === 'paid') {
+        const rate = session.shipping_cost?.shipping_rate;
+        const rateMeta = (rate && typeof rate === 'object' && rate.metadata) || {};
+        const isLocal = rateMeta.typ === 'lokalna';
+        const addr = (session.shipping_details || session.collected_information?.shipping_details)?.address || null;
         order = {
           email: session.customer_details?.email || null,
           name: session.customer_details?.name || '',
           total: zl(session.amount_total),
+          local: isLocal,
+          eta: LOCAL_DELIVERY.eta,
+          address: addr ? [addr.line1, addr.line2, ((addr.postal_code || '') + ' ' + (addr.city || '')).trim()].filter(Boolean).join(', ') : '',
           items: (session.line_items?.data || []).map(li => ({
             name: li.description, qty: li.quantity, total: zl(li.amount_total)
           }))
         };
+
+        // Pilot-statistiek: lokale bestelling registreren + checken of het afleveradres echt in de zone ligt
+        if (isLocal && !localLoggedSessions.has(session.id)) {
+          localLoggedSessions.add(session.id);
+          const z = checkLocalZone(addr?.postal_code || rateMeta.kod);
+          if (!z.inZone) console.warn(`⚠️ Lokalna dostawa poza strefą: ${session.id}, kod ${addr?.postal_code || '?'}`);
+          logLocalOrder({
+            sessionId: session.id, code: z.code || addr?.postal_code || null, place: z.place, km: z.km,
+            amountGr: session.amount_total, outOfZone: !z.inZone
+          });
+        }
+
         if (resend && order.email && !emailedSessions.has(session.id)) {
           emailedSessions.add(session.id);
           const rows = order.items.map(i =>
             `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${i.name}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`
           ).join('');
+          const deliveryHtml = order.local
+            ? `<p>🛵 <strong>Dowozimy sami!</strong> Zadzwonimy lub napiszemy, żeby umówić dostawę — ${LOCAL_DELIVERY.eta}. Produkty przywozimy prosto z mroźni, więc od razu włóż je do zamrażarki.${order.address ? '<br>📍 Adres dostawy: ' + escHtml(order.address) : ''}</p>`
+            : `<p>📦 Mrożonki wysyłamy w termoboxie z suchym lodem — kurier dostarczy paczkę w 24–48 h. Produkty włóż od razu do zamrażarki.</p>`;
           await resend.emails.send({
             from: ORDER_EMAIL_FROM,
             to: order.email,
             ...(ORDER_EMAIL_BCC ? { bcc: ORDER_EMAIL_BCC } : {}),
-            subject: 'Lekker! Twoje zamówienie w Pan Frikandel 🍟',
+            subject: order.local
+              ? 'Lekker! Twoje zamówienie w Pan Frikandel 🍟 — dowozimy sami'
+              : 'Lekker! Twoje zamówienie w Pan Frikandel 🍟',
             html: `
               <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
                 <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
@@ -958,7 +1294,7 @@ app.get('/sukces', async (req, res) => {
                 <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
                   <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}</table>
                   <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">Razem: ${order.total}</p>
-                  <p>📦 Mrożonki wysyłamy w termoboxie z suchym lodem — kurier dostarczy paczkę w 24–48 h. Produkty włóż od razu do zamrażarki.</p>
+                  ${deliveryHtml}
                   <p style="color:#8a6a4f;font-size:13px">Pan Frikandel · panfrikandel.pl<br>Pytania? Odpowiedz na tego maila.</p>
                 </div>
               </div>`
@@ -974,6 +1310,6 @@ app.get('/sukces', async (req, res) => {
 
 app.use((req, res) => res.redirect('/'));
 
-loadPrices().then(() => {
+Promise.all([loadPrices(), initLocalStats()]).then(() => {
   app.listen(PORT, () => console.log(`🍟 Pan Frikandel draait op ${BASE_URL}`));
 });

@@ -27,7 +27,55 @@
     <button class="btn btn-primary" type="submit">Inloggen</button>
   </form>
 <% } else { %>
-  <h1>Prijzen</h1>
+  <% if (localStats) { %>
+  <h1>Pilot: bezorging <%= local.city %> +<%= local.radiusKm %> km</h1>
+  <p style="color:var(--muted);font-weight:700">Laatste <%= localStats.days %> dagen. Postcodechecks komen uit de winkelmand en de sectie „Dostawa”; lokale bestellingen zijn betaalde Stripe-sessies met de optie „Dowozimy sami”. Uitzetten: env <code>LOCAL_DELIVERY=off</code>.</p>
+  <div class="stats">
+    <div class="stat"><b><%= localStats.checks %></b><span>postcodechecks</span></div>
+    <div class="stat"><b><%= localStats.inZone %></b><span>binnen de zone</span></div>
+    <div class="stat"><b><%= localStats.uniqueCodes %></b><span>unieke postcodes</span></div>
+    <div class="stat"><b><%= localStats.unknown %></b><span>onbekend (niet in tabel)</span></div>
+    <div class="stat"><b><%= localStats.orders %></b><span>lokale bestellingen</span></div>
+    <div class="stat"><b><%= zl(localStats.revenueGr) %></b><span>omzet lokaal</span></div>
+  </div>
+  <% if (localStats.outOfZone) { %><p class="admin-error">⚠️ <%= localStats.outOfZone %> lokale bestelling(en) met een afleveradres buiten de zone — controleer in Stripe.</p><% } %>
+  <% if (localStats.topCodes.length) { %>
+  <table class="admin-table">
+    <thead><tr><th>Postcode</th><th>Plaats</th><th>Afstand</th><th>Zone</th><th style="text-align:right">Checks</th></tr></thead>
+    <tbody>
+    <% for (const c of localStats.topCodes) { %>
+      <tr>
+        <td><b><%= c.code %></b></td>
+        <td class="admin-unit"><%= c.place || 'onbekend — voeg toe aan LOCAL_POSTCODES' %></td>
+        <td class="admin-unit"><%= c.km != null ? c.km + ' km' : '–' %></td>
+        <td><%= c.inZone ? '✅' : '—' %></td>
+        <td style="text-align:right"><%= c.n %></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p style="color:var(--muted);font-weight:700">Nog geen postcodechecks.</p>
+  <% } %>
+  <% if (localStats.recentOrders.length) { %>
+  <table class="admin-table" style="margin-top:14px">
+    <thead><tr><th>Datum</th><th>Postcode</th><th>Plaats</th><th>Afstand</th><th style="text-align:right">Bedrag</th></tr></thead>
+    <tbody>
+    <% for (const o of localStats.recentOrders) { %>
+      <tr>
+        <td class="admin-unit"><%= o.at.toLocaleDateString('nl-NL') %></td>
+        <td><b><%= o.code || '?' %></b><% if (o.outOfZone) { %> ⚠️<% } %></td>
+        <td class="admin-unit"><%= o.place || '–' %></td>
+        <td class="admin-unit"><%= o.km != null ? o.km + ' km' : '–' %></td>
+        <td style="text-align:right"><%= zl(o.amountGr || 0) %></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } %>
+  <% } %>
+
+  <h1 class="admin-section">Prijzen</h1>
   <p style="color:var(--muted);font-weight:700">Pas prijzen aan (in zł) en klik op Opslaan. Gewijzigde regels kleuren geel. Wijzigingen zijn direct live — ook voor Stripe en de AI-assistent.</p>
 
   <div class="admin-bar">

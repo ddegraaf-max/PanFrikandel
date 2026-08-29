@@ -19,6 +19,8 @@ Node.js/Express/EJS + Stripe Checkout (BLIK · P24 · karta) + Resend.
 | `ANTHROPIC_API_KEY` | `sk-ant-...` — voor de AI-assistent "Pan Frikandel" |
 | `ADMIN_PASSWORD` | wachtwoord voor het prijzenbeheer op `/admin` |
 | `DATABASE_URL` | Railway PostgreSQL — nodig zodat prijswijzigingen deploys overleven |
+| `LOCAL_DELIVERY` | `off` om de pilot "dowozimy sami" (Płock +50 km) uit te zetten (optioneel, standaard aan) |
+| `LOCAL_RADIUS_KM` | straal van de lokale bezorgzone in km (optioneel, standaard 50) |
 
 ## Stripe-instellingen
 
@@ -32,6 +34,8 @@ Node.js/Express/EJS + Stripe Checkout (BLIK · P24 · karta) + Resend.
 
 - **Producten & prijzen**: bovenin `server.js` (`PRODUCTS`, prijzen in grosze).
 - **Verzendkosten / gratis-drempel**: `SHIPPING` in `server.js`.
+- **Lokale bezorging (prijs, gratis-drempel, levertekst)**: `LOCAL_DELIVERY` in `server.js`;
+  postcodetabel `LOCAL_POSTCODES` / `LOCAL_PREFIXES` eronder.
 - **Bedrijfsgegevens invullen**: `views/regulamin.ejs` en `views/prywatnosc.ejs`
   → placeholder `[NAZWA FIRMY, adres, NIP/KvK]`.
 
@@ -68,3 +72,35 @@ project) gaan overrides naar de tabel `price_overrides` en overleven ze
 elke deploy. Zonder database valt de app terug op `data/prices.json` —
 prima lokaal, maar op Railway gaat dat bestand bij een redeploy verloren,
 dus koppel daar altijd PostgreSQL.
+
+## Pilot: bezorging Płock + 50 km ("Dowozimy sami")
+
+Naast de kurier door heel Polen kan een klant in een straal van 50 km rond
+Płock kiezen voor eigen bezorging. Zo werkt het:
+
+- **Zonecheck op postcode** — geen externe API. `LOCAL_POSTCODES` in
+  `server.js` koppelt postcodes/gminy rond Płock aan coördinaten; de
+  afstand tot het centrum van Płock (hemelsbreed) bepaalt of een code binnen
+  `LOCAL_DELIVERY.radiusKm` valt. Onbekende codes vallen terug op de
+  prefix-tabel `LOCAL_PREFIXES` (hoofdplaats van de subregio) en anders op
+  "buiten de zone" (kurier). Ontbrekende codes zie je in `/admin` onder
+  "onbekend" — voeg ze toe aan de tabel.
+- **Shop** — postcodechecker in de sectie "Dostawa" (`#lokalnie`) en in de
+  winkelmand. Zit de klant in de zone, dan rekent de winkelmand met de lokale
+  prijs en krijgt Stripe Checkout de extra verzendoptie "Dowozimy sami"
+  (bovenaan; de kurier blijft kiesbaar). De gekozen optie staat in de
+  Stripe-sessie als `shipping_rate.metadata.typ` (`lokalna` / `kurier`),
+  plus `metadata.kod_pocztowy` en `odleglosc_km` op de sessie zelf.
+- **Bevestiging** — `/sukces` en de Resend-mail tonen bij een lokale
+  bestelling "Dowozimy sami — zadzwonimy" met het afleveradres; ligt het
+  Stripe-adres tóch buiten de zone, dan komt er een ⚠️ in de serverlog en in
+  `/admin`.
+- **Meten of het aanslaat** — elke postcodecheck (`local_zone_checks`) en
+  elke betaalde lokale bestelling (`local_orders`) wordt gelogd in PostgreSQL
+  (of `data/local-stats.json` zonder `DATABASE_URL`). `/admin` toont de
+  laatste 30 dagen: checks, aandeel in de zone, top-postcodes, lokale
+  bestellingen en omzet.
+- **Aan/uit** — `LOCAL_DELIVERY=off` verbergt alles (banner, checker,
+  Stripe-optie); `LOCAL_RADIUS_KM` verandert de straal zonder code-wijziging.
+- **Endpoint** — `POST /api/strefa` `{ kod: "09-400", zrodlo: "koszyk"|"sekcja" }`
+  → `{ code, known, place, km, inZone, priceGr, freeAboveGr, eta, radiusKm }`.

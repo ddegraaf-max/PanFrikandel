@@ -4,8 +4,16 @@
   const byId = Object.fromEntries(window.CATALOG.map(p => [p.id, p]));
   const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
 
+  const LOCAL = window.LOCAL || { enabled: false };
+  const ZKEY = 'pf_zone_v1';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
   let cart = {};
   try { cart = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { cart = {}; }
+  // strefa dostawy lokalnej (Płock + 50 km) — onthouden per browser
+  let zone = null;
+  try { zone = LOCAL.enabled ? JSON.parse(localStorage.getItem(ZKEY)) : null; } catch (e) { zone = null; }
+  if (zone && !zone.code) zone = null;
   // opschonen: alleen bekende producten
   for (const id of Object.keys(cart)) if (!byId[id]) delete cart[id];
 
@@ -40,17 +48,32 @@
 
     const sub = subtotal();
     const ship = $('#cartShip');
-    if (!n) { ship.textContent = ''; }
-    else if (sub >= window.SHIPPING.freeAboveGr) {
-      ship.textContent = '🎉 Darmowa dostawa!';
-      ship.classList.add('free');
-    } else {
-      ship.textContent = `Dostawa ${zl(window.SHIPPING.standardGr)} · do darmowej brakuje ${zl(window.SHIPPING.freeAboveGr - sub)}`;
-      ship.classList.remove('free');
-    }
-    $('#cartTotal').textContent = zl(sub + (n && sub < window.SHIPPING.freeAboveGr ? window.SHIPPING.standardGr : 0));
+    const s = shippingFor(sub);
+    if (!n) { ship.textContent = ''; ship.classList.remove('free'); }
+    else { ship.textContent = s.text; ship.classList.toggle('free', s.free); }
+    $('#cartTotal').textContent = zl(sub + (n ? s.gr : 0));
     $('#checkoutBtn').disabled = !n;
     save();
+  }
+
+  // Verzendkosten: lokale bezorging als de postcode in de zone valt, anders kurier
+  function shippingFor(sub) {
+    if (zone && zone.inZone) {
+      const free = sub >= LOCAL.freeAboveGr;
+      return {
+        gr: free ? 0 : LOCAL.priceGr, free,
+        text: free
+          ? `🎉 Dowozimy sami do ${zone.place} — GRATIS!`
+          : `🛵 Dowozimy sami (${zone.place}, ${zone.km} km): ${zl(LOCAL.priceGr)} · gratis od ${zl(LOCAL.freeAboveGr)}`
+      };
+    }
+    const free = sub >= window.SHIPPING.freeAboveGr;
+    return {
+      gr: free ? 0 : window.SHIPPING.standardGr, free,
+      text: free
+        ? '🎉 Darmowa dostawa!'
+        : `Dostawa ${zl(window.SHIPPING.standardGr)} · do darmowej brakuje ${zl(window.SHIPPING.freeAboveGr - sub)}`
+    };
   }
 
   function open() { drawer.hidden = false; overlay.hidden = false; document.body.style.overflow = 'hidden'; }
@@ -152,7 +175,10 @@
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: Object.entries(cart).map(([id, qty]) => ({ id, qty })) })
+        body: JSON.stringify({
+          items: Object.entries(cart).map(([id, qty]) => ({ id, qty })),
+          kod: zone ? zone.code : null
+        })
       });
       const data = await res.json();
       if (data.url) { location.href = data.url; return; }
@@ -163,6 +189,65 @@
     btn.disabled = false;
     btn.textContent = 'Przejdź do płatności →';
   });
+
+  // ---- strefa dostawy lokalnej: kod pocztowy → /api/strefa ----
+  const fmtKod = v => {
+    const d = String(v).replace(/\D/g, '').slice(0, 5);
+    return d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d;
+  };
+  function zoneMsg(z) {
+    if (z.inZone) return { cls: 'ok', html: `✅ <b>${esc(z.place)}</b> (${z.km} km od Płocka) — dowozimy sami! ${zl(z.priceGr)}, gratis od ${zl(z.freeAboveGr)}, ${esc(z.eta)}.` };
+    if (z.known) return { cls: 'no', html: `🚚 <b>${esc(z.place)}</b> to ${z.km} km od Płocka — poza strefą ${z.radiusKm} km. Wyślemy kurierem w termoboxie (24–48 h).` };
+    return { cls: 'no', html: `🚚 Kodu ${esc(z.code)} nie ma w naszej strefie — wyślemy kurierem (24–48 h). Mieszkasz blisko Płocka? <a href="mailto:hallo@panfrikandel.pl">Napisz do nas</a>.` };
+  }
+  function showZoneResult(out, cls, html) {
+    if (!out) return;
+    out.innerHTML = html;
+    out.classList.remove('ok', 'no');
+    out.classList.add(cls);
+    out.hidden = false;
+  }
+  function paintZone() {
+    if (!zone) return;
+    const m = zoneMsg(zone);
+    document.querySelectorAll('[data-zone-form]').forEach(f => {
+      const inp = f.querySelector('[data-zone-input]');
+      if (inp) inp.value = zone.code;
+      showZoneResult(f.querySelector('[data-zone-result]'), m.cls, m.html);
+    });
+  }
+  document.addEventListener('input', e => {
+    if (e.target.matches('[data-zone-input]')) e.target.value = fmtKod(e.target.value);
+  });
+  document.addEventListener('submit', async e => {
+    const f = e.target.closest('[data-zone-form]');
+    if (!f) return;
+    e.preventDefault();
+    const inp = f.querySelector('[data-zone-input]'), out = f.querySelector('[data-zone-result]');
+    const btn = f.querySelector('button[type="submit"]');
+    const kod = fmtKod(inp.value);
+    inp.value = kod;
+    if (kod.length !== 6) { showZoneResult(out, 'no', 'Wpisz pełny kod pocztowy, np. 09-400.'); return; }
+    btn.disabled = true;
+    try {
+      const r = await fetch('/api/strefa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kod, zrodlo: f.dataset.source })
+      });
+      const z = await r.json();
+      if (!r.ok) throw new Error(z.error || 'Błąd');
+      zone = z;
+      try { localStorage.setItem(ZKEY, JSON.stringify(zone)); } catch (err) {}
+      paintZone();
+      render();
+      if (z.inZone) toast('🛵 Dowozimy do Ciebie sami!');
+    } catch (err) {
+      showZoneResult(out, 'no', 'Nie udało się sprawdzić kodu — spróbuj ponownie.');
+    }
+    btn.disabled = false;
+  });
+  paintZone();
 
   // na sukces-pagina wordt de cart geleegd; hier: als ?anulowano=1 open drawer weer
   if (new URLSearchParams(location.search).get('anulowano')) open();

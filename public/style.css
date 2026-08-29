@@ -525,3 +525,58 @@ em { font-style: normal; color: var(--oranje); }
   padding: 7px 10px; font: 700 14px 'Hanken Grotesk', sans-serif; background: #fff;
 }
 .admin-price:focus { outline: 3px solid var(--geel); }
+
+
+/* ---------- Dostawa lokalna — Płock + 50 km (pilot) ---------- */
+.hero-sub a { color: var(--geel); font-weight: 800; }
+.step p a { color: var(--geel); font-weight: 800; }
+.local-box {
+  margin-top: 44px; text-align: left;
+  display: grid; grid-template-columns: 1.1fr .9fr; gap: 28px; align-items: center;
+  background: var(--oranje); color: var(--paper);
+  border: 3px solid var(--paper); border-radius: var(--radius);
+  padding: clamp(22px, 3vw, 36px); box-shadow: 8px 8px 0 var(--geel);
+}
+.local-kicker {
+  display: inline-block; background: var(--ink); color: var(--geel);
+  font-weight: 800; font-size: 13px; letter-spacing: .06em; text-transform: uppercase;
+  padding: 6px 14px; border-radius: 999px; margin-bottom: 14px; transform: rotate(-1.5deg);
+}
+.local-box h3 {
+  font-family: 'Shrikhand', cursive; font-weight: 400; line-height: 1.05;
+  font-size: clamp(26px, 3.4vw, 38px); margin-bottom: 12px;
+  text-shadow: 3px 3px 0 rgba(42,21,3,.35);
+}
+.local-box h3 em { color: var(--geel); font-style: normal; }
+.local-box p { font-size: 15.5px; }
+.zone-form {
+  background: var(--paper); color: var(--ink);
+  border: 3px solid var(--ink); border-radius: 14px; padding: 20px; box-shadow: var(--shadow-sm);
+}
+.zone-form label { display: block; font-weight: 800; margin-bottom: 10px; }
+.zone-row { display: flex; gap: 10px; }
+.zone-row input, .cart-zone input {
+  flex: 1; min-width: 0; border: 2.5px solid var(--ink); border-radius: 12px;
+  padding: 11px 14px; font: 700 16px 'Hanken Grotesk', sans-serif; letter-spacing: .06em;
+  background: #fff; color: var(--ink);
+}
+.zone-row input:focus, .cart-zone input:focus { outline: 3px solid var(--geel); }
+.zone-result { margin-top: 12px; font-size: 14.5px; font-weight: 700; line-height: 1.4; }
+.zone-result.ok { color: #1a7a2e; }
+.zone-result.no { color: var(--muted); }
+.zone-result a { color: inherit; }
+.cart-zone {
+  display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+  margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px dashed rgba(42,21,3,.2);
+}
+.cart-zone-label { grid-column: 1 / -1; font-size: 13px; font-weight: 800; }
+.cart-zone input { padding: 8px 12px; font-size: 14px; }
+.cart-zone .zone-result { grid-column: 1 / -1; margin-top: 0; font-size: 13px; }
+@media (max-width: 860px) { .local-box { grid-template-columns: 1fr; } }
+
+/* admin — pilot-statistieken */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 14px 0 18px; }
+.stat { background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow-sm); }
+.stat b { display: block; font-family: 'Shrikhand', cursive; font-size: 26px; color: var(--oranje); line-height: 1.1; }
+.stat span { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+.admin-section { margin-top: 40px; }

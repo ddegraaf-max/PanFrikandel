@@ -11,7 +11,7 @@
 <div class="topbar">
   <div class="marquee"><div class="marquee-track">
     <% for (let i = 0; i < 3; i++) { %>
-      <span>FRIKANDEL</span><i>★</i><span>BITTERBALLEN</span><i>★</i><span>KROKET</span><i>★</i><span>KAASSOUFFLÉ</span><i>★</i><span>DOSTAWA W CAŁEJ POLSCE</span><i>★</i><span>LEKKER!</span><i>★</i>
+      <span>FRIKANDEL</span><i>★</i><span>BITTERBALLEN</span><i>★</i><span>KROKET</span><i>★</i><span>KAASSOUFFLÉ</span><i>★</i><span>DOSTAWA W CAŁEJ POLSCE</span><i>★</i><% if (local.enabled) { %><span>PŁOCK +<%= local.radiusKm %> KM: DOWOZIMY SAMI</span><i>★</i><% } %><span>LEKKER!</span><i>★</i>
     <% } %>
   </div></div>
 </div>
@@ -39,7 +39,7 @@
     <div class="hero-copy">
       <p class="hero-kicker">🇳🇱 Prosto z Holandii → 🇵🇱 pod Twoje drzwi</p>
       <h1>Tęsknisz za <em>frikandelem</em>?<br>My go przywozimy.</h1>
-      <p class="hero-sub">Oryginalne przekąski z holenderskiej frytkowni — mrożone, pakowane w termobox z suchym lodem i dostarczane kurierem <strong>w całej Polsce w 24–48 h</strong>.</p>
+      <p class="hero-sub">Oryginalne przekąski z holenderskiej frytkowni — mrożone, pakowane w termobox z suchym lodem i dostarczane kurierem <strong>w całej Polsce w 24–48 h</strong>.<% if (local.enabled) { %> Mieszkasz w Płocku lub okolicy? <a href="#lokalnie">Dowozimy sami.</a><% } %></p>
       <div class="hero-cta">
         <a href="#sklep" class="btn btn-primary">Zamów teraz</a>
         <a href="#dostawa" class="btn btn-ghost">Jak działa dostawa?</a>
@@ -48,6 +48,7 @@
         <span>❄️ Zawsze mrożone</span>
         <span>💳 BLIK · P24 · karta</span>
         <span>🚚 Gratis od <%= zl(shipping.freeAboveGr) %></span>
+        <% if (local.enabled) { %><span>🛵 Płock +<%= local.radiusKm %> km: dowozimy sami</span><% } %>
       </div>
     </div>
     <div class="hero-art">
@@ -137,9 +138,28 @@
     <div class="steps">
       <div class="step"><b>1</b><h4>Zamawiasz</h4><p>Wybierasz przekąski, płacisz BLIK-iem, Przelewy24 lub kartą przez bezpieczny Stripe.</p></div>
       <div class="step"><b>2</b><h4>Pakujemy na zimno</h4><p>Termobox + suchy lód utrzymują -18°C przez ponad 48 godzin.</p></div>
-      <div class="step"><b>3</b><h4>Kurier puka</h4><p>Dostawa w 24–48 h pod dowolny adres w Polsce. Wysyłka <%= zl(shipping.standardGr) %>, <strong>gratis od <%= zl(shipping.freeAboveGr) %></strong>.</p></div>
+      <div class="step"><b>3</b><h4>Kurier puka</h4><p>Dostawa w 24–48 h pod dowolny adres w Polsce. Wysyłka <%= zl(shipping.standardGr) %>, <strong>gratis od <%= zl(shipping.freeAboveGr) %></strong>.<% if (local.enabled) { %> W Płocku i okolicy <a href="#lokalnie">dowozimy sami</a>.<% } %></p></div>
       <div class="step"><b>4</b><h4>Do zamrażarki → airfryer</h4><p>10 minut i masz w domu prawdziwą holenderską frytkownię. Eet smakelijk!</p></div>
     </div>
+
+    <% if (local.enabled) { %>
+    <!-- Pilot: dostawa własna Płock + 50 km -->
+    <div class="local-box" id="lokalnie">
+      <div class="local-copy">
+        <p class="local-kicker">🛵 Nowość · <%= local.city %> i okolice</p>
+        <h3>Mieszkasz do <%= local.radiusKm %> km od Płocka?<br><em>Dowozimy sami.</em></h3>
+        <p>Bez kuriera — przywozimy zamówienie własnym transportem, prosto z mroźni, <%= local.eta %>. Dostawa <strong><%= zl(local.priceGr) %></strong>, <strong>gratis od <%= zl(local.freeAboveGr) %></strong>. Przed dostawą dzwonimy, żeby umówić godzinę.</p>
+      </div>
+      <form class="zone-form" data-zone-form data-source="sekcja">
+        <label for="zoneKod">Sprawdź, czy dowozimy do Ciebie</label>
+        <div class="zone-row">
+          <input id="zoneKod" data-zone-input inputmode="numeric" autocomplete="postal-code" placeholder="np. 09-400" maxlength="6" aria-label="Kod pocztowy">
+          <button class="btn btn-primary" type="submit">Sprawdź</button>
+        </div>
+        <p class="zone-result" data-zone-result hidden></p>
+      </form>
+    </div>
+    <% } %>
   </div>
   <div class="check-strip"></div>
 </section>
@@ -151,6 +171,9 @@
   <details><summary>Czy produkty dojadą naprawdę zamrożone?</summary><p>Tak. Pakujemy w profesjonalny termobox z suchym lodem (-78°C), który utrzymuje głębokie mrożenie znacznie dłużej niż trwa transport. Po odbiorze włóż produkty od razu do zamrażarki.</p></details>
   <details><summary>Jak przygotować przekąski?</summary><p>Najlepiej w airfryerze (ok. 8–10 min, 180°C) lub piekarniku (ok. 12–15 min, 200°C). Można też klasycznie we frytkownicy — 3–4 minuty w 180°C. Zawsze prosto z zamrażarki, bez rozmrażania.</p></details>
   <details><summary>Jakie są metody płatności?</summary><p>BLIK, Przelewy24 i karty płatnicze — wszystko obsługiwane przez Stripe, bez zakładania konta.</p></details>
+  <% if (local.enabled) { %>
+  <details><summary>Mieszkam w Płocku lub okolicy — dowozicie sami?</summary><p>Tak! W promieniu <%= local.radiusKm %> km od Płocka testujemy dostawę własnym transportem: <%= zl(local.priceGr) %>, gratis od <%= zl(local.freeAboveGr) %>, <%= local.eta %>. Wpisz kod pocztowy w koszyku lub w sekcji <a href="#lokalnie">Dostawa</a> — jeśli jesteś w strefie, przy płatności pojawi się opcja „Dowozimy sami”. Przed dostawą kontaktujemy się telefonicznie.</p></details>
+  <% } %>
   <details><summary>Co jeśli nie będzie mnie w domu?</summary><p>Kurier podejmie drugą próbę doręczenia. Termobox spokojnie wytrzyma ten czas, ale zalecamy wybrać dzień, w którym ktoś odbierze paczkę.</p></details>
 </section>
 
@@ -159,7 +182,7 @@
   <div class="footer-inner">
     <div>
       <p class="footer-logo">Pan Frikandel</p>
-      <p>Holenderskie przekąski z dostawą<br>w całej Polsce. Echt lekker.</p>
+      <p>Holenderskie przekąski z dostawą<br>w całej Polsce<% if (local.enabled) { %> — w Płocku i okolicy dowozimy sami<% } %>. Echt lekker.</p>
     </div>
     <div>
       <p class="footer-head">Sklep</p>
@@ -199,6 +222,14 @@
   </div>
   <div class="cart-items" id="cartItems"></div>
   <div class="cart-foot">
+    <% if (local.enabled) { %>
+    <form class="cart-zone" data-zone-form data-source="koszyk">
+      <span class="cart-zone-label">🛵 <%= local.city %> +<%= local.radiusKm %> km? Sprawdź kod — dowozimy sami od <%= zl(local.priceGr) %></span>
+      <input data-zone-input inputmode="numeric" autocomplete="postal-code" placeholder="09-400" maxlength="6" aria-label="Kod pocztowy">
+      <button type="submit" class="btn btn-add">Sprawdź</button>
+      <p class="zone-result" data-zone-result hidden></p>
+    </form>
+    <% } %>
     <p class="cart-ship" id="cartShip"></p>
     <div class="cart-total"><span>Razem</span><b id="cartTotal">0,00 zł</b></div>
     <button class="btn btn-primary btn-checkout" id="checkoutBtn">Przejdź do płatności →</button>
@@ -239,6 +270,7 @@
 <script>
   window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon, img: p.img || null }))) %>;
   window.SHIPPING = <%- JSON.stringify(shipping) %>;
+  window.LOCAL = <%- JSON.stringify(local) %>;
 </script>
 <script src="/shop.js?v=<%= v %>"></script>
 </body>

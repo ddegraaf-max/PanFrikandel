@@ -36,9 +36,9 @@ const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null;
 // Bedrijfsgegevens (regulamin, privacybeleid, footer) — jednoosobowa działalność, wpis w CEIDG
 const COMPANY = {
   name:    process.env.COMPANY_NAME    || 'Budomatch Daniel de Graaf',
-  address: process.env.COMPANY_ADDRESS || '',          // bv. "ul. Przykładowa 1, 09-400 Płock"
-  nip:     process.env.COMPANY_NIP     || '',
-  regon:   process.env.COMPANY_REGON   || '',
+  address: process.env.COMPANY_ADDRESS || 'Białka 15, 09-550 Białka',   // gmina Szczawin Kościelny (zoals op budomatch.pl)
+  nip:     process.env.COMPANY_NIP     || '7010869430',
+  regon:   process.env.COMPANY_REGON   || '381430120',
   email:   process.env.COMPANY_EMAIL   || 'hallo@panfrikandel.pl',
   phone:   process.env.COMPANY_PHONE   || ''
 };

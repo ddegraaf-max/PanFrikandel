@@ -1,6 +1,6 @@
 // ============================================================
-//  PAN FRIKANDEL — server.js
-//  Holenderskie przekąski · dostawa w całej Polsce · Płock +50 km: dowozimy sami
+//  PANFRIKANDEL — server.js
+//  Holenderskie przekąski · dowozimy sami: Płock + 50 km · PL/EN
 //  Stack: Express + EJS + Stripe Checkout + Resend
 // ============================================================
 
@@ -21,7 +21,7 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const ORDER_EMAIL_FROM = process.env.ORDER_EMAIL_FROM || 'Pan Frikandel <zamowienia@panfrikandel.pl>';
+const ORDER_EMAIL_FROM = process.env.ORDER_EMAIL_FROM || 'PanFrikandel <zamowienia@panfrikandel.pl>';
 const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null;
 
 const ASSET_V = Date.now().toString(36);
@@ -636,11 +636,6 @@ const PRODUCTS = [
     ] } }
 ];
 
-const SHIPPING = {
-  standardGr: 4900,          // 49 zł — kurier z termoboxem
-  freeAboveGr: 25000         // gratis powyżej 250 zł
-};
-
 const productById = Object.fromEntries(PRODUCTS.map(p => [p.id, p]));
 const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
 
@@ -702,25 +697,24 @@ async function savePrices(changes) {
 }
 
 // ============================================================
-//  DOSTAWA LOKALNA — Płock + 50 km (własny transport, pilotaż)
-//  Uitzetten: env LOCAL_DELIVERY=off · straal: env LOCAL_RADIUS_KM (default 50)
-//  Prijs, gratis-drempel en levertekst hieronder aanpassen.
+//  DOSTAWA — dowozimy sami, Płock + 50 km (jedyna forma dostawy)
+//  Straal: env DELIVERY_RADIUS_KM (default 50). Prijs, gratis-drempel en
+//  levertekst (PL/EN) hieronder aanpassen.
 // ============================================================
 
-const LOCAL_DELIVERY = {
-  enabled: process.env.LOCAL_DELIVERY !== 'off',
-  radiusKm: parseInt(process.env.LOCAL_RADIUS_KM, 10) || 50,
+const DELIVERY = {
+  radiusKm: parseInt(process.env.DELIVERY_RADIUS_KM || process.env.LOCAL_RADIUS_KM, 10) || 50,
   center: { name: 'Płock', lat: 52.5464, lon: 19.7065 },
-  priceGr: 1900,             // 19 zł — dowozimy sami
+  priceGr: 1900,             // 19 zł
   freeAboveGr: 15000,        // gratis powyżej 150 zł
-  eta: 'zwykle następnego dnia'
+  eta: { pl: 'zwykle następnego dnia', en: 'usually the next day' }
 };
 
 // Kody pocztowe → przybliżone współrzędne (centrum miejscowości / gminy).
 // Dokładny kod ma pierwszeństwo, potem prefiks "NN-N" (główne miasto podregionu).
-// Odległość liczona w linii prostej od centrum Płocka; strefa = LOCAL_DELIVERY.radiusKm.
+// Odległość liczona w linii prostej od centrum Płocka; strefa = DELIVERY.radiusKm.
 // Brakuje kodu? Dodaj wiersz — admin pokazuje sprawdzane kody, których nie ma w tabeli.
-const LOCAL_POSTCODES = [
+const ZONE_POSTCODES = [
   // powiat płocki (09-4xx; samo miasto Płock 09-400…09-410 → prefiks)
   ['09-411', 'Stara Biała', 52.585, 19.624],
   ['09-414', 'Brudzeń Duży', 52.643, 19.544],
@@ -808,7 +802,7 @@ const LOCAL_POSTCODES = [
   ['06-450', 'Glinojeck', 52.821, 20.277],
   ['06-456', 'Ojrzeń', 52.784, 20.474]
 ];
-const LOCAL_PREFIXES = {
+const ZONE_PREFIXES = {
   '09-4': ['Płock', 52.5464, 19.7065],
   '09-5': ['Gostynin', 52.430, 19.460],
   '09-2': ['Sierpc', 52.856, 19.670],
@@ -823,7 +817,7 @@ const LOCAL_PREFIXES = {
   '06-4': ['Ciechanów', 52.881, 20.619],
   '05-1': ['Nowy Dwór Mazowiecki', 52.431, 20.716]
 };
-const postcodeByCode = Object.fromEntries(LOCAL_POSTCODES.map(r => [r[0], r.slice(1)]));
+const postcodeByCode = Object.fromEntries(ZONE_POSTCODES.map(r => [r[0], r.slice(1)]));
 
 // "09400", "09 400", "09-400" → "09-400"; anders null
 function normalizePostcode(raw) {
@@ -839,31 +833,31 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 }
 
 // → { code, known, place, km, inZone }
-function checkLocalZone(raw) {
+function checkZone(raw) {
   const code = normalizePostcode(raw);
   if (!code) return { code: null, known: false, place: null, km: null, inZone: false };
-  const hit = postcodeByCode[code] || LOCAL_PREFIXES[code.slice(0, 4)];
+  const hit = postcodeByCode[code] || ZONE_PREFIXES[code.slice(0, 4)];
   if (!hit) return { code, known: false, place: null, km: null, inZone: false };
   const [place, lat, lon] = hit;
-  const km = Math.round(haversineKm(LOCAL_DELIVERY.center.lat, LOCAL_DELIVERY.center.lon, lat, lon));
-  return { code, known: true, place, km, inZone: LOCAL_DELIVERY.enabled && km <= LOCAL_DELIVERY.radiusKm };
+  const km = Math.round(haversineKm(DELIVERY.center.lat, DELIVERY.center.lon, lat, lon));
+  return { code, known: true, place, km, inZone: km <= DELIVERY.radiusKm };
 }
 
-const localPublic = () => ({
-  enabled: LOCAL_DELIVERY.enabled,
-  radiusKm: LOCAL_DELIVERY.radiusKm,
-  city: LOCAL_DELIVERY.center.name,
-  priceGr: LOCAL_DELIVERY.priceGr,
-  freeAboveGr: LOCAL_DELIVERY.freeAboveGr,
-  eta: LOCAL_DELIVERY.eta
+const deliveryPublic = lang => ({
+  radiusKm: DELIVERY.radiusKm,
+  city: DELIVERY.center.name,
+  priceGr: DELIVERY.priceGr,
+  freeAboveGr: DELIVERY.freeAboveGr,
+  eta: DELIVERY.eta[lang] || DELIVERY.eta.pl
 });
 
-// ---- Pilot-statistieken: postcodechecks + lokale bestellingen ----
+// ---- Statistieken: postcodechecks + bestellingen ----
 //      PostgreSQL (DATABASE_URL) of fallback data/local-stats.json
-const LOCAL_STATS_FILE = path.join(__dirname, 'data', 'local-stats.json');
-let localMem = { checks: [], orders: [] };
+//      (tabelnamen local_* zijn historisch; niet hernoemen zonder migratie)
+const STATS_FILE = path.join(__dirname, 'data', 'local-stats.json');
+let statsMem = { checks: [], orders: [] };
 
-async function initLocalStats() {
+async function initStats() {
   try {
     if (pool) {
       await pool.query(`CREATE TABLE IF NOT EXISTS local_zone_checks (
@@ -872,21 +866,21 @@ async function initLocalStats() {
       await pool.query(`CREATE TABLE IF NOT EXISTS local_orders (
         session_id TEXT PRIMARY KEY, postal_code TEXT, place TEXT, km INTEGER, amount_gr INTEGER,
         out_of_zone BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT now())`);
-    } else if (fs.existsSync(LOCAL_STATS_FILE)) {
-      localMem = JSON.parse(fs.readFileSync(LOCAL_STATS_FILE, 'utf8'));
-      localMem.checks = localMem.checks || [];
-      localMem.orders = localMem.orders || [];
+    } else if (fs.existsSync(STATS_FILE)) {
+      statsMem = JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
+      statsMem.checks = statsMem.checks || [];
+      statsMem.orders = statsMem.orders || [];
     }
   } catch (err) {
-    console.error('Lokale statistieken init mislukt:', err.message);
+    console.error('Statistieken init mislukt:', err.message);
   }
 }
 
-function saveLocalMem() {
+function saveStatsMem() {
   try {
-    localMem.checks = localMem.checks.slice(-3000);
-    fs.mkdirSync(path.dirname(LOCAL_STATS_FILE), { recursive: true });
-    fs.writeFileSync(LOCAL_STATS_FILE, JSON.stringify(localMem));
+    statsMem.checks = statsMem.checks.slice(-3000);
+    fs.mkdirSync(path.dirname(STATS_FILE), { recursive: true });
+    fs.writeFileSync(STATS_FILE, JSON.stringify(statsMem));
   } catch (e) {}
 }
 
@@ -898,31 +892,31 @@ async function logZoneCheck(z, source) {
         [z.code, z.place, z.km, z.inZone, source]
       );
     } else {
-      localMem.checks.push({ code: z.code, place: z.place, km: z.km, inZone: z.inZone, source, at: Date.now() });
-      saveLocalMem();
+      statsMem.checks.push({ code: z.code, place: z.place, km: z.km, inZone: z.inZone, source, at: Date.now() });
+      saveStatsMem();
     }
   } catch (err) {
     console.error('Postcodecheck loggen mislukt:', err.message);
   }
 }
 
-async function logLocalOrder(o) {
+async function logOrder(o) {
   try {
     if (pool) {
       await pool.query(
         'INSERT INTO local_orders (session_id, postal_code, place, km, amount_gr, out_of_zone) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (session_id) DO NOTHING',
         [o.sessionId, o.code, o.place, o.km, o.amountGr, o.outOfZone]
       );
-    } else if (!localMem.orders.some(x => x.sessionId === o.sessionId)) {
-      localMem.orders.push({ ...o, at: Date.now() });
-      saveLocalMem();
+    } else if (!statsMem.orders.some(x => x.sessionId === o.sessionId)) {
+      statsMem.orders.push({ ...o, at: Date.now() });
+      saveStatsMem();
     }
   } catch (err) {
-    console.error('Lokale bestelling loggen mislukt:', err.message);
+    console.error('Bestelling loggen mislukt:', err.message);
   }
 }
 
-async function getLocalStats(days = 30) {
+async function getStats(days = 30) {
   const since = Date.now() - days * 86400000;
   let checks, orders;
   if (pool) {
@@ -935,8 +929,8 @@ async function getLocalStats(days = 30) {
       [new Date(since)]
     )).rows;
   } else {
-    checks = localMem.checks.filter(c => c.at >= since);
-    orders = localMem.orders.filter(o => o.at >= since).slice().reverse();
+    checks = statsMem.checks.filter(c => c.at >= since);
+    orders = statsMem.orders.filter(o => o.at >= since).slice().reverse();
   }
   const byCode = {};
   for (const c of checks) {
@@ -944,16 +938,18 @@ async function getLocalStats(days = 30) {
     const b = byCode[c.code] || (byCode[c.code] = { code: c.code, place: c.place, km: c.km, inZone: c.inZone, n: 0 });
     b.n++;
   }
+  const codes = Object.values(byCode).sort((a, b) => b.n - a.n);
   return {
     days,
     checks: checks.length,
     inZone: checks.filter(c => c.inZone).length,
     unknown: checks.filter(c => !c.place).length,
-    uniqueCodes: Object.keys(byCode).length,
+    uniqueCodes: codes.length,
     orders: orders.length,
     revenueGr: orders.reduce((s, o) => s + (o.amountGr || 0), 0),
     outOfZone: orders.filter(o => o.outOfZone).length,
-    topCodes: Object.values(byCode).sort((a, b) => b.n - a.n).slice(0, 12),
+    topCodes: codes.slice(0, 12),
+    topOutside: codes.filter(c => !c.inZone).slice(0, 8),
     recentOrders: orders.slice(0, 10).map(o => ({ ...o, at: new Date(o.at) }))
   };
 }
@@ -1000,40 +996,94 @@ function registerFail(ip) {
 }
 
 // ============================================================
+//  TAAL (PL/EN)  — ?lang=en zet een cookie en redirect naar de schone URL;
+//  daarna cookie, anders Accept-Language (Engels vóór Pools → EN), anders PL.
+//  Views krijgen: lang, t(), dict, zl() (geldformaat per taal), delivery.
+// ============================================================
+
+const { UI, LANGS, makeT, money } = require('./locales/ui');
+const PRODUCTS_EN = require('./locales/products-en');
+const COOKIE_SECURE = BASE_URL.startsWith('https') ? '; Secure' : '';
+
+function localizeProduct(p, lang) {
+  if (lang !== 'en') return p;
+  const e = PRODUCTS_EN[p.id];
+  if (!e) return p;
+  return {
+    ...p,
+    name: e.name || p.name,
+    unit: e.unit || p.unit,
+    badge: e.badge !== undefined ? e.badge : p.badge,
+    desc: e.desc || p.desc,
+    details: p.details ? { ...p.details, ...(e.details || {}) } : p.details
+  };
+}
+const catalog = lang => PRODUCTS.map(p => localizeProduct(p, lang));
+
+function pickLang(req) {
+  const q = String(req.query.lang || '').toLowerCase();
+  if (LANGS.includes(q)) return q;
+  const c = getCookie(req, 'pf_lang');
+  if (LANGS.includes(c)) return c;
+  const al = String(req.headers['accept-language'] || '').toLowerCase();
+  const iPl = al.indexOf('pl'), iEn = al.indexOf('en');
+  return iEn >= 0 && (iPl < 0 || iEn < iPl) ? 'en' : 'pl';
+}
+
+app.use((req, res, next) => {
+  const lang = pickLang(req);
+  if (req.method === 'GET' && LANGS.includes(String(req.query.lang || '').toLowerCase())) {
+    res.setHeader('Set-Cookie', `pf_lang=${lang}; Path=/; Max-Age=${365 * 86400}; SameSite=Lax${COOKIE_SECURE}`);
+    const url = new URL(req.originalUrl, BASE_URL);
+    url.searchParams.delete('lang');
+    return res.redirect(url.pathname + url.search);
+  }
+  req.lang = lang;
+  res.locals.lang = lang;
+  res.locals.t = makeT(lang);
+  res.locals.dict = UI[lang] || UI.pl;
+  res.locals.zl = gr => money(gr, lang);
+  res.locals.delivery = deliveryPublic(lang);
+  next();
+});
+
+// ============================================================
 //  ROUTES
 // ============================================================
 
 app.get('/', (req, res) => {
-  res.render('index', { products: PRODUCTS, shipping: SHIPPING, local: localPublic(), v: ASSET_V, zl });
+  res.render('index', { products: catalog(req.lang), v: ASSET_V });
 });
 
-app.get('/regulamin',   (req, res) => res.render('regulamin',   { v: ASSET_V }));
-app.get('/prywatnosc',  (req, res) => res.render('prywatnosc',  { v: ASSET_V }));
+app.get('/regulamin',   (req, res) => res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }));
+app.get('/prywatnosc',  (req, res) => res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }));
 
-// ---- Admin: prijzenbeheer ----
+// ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
+const adminLocals = extra => ({ products: PRODUCTS, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, error: null, ...extra });
+
 app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
   const authed = isAdmin(req);
-  let localStats = null;
+  let stats = null;
   if (authed) {
-    try { localStats = await getLocalStats(30); } catch (err) { console.error('Lokale statistieken:', err.message); }
+    try { stats = await getStats(30); } catch (err) { console.error('Statistieken:', err.message); }
   }
-  res.render('admin', { authed, products: PRODUCTS, v: ASSET_V, zl, error: null, local: localPublic(), localStats });
+  res.render('admin', adminLocals({ authed, stats }));
 });
 
 app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
   const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
   if (!ADMIN_PASSWORD || !loginAllowed(ip)) {
-    return res.status(429).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, local: localPublic(), localStats: null, error: 'Te veel pogingen — probeer het over 15 minuten opnieuw.' });
+    return res.status(429).render('admin', adminLocals({ authed: false, error: 'Te veel pogingen — probeer het over 15 minuten opnieuw.' }));
   }
   const given = String(req.body.password || '');
   const ok = given.length === ADMIN_PASSWORD.length &&
     crypto.timingSafeEqual(Buffer.from(given), Buffer.from(ADMIN_PASSWORD));
   if (!ok) {
     registerFail(ip);
-    return res.status(401).render('admin', { authed: false, products: PRODUCTS, v: ASSET_V, zl, local: localPublic(), localStats: null, error: 'Onjuist wachtwoord.' });
+    return res.status(401).render('admin', adminLocals({ authed: false, error: 'Onjuist wachtwoord.' }));
   }
-  res.setHeader('Set-Cookie', `pf_admin=${adminToken()}; HttpOnly; Path=/; Max-Age=${8 * 3600}; SameSite=Lax${BASE_URL.startsWith('https') ? '; Secure' : ''}`);
+  res.setHeader('Set-Cookie', `pf_admin=${adminToken()}; HttpOnly; Path=/; Max-Age=${8 * 3600}; SameSite=Lax${COOKIE_SECURE}`);
   res.redirect('/admin');
 });
 
@@ -1062,40 +1112,34 @@ app.post('/admin/prices', async (req, res) => {
   }
 });
 
-// ---- AI Frikandel-assistent (Pan Frikandel) ----
+// ---- AI-assistent (PanFrikandel) ----
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
 
-const CATALOG_FOR_AI = () => PRODUCTS.map(p =>
-  `${p.id} | ${p.name} | ${zl(p.price)} | ${p.unit} | kat: ${p.cat}${p.badge ? ' | ' + p.badge : ''} | ${p.desc}`
+const CATALOG_FOR_AI = lang => catalog(lang).map(p =>
+  `${p.id} | ${p.name} | ${money(p.price, lang)} | ${p.unit} | kat: ${p.cat}${p.badge ? ' | ' + p.badge : ''} | ${p.desc}`
 ).join('\n');
 
-const DELIVERY_FOR_AI = () => {
-  let s = `dostawa mrożonek kurierem w całej Polsce, 24-48h, wysyłka ${zl(SHIPPING.standardGr)}, darmowa dostawa od ${zl(SHIPPING.freeAboveGr)}`;
-  if (LOCAL_DELIVERY.enabled) {
-    s += `; NOWOŚĆ (pilotaż): w promieniu ${LOCAL_DELIVERY.radiusKm} km od Płocka dowozimy sami za ${zl(LOCAL_DELIVERY.priceGr)}, gratis od ${zl(LOCAL_DELIVERY.freeAboveGr)}, ${LOCAL_DELIVERY.eta} — klient sprawdza kod pocztowy w koszyku lub w sekcji "Dostawa" na stronie`;
-  }
-  return s;
-};
-
-const ASSISTANT_SYSTEM = () => `Jesteś "Panem Frikandelem" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami (${DELIVERY_FOR_AI()}).
+const ASSISTANT_SYSTEM = lang => `Jesteś "PanFrikandel" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami.
+Dostawa: dowozimy sami WYŁĄCZNIE w promieniu ${DELIVERY.radiusKm} km od Płocka (${DELIVERY.eta.pl}), koszt ${money(DELIVERY.priceGr, 'pl')}, gratis od ${money(DELIVERY.freeAboveGr, 'pl')}. Klient sprawdza kod pocztowy w koszyku. Poza strefą na razie nie dowozimy — zapisujemy zainteresowanie i rozszerzamy zasięg tam, gdzie jest popyt.
 
 Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
 
 ZASADY:
-- Odpowiadasz WYŁĄCZNIE po polsku.
+- Język odpowiedzi: ${lang === 'en' ? 'ANGIELSKI (klient korzysta z angielskiej wersji sklepu)' : 'POLSKI'}. Jeśli klient wyraźnie pisze w innym języku, odpowiadaj w jego języku.
 - Polecasz TYLKO produkty z katalogu. Gdy polecasz produkt, wstaw jego ID w podwójnych nawiasach: [[id-produktu]]. Maksymalnie 3-4 polecenia naraz.
 - Pytaj o preferencje gdy potrzeba (mięsne/wege, ostre/łagodne, na imprezę/na obiad, piekarnik/frytkownica/airfryer).
 - Znasz się na holenderskiej kulturze frytkowni (frikandel speciaal, broodje kroket, patatje oorlog, bitterballen z musztardą przy piwie) i chętnie ją tłumaczysz.
 - Nie wymyślasz cen, składników ani produktów spoza katalogu. Przy pytaniach o alergeny odsyłaj do szczegółów produktu na stronie.
+- Pytania o dostawę: dowozimy tylko w promieniu ${DELIVERY.radiusKm} km od Płocka — odsyłaj do sprawdzenia kodu pocztowego w koszyku; nie obiecuj dostawy poza strefą.
 - Nie odpowiadasz na pytania niezwiązane ze sklepem — uprzejmie wracasz do tematu przekąsek.
-- Pytania o dostawę lokalną (Płock i okolice): odsyłaj do sprawdzenia kodu pocztowego na stronie; nie obiecuj dostawy własnej poza strefą.
 
 KATALOG:
-${CATALOG_FOR_AI()}`;
+${CATALOG_FOR_AI(lang)}`;
 
 app.post('/api/assistent', async (req, res) => {
+  const t = res.locals.t;
   try {
-    if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'Asystent nie jest jeszcze skonfigurowany (ANTHROPIC_API_KEY).' });
+    if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: t('errAiConfig') });
 
     let msgs = Array.isArray(req.body.messages) ? req.body.messages : [];
     msgs = msgs.slice(-12).map(m => ({
@@ -1103,7 +1147,7 @@ app.post('/api/assistent', async (req, res) => {
       content: String(m.content || '').slice(0, 1500)
     })).filter(m => m.content);
     if (!msgs.length || msgs[msgs.length - 1].role !== 'user') {
-      return res.status(400).json({ error: 'Brak wiadomości.' });
+      return res.status(400).json({ error: t('errAiEmpty') });
     }
 
     const r = await fetch('https://api.anthropic.com/v1/messages', {
@@ -1116,46 +1160,54 @@ app.post('/api/assistent', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-haiku-4-5',   // snel & goedkoop; evt. 'claude-sonnet-4-6' voor slimmere antwoorden
         max_tokens: 600,
-        system: ASSISTANT_SYSTEM(),
+        system: ASSISTANT_SYSTEM(req.lang),
         messages: msgs
       })
     });
 
     if (!r.ok) {
       console.error('Anthropic API error:', r.status, await r.text());
-      return res.status(502).json({ error: 'Asystent chwilowo niedostępny. Spróbuj za moment.' });
+      return res.status(502).json({ error: t('errAiDown') });
     }
     const data = await r.json();
     const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-    res.json({ reply: reply || 'Hmm, spróbuj zapytać inaczej 🍟' });
+    res.json({ reply: reply || t('aiFallback') });
   } catch (err) {
     console.error('Assistent error:', err.message);
-    res.status(500).json({ error: 'Asystent chwilowo niedostępny.' });
+    res.status(500).json({ error: t('errAiDown') });
   }
 });
 
-// ---- Strefa dostawy lokalnej: sprawdzenie kodu pocztowego ----
+// ---- Strefa dostawy: sprawdzenie kodu pocztowego ----
 app.post('/api/strefa', (req, res) => {
-  const z = checkLocalZone(req.body.kod);
-  if (!z.code) return res.status(400).json({ error: 'Podaj kod pocztowy w formacie 09-400.' });
+  const z = checkZone(req.body.kod);
+  if (!z.code) return res.status(400).json({ error: res.locals.t('errZone') });
   const source = ['koszyk', 'sekcja'].includes(req.body.zrodlo) ? req.body.zrodlo : 'inne';
-  logZoneCheck(z, source);   // fire-and-forget (pilot-statistiek)
-  res.json({ ...z, ...localPublic() });
+  logZoneCheck(z, source);   // fire-and-forget (statistiek: ook vraag buiten de zone)
+  res.json({ ...z, ...deliveryPublic(req.lang) });
 });
 
 // ---- Stripe Checkout ----
 app.post('/api/checkout', async (req, res) => {
+  const t = res.locals.t, lang = req.lang;
   try {
-    if (!stripe) return res.status(500).json({ error: 'Płatności nie są jeszcze skonfigurowane (STRIPE_SECRET_KEY).' });
+    if (!stripe) return res.status(500).json({ error: t('errStripe') });
+
+    // Alleen bezorgen binnen de zone — server beslist, niet de browser
+    const zone = checkZone(req.body.kod);
+    if (!zone.inZone) {
+      return res.status(400).json({ error: t('errOutsideZone', { radius: DELIVERY.radiusKm }), outsideZone: true });
+    }
 
     const items = Array.isArray(req.body.items) ? req.body.items : [];
     const lineItems = [];
     let subtotal = 0;
 
     for (const it of items) {
-      const p = productById[it.id];
+      const base = productById[it.id];
       const qty = Math.min(Math.max(parseInt(it.qty, 10) || 0, 1), 50);
-      if (!p) continue;
+      if (!base) continue;
+      const p = localizeProduct(base, lang);
       subtotal += p.price * qty;
       lineItems.push({
         quantity: qty,
@@ -1167,58 +1219,33 @@ app.post('/api/checkout', async (req, res) => {
       });
     }
 
-    if (!lineItems.length) return res.status(400).json({ error: 'Koszyk jest pusty.' });
+    if (!lineItems.length) return res.status(400).json({ error: t('errEmptyCart') });
 
-    const freeShipping = subtotal >= SHIPPING.freeAboveGr;
-    const courierOption = {
-      shipping_rate_data: {
-        type: 'fixed_amount',
-        fixed_amount: { amount: freeShipping ? 0 : SHIPPING.standardGr, currency: 'pln' },
-        display_name: freeShipping
-          ? 'Kurier z termoboxem — GRATIS'
-          : 'Kurier z termoboxem (24–48 h)',
-        delivery_estimate: {
-          minimum: { unit: 'business_day', value: 1 },
-          maximum: { unit: 'business_day', value: 2 }
-        },
-        metadata: { typ: 'kurier' }
-      }
-    };
-
-    // Dostawa lokalna: alleen aanbieden als de postcode uit de koszyk in de zone valt
-    // (Stripe Checkout kan opties niet op adres filteren, dus wij checken vooraf)
-    const zone = checkLocalZone(req.body.kod);
-    const shippingOptions = [courierOption];
-    if (zone.inZone) {
-      const freeLocal = subtotal >= LOCAL_DELIVERY.freeAboveGr;
-      shippingOptions.unshift({
+    const free = subtotal >= DELIVERY.freeAboveGr;
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      locale: lang === 'en' ? 'en' : 'pl',
+      payment_method_types: ['card', 'p24', 'blik'],
+      line_items: lineItems,
+      shipping_address_collection: { allowed_countries: ['PL'] },
+      phone_number_collection: { enabled: true },
+      shipping_options: [{
         shipping_rate_data: {
           type: 'fixed_amount',
-          fixed_amount: { amount: freeLocal ? 0 : LOCAL_DELIVERY.priceGr, currency: 'pln' },
-          display_name: freeLocal
-            ? `Dowozimy sami — ${zone.place}, ${zone.km} km — GRATIS`
-            : `Dowozimy sami — ${zone.place}, ${zone.km} km`,
+          fixed_amount: { amount: free ? 0 : DELIVERY.priceGr, currency: 'pln' },
+          display_name: t(free ? 'shipLocalFree' : 'shipLocal', { place: zone.place, km: zone.km }),
           delivery_estimate: {
             minimum: { unit: 'business_day', value: 1 },
             maximum: { unit: 'business_day', value: 1 }
           },
           metadata: { typ: 'lokalna', kod: zone.code, km: String(zone.km) }
         }
-      });
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      locale: 'pl',
-      payment_method_types: ['card', 'p24', 'blik'],
-      line_items: lineItems,
-      shipping_address_collection: { allowed_countries: ['PL'] },
-      phone_number_collection: { enabled: true },
-      shipping_options: shippingOptions,
+      }],
       metadata: {
-        kod_pocztowy: zone.code || '',
-        strefa_lokalna: zone.inZone ? 'tak' : 'nie',
-        odleglosc_km: zone.km != null ? String(zone.km) : ''
+        kod_pocztowy: zone.code,
+        miejscowosc: zone.place,
+        odleglosc_km: String(zone.km),
+        lang
       },
       success_url: `${BASE_URL}/sukces?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${BASE_URL}/?anulowano=1#sklep`
@@ -1227,44 +1254,43 @@ app.post('/api/checkout', async (req, res) => {
     res.json({ url: session.url });
   } catch (err) {
     console.error('Checkout error:', err.message);
-    res.status(500).json({ error: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.' });
+    res.status(500).json({ error: t('errCheckout') });
   }
 });
 
 // ---- Success page + orderbevestiging via Resend ----
 const emailedSessions = new Set();
-const localLoggedSessions = new Set();
+const loggedSessions = new Set();
 
 app.get('/sukces', async (req, res) => {
   let order = null;
   try {
     if (stripe && req.query.session_id) {
       const session = await stripe.checkout.sessions.retrieve(req.query.session_id, {
-        expand: ['line_items', 'shipping_cost.shipping_rate']
+        expand: ['line_items']
       });
       if (session.payment_status === 'paid') {
-        const rate = session.shipping_cost?.shipping_rate;
-        const rateMeta = (rate && typeof rate === 'object' && rate.metadata) || {};
-        const isLocal = rateMeta.typ === 'lokalna';
+        // Taal van de bestelling = taal waarin de klant afrekende (metadata), niet de huidige cookie
+        const lang = LANGS.includes(session.metadata?.lang) ? session.metadata.lang : 'pl';
+        const t = makeT(lang);
         const addr = (session.shipping_details || session.collected_information?.shipping_details)?.address || null;
         order = {
           email: session.customer_details?.email || null,
           name: session.customer_details?.name || '',
-          total: zl(session.amount_total),
-          local: isLocal,
-          eta: LOCAL_DELIVERY.eta,
+          total: money(session.amount_total, lang),
+          eta: DELIVERY.eta[lang],
           address: addr ? [addr.line1, addr.line2, ((addr.postal_code || '') + ' ' + (addr.city || '')).trim()].filter(Boolean).join(', ') : '',
           items: (session.line_items?.data || []).map(li => ({
-            name: li.description, qty: li.quantity, total: zl(li.amount_total)
+            name: li.description, qty: li.quantity, total: money(li.amount_total, lang)
           }))
         };
 
-        // Pilot-statistiek: lokale bestelling registreren + checken of het afleveradres echt in de zone ligt
-        if (isLocal && !localLoggedSessions.has(session.id)) {
-          localLoggedSessions.add(session.id);
-          const z = checkLocalZone(addr?.postal_code || rateMeta.kod);
-          if (!z.inZone) console.warn(`⚠️ Lokalna dostawa poza strefą: ${session.id}, kod ${addr?.postal_code || '?'}`);
-          logLocalOrder({
+        // Statistiek: bestelling registreren + checken of het afleveradres echt in de zone ligt
+        if (!loggedSessions.has(session.id)) {
+          loggedSessions.add(session.id);
+          const z = checkZone(addr?.postal_code || session.metadata?.kod_pocztowy);
+          if (!z.inZone) console.warn(`⚠️ Bestelling buiten de zone: ${session.id}, kod ${addr?.postal_code || '?'}`);
+          logOrder({
             sessionId: session.id, code: z.code || addr?.postal_code || null, place: z.place, km: z.km,
             amountGr: session.amount_total, outOfZone: !z.inZone
           });
@@ -1273,29 +1299,24 @@ app.get('/sukces', async (req, res) => {
         if (resend && order.email && !emailedSessions.has(session.id)) {
           emailedSessions.add(session.id);
           const rows = order.items.map(i =>
-            `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${i.name}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`
+            `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${escHtml(i.name)}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`
           ).join('');
-          const deliveryHtml = order.local
-            ? `<p>🛵 <strong>Dowozimy sami!</strong> Zadzwonimy lub napiszemy, żeby umówić dostawę — ${LOCAL_DELIVERY.eta}. Produkty przywozimy prosto z mroźni, więc od razu włóż je do zamrażarki.${order.address ? '<br>📍 Adres dostawy: ' + escHtml(order.address) : ''}</p>`
-            : `<p>📦 Mrożonki wysyłamy w termoboxie z suchym lodem — kurier dostarczy paczkę w 24–48 h. Produkty włóż od razu do zamrażarki.</p>`;
           await resend.emails.send({
             from: ORDER_EMAIL_FROM,
             to: order.email,
             ...(ORDER_EMAIL_BCC ? { bcc: ORDER_EMAIL_BCC } : {}),
-            subject: order.local
-              ? 'Lekker! Twoje zamówienie w Pan Frikandel 🍟 — dowozimy sami'
-              : 'Lekker! Twoje zamówienie w Pan Frikandel 🍟',
+            subject: t('mailSubject'),
             html: `
               <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
                 <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
-                  <h1 style="margin:0;font-size:26px">Dziękujemy, ${order.name || 'smakoszu'}!</h1>
-                  <p style="margin:8px 0 0">Twoje holenderskie przekąski już się pakują.</p>
+                  <h1 style="margin:0;font-size:26px">${t('mailThanks', { name: escHtml(order.name || t('mailGuest')) })}</h1>
+                  <p style="margin:8px 0 0">${t('mailPacking')}</p>
                 </div>
                 <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
                   <table style="width:100%;border-collapse:collapse;font-size:15px">${rows}</table>
-                  <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">Razem: ${order.total}</p>
-                  ${deliveryHtml}
-                  <p style="color:#8a6a4f;font-size:13px">Pan Frikandel · panfrikandel.pl<br>Pytania? Odpowiedz na tego maila.</p>
+                  <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">${t('mailTotal')}: ${order.total}</p>
+                  <p>${t('mailDeliveryHtml', { eta: order.eta })}${order.address ? '<br>' + t('mailAddress') + escHtml(order.address) : ''}</p>
+                  <p style="color:#8a6a4f;font-size:13px">${t('mailFooterHtml')}</p>
                 </div>
               </div>`
           });
@@ -1310,6 +1331,6 @@ app.get('/sukces', async (req, res) => {
 
 app.use((req, res) => res.redirect('/'));
 
-Promise.all([loadPrices(), initLocalStats()]).then(() => {
-  app.listen(PORT, () => console.log(`🍟 Pan Frikandel draait op ${BASE_URL}`));
+Promise.all([loadPrices(), initStats()]).then(() => {
+  app.listen(PORT, () => console.log(`🍟 PanFrikandel draait op ${BASE_URL}`));
 });

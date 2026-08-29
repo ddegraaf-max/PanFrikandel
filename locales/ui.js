@@ -171,7 +171,7 @@ UI.pl = {
   truckCtaMenu: 'Menu',
 
   // sukces
-  successTitle: 'Dziękujemy! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Zamówienie przyjęte! 🍟',
+  successTitle: 'Dziękujemy! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Zamówienie przyjęte!',
   successThanks: 'Dziękujemy, {name}!',
   successPendingH1: 'Płatność w trakcie ⏳',
   successPendingHtml: 'Czekamy na potwierdzenie z banku — zwykle trwa to chwilę. Gdy płatność dojdzie, wyślemy potwierdzenie e-mailem.',
@@ -414,7 +414,7 @@ UI.en = {
   menuCats: { frytki: 'Fries & sauces', snacki: 'Snacks from the fryer', zestawy: 'Combos', napoje: 'Drinks' },
   truckCtaMenu: 'Menu',
 
-  successTitle: 'Thank you! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Order received! 🍟',
+  successTitle: 'Thank you! — PanFrikandel', successStickerHtml: 'Dank<br>je!', successH1: 'Order received!',
   successThanks: 'Thank you, {name}!',
   successPendingH1: 'Payment in progress ⏳',
   successPendingHtml: 'We\'re waiting for your bank to confirm — this usually takes a moment. As soon as the payment goes through, we\'ll e-mail you a confirmation.',

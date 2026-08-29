@@ -76,7 +76,7 @@ UI.pl = {
   cartZoneLabel: '📍 Podaj kod pocztowy — dowozimy w promieniu {radius} km od Płocka', cartZonePlaceholder: '09-400',
   cartTotal: 'Razem', checkout: 'Przejdź do płatności →', cartPay: '💳 BLIK · Przelewy24 · karta — przez Stripe',
 
-  aiFab: 'Zapytaj PanFrikandela', aiName: 'PanFrikandel', aiSub: 'Twój holenderski doradca 🍟',
+  aiFab: 'Zapytaj PanFrikandela', aiName: 'PanFrikandel', aiSub: 'Twój holenderski doradca',
   aiWelcome: 'Cześć! Tu PanFrikandel. Powiedz, na co masz ochotę — impreza ze znajomymi, szybki obiad, coś wege, coś bardzo ostrego? Doradzę jak stary znajomy z frytkowni. 🧡',
   aiPlaceholder: 'np. coś na imprezę dla 8 osób…',
 
@@ -165,7 +165,7 @@ UI.pl = {
   mailUnsubHtml: 'Nie chcesz więcej powiadomień? <a href="{url}">Wypisz się</a>.',
   // kortingscode + menu
   infoCodeText: 'Twój kod rabatowy: {code} — {percent}% na pierwsze zamówienie w sklepie online lub przy okienku food trucka.',
-  subWelcomeSubject: 'Witaj w PanFrikandel! Twój kod rabatowy 🍟',
+  subWelcomeSubject: 'Witaj w PanFrikandel! Twój kod rabatowy',
   subWelcomeBodyHtml: '<p>Zapis potwierdzony — damy Ci znać, gdy tylko staniemy w okolicy.</p><p style="font-size:17px">Twój kod rabatowy:<br><b style="font-size:26px;letter-spacing:.12em">{code}</b><br>{percent}% na pierwsze zamówienie w <a href="{siteUrl}">sklepie online</a> (wpisz kod w koszyku) lub przy okienku food trucka (pokaż kod).</p>',
   liveMailCodeHtml: '<p>Masz jeszcze kod <b>{code}</b> — {percent}% przy okienku lub w sklepie online.</p>',
   errCodeInvalid: 'Nieprawidłowy kod rabatowy.', errCodeUsed: 'Ten kod rabatowy został już wykorzystany.',
@@ -200,13 +200,13 @@ UI.pl = {
   errEmptyCart: 'Koszyk jest pusty.',
   errCheckout: 'Nie udało się rozpocząć płatności. Spróbuj ponownie.',
   errAiConfig: 'Asystent nie jest jeszcze skonfigurowany (ANTHROPIC_API_KEY).',
-  errAiEmpty: 'Brak wiadomości.', errAiDown: 'Asystent chwilowo niedostępny. Spróbuj za moment.', aiFallback: 'Hmm, spróbuj zapytać inaczej 🍟',
+  errAiEmpty: 'Brak wiadomości.', errAiDown: 'Asystent chwilowo niedostępny. Spróbuj za moment.', aiFallback: 'Hmm, spróbuj zapytać inaczej.',
   errQuoteForm: 'Podaj imię oraz e-mail lub telefon.',
   errQuoteEmpty: 'Dodaj przynajmniej jeden produkt albo napisz wiadomość.',
   errQuoteRate: 'Za dużo zapytań z tego adresu — spróbuj za godzinę.',
   errQuoteSend: 'Nie udało się wysłać zapytania. Napisz do nas na hallo@panfrikandel.pl.',
   shipLocal: 'Dowozimy sami — {place}, {km} km', shipLocalFree: 'Dowozimy sami — {place}, {km} km — GRATIS',
-  mailSubject: 'Lekker! Twoje zamówienie w PanFrikandel 🍟',
+  mailSubject: 'Lekker! Twoje zamówienie w PanFrikandel',
   mailThanks: 'Dziękujemy, {name}!', mailGuest: 'smakoszu', mailPacking: 'Twoje holenderskie przekąski już się pakują.', mailTotal: 'Razem',
   mailDeliveryHtml: '🛵 <strong>Dowozimy sami!</strong> Zadzwonimy lub napiszemy, żeby umówić dostawę — {eta}. Produkty przywozimy prosto z mroźni, więc od razu włóż je do zamrażarki.',
   mailAddress: '📍 Adres dostawy: ',
@@ -216,7 +216,7 @@ UI.pl = {
   quoteMailItems: 'Produkty w zapytaniu', quoteMailMessage: 'Twoja wiadomość',
 
   client: {
-    cartEmptyHtml: 'Koszyk jest pusty…<br>a frikandele same się nie zjedzą 🍟',
+    cartEmptyHtml: 'Koszyk jest pusty…<br>a frikandele same się nie zjedzą <svg class="txt-snack" aria-hidden="true"><use href="#snack-frikandel"/></svg>',
     less: 'Mniej', more: 'Więcej',
     needZone: '📍 Najpierw sprawdź kod pocztowy — dowozimy w promieniu {radius} km od Płocka.',
     outsideZone: '🚫 {place} ({km} km) jest poza naszą strefą {radius} km — na razie nie dowozimy. Zapisaliśmy Twoje zainteresowanie!',
@@ -329,7 +329,7 @@ UI.en = {
   cartZoneLabel: '📍 Enter your postcode — we deliver within {radius} km of Płock', cartZonePlaceholder: '09-400',
   cartTotal: 'Total', checkout: 'Go to checkout →', cartPay: '💳 BLIK · Przelewy24 · card — via Stripe',
 
-  aiFab: 'Ask PanFrikandel', aiName: 'PanFrikandel', aiSub: 'Your Dutch snack advisor 🍟',
+  aiFab: 'Ask PanFrikandel', aiName: 'PanFrikandel', aiSub: 'Your Dutch snack advisor',
   aiWelcome: 'Hi! PanFrikandel here. Tell me what you fancy — a party with friends, a quick dinner, something veggie, something really spicy? I\'ll advise you like an old friend from the snackbar. 🧡',
   aiPlaceholder: 'e.g. something for a party of 8…',
 
@@ -414,7 +414,7 @@ UI.en = {
   liveMailHours: ' · hours {hours}',
   mailUnsubHtml: 'Don\'t want alerts any more? <a href="{url}">Unsubscribe</a>.',
   infoCodeText: 'Your discount code: {code} — {percent}% off your first order in the online shop or at the food truck.',
-  subWelcomeSubject: 'Welcome to PanFrikandel! Your discount code 🍟',
+  subWelcomeSubject: 'Welcome to PanFrikandel! Your discount code',
   subWelcomeBodyHtml: '<p>Subscription confirmed — we\'ll let you know as soon as we stop nearby.</p><p style="font-size:17px">Your discount code:<br><b style="font-size:26px;letter-spacing:.12em">{code}</b><br>{percent}% off your first order in the <a href="{siteUrl}">online shop</a> (enter it in the cart) or at the food truck (show the code).</p>',
   liveMailCodeHtml: '<p>You still have code <b>{code}</b> — {percent}% off at the hatch or in the online shop.</p>',
   errCodeInvalid: 'Invalid discount code.', errCodeUsed: 'This discount code has already been used.',
@@ -447,13 +447,13 @@ UI.en = {
   errEmptyCart: 'Your cart is empty.',
   errCheckout: 'Could not start the payment. Please try again.',
   errAiConfig: 'The assistant is not configured yet (ANTHROPIC_API_KEY).',
-  errAiEmpty: 'No message.', errAiDown: 'The assistant is temporarily unavailable. Try again in a moment.', aiFallback: 'Hmm, try asking differently 🍟',
+  errAiEmpty: 'No message.', errAiDown: 'The assistant is temporarily unavailable. Try again in a moment.', aiFallback: 'Hmm, try asking differently.',
   errQuoteForm: 'Please give your name and an e-mail or phone number.',
   errQuoteEmpty: 'Add at least one product or write a message.',
   errQuoteRate: 'Too many requests from this address — try again in an hour.',
   errQuoteSend: 'Could not send the request. Please e-mail us at hallo@panfrikandel.pl.',
   shipLocal: 'We deliver ourselves — {place}, {km} km', shipLocalFree: 'We deliver ourselves — {place}, {km} km — FREE',
-  mailSubject: 'Lekker! Your PanFrikandel order 🍟',
+  mailSubject: 'Lekker! Your PanFrikandel order',
   mailThanks: 'Thank you, {name}!', mailGuest: 'snack lover', mailPacking: 'Your Dutch snacks are being packed.', mailTotal: 'Total',
   mailDeliveryHtml: '🛵 <strong>We deliver ourselves!</strong> We\'ll call or message you to arrange delivery — {eta}. The products come straight from our freezer, so put them in yours right away.',
   mailAddress: '📍 Delivery address: ',
@@ -463,7 +463,7 @@ UI.en = {
   quoteMailItems: 'Products in your request', quoteMailMessage: 'Your message',
 
   client: {
-    cartEmptyHtml: 'Your cart is empty…<br>and the frikandels won\'t eat themselves 🍟',
+    cartEmptyHtml: 'Your cart is empty…<br>and the frikandels won\'t eat themselves <svg class="txt-snack" aria-hidden="true"><use href="#snack-frikandel"/></svg>',
     less: 'Less', more: 'More',
     needZone: '📍 Check your postcode first — we deliver within {radius} km of Płock.',
     outsideZone: '🚫 {place} ({km} km) is outside our {radius} km zone — we don\'t deliver there yet. We\'ve noted your interest!',

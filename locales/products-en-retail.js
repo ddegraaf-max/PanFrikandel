@@ -40,7 +40,7 @@ module.exports = {
       allergens: 'Gluten (wheat), milk · may contain peanuts', nutrition: nutri(1041, 250, 15, 5.5, 20, 0.9, 1.7, 7.8, 1.1), storage: STORAGE } },
 
   'mora-oven-kroketten-4': { name: 'Mora Oven & Airfryer Beef Croquettes · 4 pcs', unit: '4 × 80 g (320 g)', badge: 'OVEN / AIR FRYER',
-    desc: 'A kroket just like the Dutch snack bar — creamy beef ragout in a crispy coating. On a roll with mustard ("broodje kroket") or next to your fries. Oven or air fryer.',
+    desc: 'A kroket just like the Dutch snackbar — creamy beef ragout in a crispy coating. On a roll with mustard ("broodje kroket") or next to your fries. Oven or air fryer.',
     details: {
       prep: [['💨 Air fryer', '200°C (preheated) · approx. 13 min from frozen, single layer'], ['🔥 Oven', '220°C (fan) · 14–16 min from frozen, on the rack without baking paper'], NO_FRY],
       ingredients: 'Water, breadcrumbs (WHEAT flour, wholemeal WHEAT flour, sunflower oil, yeast, salt, water), cooked beef 16%, vegetable oils (palm, rapeseed, sunflower), WHEAT flour, salt, butterfat (MILK), beef collagen, natural flavouring, glucose syrup, sugar, spices, dextrose, stabiliser: E466, yeast extract, invert sugar syrup, WHEAT protein, herbs. May contain peanuts.',

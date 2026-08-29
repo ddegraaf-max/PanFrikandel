@@ -279,7 +279,7 @@ UI.en = {
   badgeDelivery: '🛵 Delivery {price} · free from {free}', badgeZone: '📍 Płock +{radius} km',
   stickerHtml: '100%<br>lekker',
 
-  shopH2Html: 'The snack bar, <em>online</em>',
+  shopH2Html: 'The snackbar, <em>online</em>',
   shopSub: 'Mora — the number one Dutch snack brand. Everything frozen, ready in minutes in the oven or air fryer.',
   cats: { klasyki: 'Frikandels & classics', bitterballen: 'Bitterballen & croquettes', ser: 'Kaassoufflé — for cheese lovers', mix: 'Party mixes' },
   catsHurt: { klasyki: 'Frikandels & classics — catering boxes', bitterballen: 'Bitterballen & croquettes — boxes', sosy: 'Sauces — large packs', sprzet: 'Oil & equipment' },
@@ -289,7 +289,7 @@ UI.en = {
 
   tipKicker: '🔥 PanFrikandel\'s tip',
   tipH3Html: 'A frikandel on the barbecue?<br><em>Absolutely.</em>',
-  tipP: 'Poland is barbecue country, and a frikandel on the grill turns out brilliantly: straight from the freezer, about 14 minutes, turn often, until the skin takes colour. Then into a soft roll with curry ketchup, mayo and a handful of chopped raw onion — that\'s broodje frikandel speciaal, the most famous sandwich of the Dutch snack bar.',
+  tipP: 'Poland is barbecue country, and a frikandel on the grill turns out brilliantly: straight from the freezer, about 14 minutes, turn often, until the skin takes colour. Then into a soft roll with curry ketchup, mayo and a handful of chopped raw onion — that\'s broodje frikandel speciaal, the most famous sandwich of the Dutch snackbar.',
   tipCta: 'See the frikandels →',
 
   hurtBannerKicker: '🏭 Larger volumes',
@@ -302,7 +302,7 @@ UI.en = {
     { t: 'Check your postcode', p: 'Within {radius} km of Płock? Enter your postcode in the cart — you\'ll know straight away whether we deliver.' },
     { t: 'You order', p: 'Pick your snacks and pay with BLIK, Przelewy24 or card through secure Stripe checkout.' },
     { t: 'We deliver ourselves', p: 'We call to agree a time and bring it straight from the freezer — {eta}. Delivery {price}, <strong>free from {free}</strong>.' },
-    { t: 'Freezer → air fryer', p: 'A few minutes and you have a real Dutch snack bar at home. Eet smakelijk!' }
+    { t: 'Freezer → air fryer', p: 'A few minutes and you have a real Dutch snackbar at home. Eet smakelijk!' }
   ],
   zoneKicker: '🛵 Delivery zone · {city} +{radius} km',
   zoneH3Html: 'Do we deliver to you?<br><em>Check your postcode.</em>',
@@ -330,7 +330,7 @@ UI.en = {
   cartTotal: 'Total', checkout: 'Go to checkout →', cartPay: '💳 BLIK · Przelewy24 · card — via Stripe',
 
   aiFab: 'Ask PanFrikandel', aiName: 'PanFrikandel', aiSub: 'Your Dutch snack advisor 🍟',
-  aiWelcome: 'Hi! PanFrikandel here. Tell me what you fancy — a party with friends, a quick dinner, something veggie, something really spicy? I\'ll advise you like an old friend from the snack bar. 🧡',
+  aiWelcome: 'Hi! PanFrikandel here. Tell me what you fancy — a party with friends, a quick dinner, something veggie, something really spicy? I\'ll advise you like an old friend from the snackbar. 🧡',
   aiPlaceholder: 'e.g. something for a party of 8…',
 
   hurtTitle: 'Wholesale — larger volumes, price on request — PanFrikandel',
@@ -352,11 +352,11 @@ UI.en = {
   hurtSend: 'Send request →', hurtBackShop: '← Retail shop',
   hurtNoteHtml: 'Full ingredients, allergens and nutrition are in each product\'s details. Prices depend on quantity and timing — so we ask rather than guess.',
 
-  truckTitle: 'PanFrikandel food truck — the Dutch snack bar on wheels',
+  truckTitle: 'PanFrikandel food truck — the Dutch snackbar on wheels',
   truckMetaDesc: 'PanFrikandel food truck: fries in a cone, frikandel speciaal, bitterballen and kroket on a roll. See where we are, follow us on social media or invite us to your event.',
-  truckKicker: '🚚 New · the snack bar on wheels',
+  truckKicker: '🚚 New · the snackbar on wheels',
   truckH1Html: 'A frikandel straight from the hatch?<br><em>We\'re coming to you.</em>',
-  truckIntro: 'PanFrikandel hits the road: a Dutch snack bar on wheels — fries in a cone with fritessaus, frikandel speciaal, bitterballen, kroket on a roll. See where we are, follow us on social media or invite us to your event.',
+  truckIntro: 'PanFrikandel hits the road: a Dutch snackbar on wheels — fries in a cone with fritessaus, frikandel speciaal, bitterballen, kroket on a roll. See where we are, follow us on social media or invite us to your event.',
   truckLaunch: 'Launch: {launch}', truckLaunchSoon: 'soon',
   truckCtaWhere: 'Where are we?', truckCtaEvent: 'Invite us',
   truckStickerHtml: 'New!',
@@ -373,7 +373,7 @@ UI.en = {
   eventFormGuests: 'Approximate number of guests', eventFormMessage: 'Message — hours, menu, questions',
   eventSend: 'Send request →',
   truckBannerKicker: '🚚 New',
-  truckBannerH3Html: 'The snack bar on wheels.<br><em>See where we are.</em>',
+  truckBannerH3Html: 'The snackbar on wheels.<br><em>See where we are.</em>',
   truckBannerP: 'The PanFrikandel food truck hits the road — schedule, map and event bookings.',
   truckBannerCta: 'See the food truck →',
   errEventForm: 'Please give your name, an e-mail or phone number, and the date and location of the event.',

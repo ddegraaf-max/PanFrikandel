@@ -1,0 +1,18 @@
+<article class="card card-hurt">
+  <% if (p.badge) { %><span class="badge"><%= p.badge %></span><% } %>
+  <div class="card-art" data-details="<%= p.id %>" role="button" tabindex="0" aria-label="<%= t('productDetails') %>">
+    <% if (p.img) { %>
+      <img src="/img/<%= p.img %>" alt="<%= p.name %>" loading="lazy">
+    <% } else { %>
+      <svg viewBox="0 0 140 140"><use href="#snack-<%= p.icon %>"/></svg>
+    <% } %>
+  </div>
+  <h4><%= p.name %></h4>
+  <p class="card-unit"><%= p.unit %></p>
+  <p class="card-desc"><%= p.desc %></p>
+  <% if (p.details) { %><button class="card-more" data-details="<%= p.id %>"><%= p.details.specs ? t('cardSpecs') : t('cardIngredients') %> →</button><% } %>
+  <div class="card-foot">
+    <span class="price price-ask"><%= t('hurtNoPrice') %></span>
+    <button class="btn btn-add" data-ask="<%= p.id %>" data-name="<%= p.name %>"><%= t('hurtAsk') %></button>
+  </div>
+</article>

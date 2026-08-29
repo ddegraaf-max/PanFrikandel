@@ -18,7 +18,7 @@
   <% } %>
 </header>
 
-<div class="page" style="max-width:<%= authed ? '860px' : '420px' %>">
+<div class="page" style="max-width:<%= authed ? '980px' : '420px' %>">
 <% if (!authed) { %>
   <h1>Admin</h1>
   <% if (error) { %><p class="admin-error"><%= error %></p><% } %>
@@ -37,6 +37,7 @@
     <div class="stat"><b><%= stats.uniqueCodes %></b><span>unieke postcodes</span></div>
     <div class="stat"><b><%= stats.orders %></b><span>bestellingen</span></div>
     <div class="stat"><b><%= zl(stats.revenueGr) %></b><span>omzet</span></div>
+    <div class="stat"><b><%= quotes.length %></b><span>offerte-aanvragen (hurt)</span></div>
   </div>
   <% if (stats.outOfZone) { %><p class="admin-error">⚠️ <%= stats.outOfZone %> bestelling(en) met een afleveradres buiten de zone — controleer in Stripe.</p><% } %>
 
@@ -94,29 +95,54 @@
     </tbody>
   </table>
   <% } %>
+
+  <% if (quotes.length) { %>
+  <h2 style="margin:18px 0 8px">Offerte-aanvragen (hurt)</h2>
+  <table class="admin-table">
+    <thead><tr><th>Datum</th><th>Wie</th><th>Contact</th><th>Producten</th><th>Bericht</th></tr></thead>
+    <tbody>
+    <% for (const q of quotes) { %>
+      <tr>
+        <td class="admin-unit"><%= q.at.toLocaleDateString('nl-NL') %></td>
+        <td><b><%= q.name %></b><% if (q.company) { %><br><small class="admin-unit"><%= q.company %></small><% } %><% if (q.place) { %><br><small class="admin-unit"><%= q.place %></small><% } %></td>
+        <td class="admin-unit"><%= q.email %><% if (q.phone) { %><br><%= q.phone %><% } %></td>
+        <td class="admin-unit"><% for (const it of (q.items || [])) { %><%= it.id %><%= it.qty ? ' × ' + it.qty : '' %><br><% } %></td>
+        <td class="admin-unit"><%= q.message %></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } %>
   <% } %>
 
-  <h1 class="admin-section">Prijzen</h1>
-  <p style="color:var(--muted);font-weight:700">Pas prijzen aan (in zł) en klik op Opslaan. Gewijzigde regels kleuren geel. Wijzigingen zijn direct live — ook voor Stripe en de AI-assistent.</p>
+  <h1 class="admin-section">Producten & prijzen</h1>
+  <div class="admin-note">
+    Prijs = inkoop (Vomar, €) × koers <b><%= pricing.eurPln %></b> × opslag <b>×<%= pricing.markup %></b>, afgerond op ,90 zł
+    (env <code>PRICING_EUR_PLN</code> / <code>PRICING_MARKUP</code>). Een handmatige prijs overschrijft de berekende; leeg = terug naar berekend kan niet, vul dan de berekende waarde in.
+    „Actief” bepaalt of het product in de shop staat — zo schaal je op zonder code.
+  </div>
 
   <div class="admin-bar">
-    <input type="search" id="adminFilter" placeholder="Zoek product… (bijv. frikandel, holtkamp, wege)">
+    <input type="search" id="adminFilter" placeholder="Zoek product… (bijv. frikandel, oven, wege)">
     <button class="btn btn-primary" id="adminSave" disabled>Opslaan</button>
   </div>
   <p id="adminStatus" class="admin-status" hidden></p>
 
   <table class="admin-table" id="adminTable">
-    <thead><tr><th>Product</th><th>Eenheid</th><th>Cat.</th><th style="text-align:right">Prijs (zł)</th></tr></thead>
+    <thead><tr><th>Actief</th><th>Product</th><th>Eenheid</th><th style="text-align:right">Inkoop €</th><th style="text-align:right">Berekend zł</th><th style="text-align:right">Prijs (zł)</th><th style="text-align:right">Marge</th></tr></thead>
     <tbody>
-      <% for (const p of products) { %>
-      <tr data-search="<%= (p.name + ' ' + p.cat + ' ' + (p.badge || '')).toLowerCase() %>">
-        <td><b><%= p.name %></b><% if (p.badge) { %> <small class="admin-badge"><%= p.badge %></small><% } %></td>
+      <% for (const p of products) { const on = p.active !== false; const costGr = p.buyEur ? Math.round(p.buyEur * pricing.eurPln * 100) : 0; const margin = costGr ? Math.round((p.price - costGr) / p.price * 100) : null; %>
+      <tr data-search="<%= (p.name + ' ' + p.cat + ' ' + (p.badge || '')).toLowerCase() %>" class="<%= on ? '' : 'inactive' %>">
+        <td><input type="checkbox" class="admin-active" data-id="<%= p.id %>" <%= on ? 'checked' : '' %> data-orig="<%= on ? '1' : '0' %>"></td>
+        <td><b><%= p.name %></b><% if (p.badge) { %> <small class="admin-badge"><%= p.badge %></small><% } %><br><small class="admin-unit"><%= p.cat %><% if (p.mora) { %> · <a href="<%= p.mora %>" target="_blank" rel="noopener">mora.nl</a><% } %></small></td>
         <td class="admin-unit"><%= p.unit %></td>
-        <td class="admin-unit"><%= p.cat %></td>
+        <td class="admin-num"><%= p.buyEur ? '€ ' + p.buyEur.toFixed(2) : '–' %></td>
+        <td class="admin-num"><%= p.basePrice ? zl(p.basePrice) : '–' %></td>
         <td style="text-align:right">
           <input type="number" step="0.01" min="1" class="admin-price" data-id="<%= p.id %>"
                  value="<%= (p.price / 100).toFixed(2) %>" data-orig="<%= (p.price / 100).toFixed(2) %>">
         </td>
+        <td class="admin-num"><%= margin != null ? margin + '%' : '–' %></td>
       </tr>
       <% } %>
     </tbody>
@@ -127,16 +153,22 @@
   const $ = s => document.querySelector(s);
   const saveBtn = $('#adminSave'), status = $('#adminStatus');
 
-  function changed() {
-    return [...document.querySelectorAll('.admin-price')].filter(i => {
-      const dirty = parseFloat(i.value) !== parseFloat(i.dataset.orig);
-      i.closest('tr').classList.toggle('dirty', dirty);
-      return dirty;
-    });
+  function changedPrices() {
+    return [...document.querySelectorAll('.admin-price')].filter(i => parseFloat(i.value) !== parseFloat(i.dataset.orig));
   }
-  document.addEventListener('input', e => {
-    if (e.target.classList.contains('admin-price')) saveBtn.disabled = changed().length === 0;
-  });
+  function changedFlags() {
+    return [...document.querySelectorAll('.admin-active')].filter(c => (c.checked ? '1' : '0') !== c.dataset.orig);
+  }
+  function refresh() {
+    document.querySelectorAll('#adminTable tbody tr').forEach(tr => {
+      const price = tr.querySelector('.admin-price'), flag = tr.querySelector('.admin-active');
+      const dirty = parseFloat(price.value) !== parseFloat(price.dataset.orig) || (flag.checked ? '1' : '0') !== flag.dataset.orig;
+      tr.classList.toggle('dirty', dirty);
+      tr.classList.toggle('inactive', !flag.checked);
+    });
+    saveBtn.disabled = changedPrices().length + changedFlags().length === 0;
+  }
+  document.addEventListener('input', e => { if (e.target.matches('.admin-price, .admin-active')) refresh(); });
 
   $('#adminFilter').addEventListener('input', e => {
     const q = e.target.value.toLowerCase().trim();
@@ -146,22 +178,25 @@
   });
 
   saveBtn.addEventListener('click', async () => {
-    const dirty = changed();
-    if (!dirty.length) return;
-    const prices = {};
-    for (const i of dirty) prices[i.dataset.id] = i.value;
+    const dirtyP = changedPrices(), dirtyF = changedFlags();
+    if (!dirtyP.length && !dirtyF.length) return;
+    const prices = {}, active = {};
+    for (const i of dirtyP) prices[i.dataset.id] = i.value;
+    for (const c of dirtyF) active[c.dataset.id] = c.checked;
     saveBtn.disabled = true;
     saveBtn.textContent = 'Opslaan…';
     try {
       const r = await fetch('/admin/prices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prices })
+        body: JSON.stringify({ prices, active })
       });
       const data = await r.json();
       if (r.ok) {
-        for (const i of dirty) { i.dataset.orig = parseFloat(i.value).toFixed(2); i.closest('tr').classList.remove('dirty'); }
-        status.textContent = '✅ ' + data.saved + ' prijs(zen) opgeslagen en direct live.';
+        for (const i of dirtyP) i.dataset.orig = parseFloat(i.value).toFixed(2);
+        for (const c of dirtyF) c.dataset.orig = c.checked ? '1' : '0';
+        refresh();
+        status.textContent = '✅ ' + data.saved + ' wijziging(en) opgeslagen en direct live.';
       } else {
         status.textContent = '⚠️ ' + (data.error || 'Opslaan mislukt.');
         saveBtn.disabled = false;

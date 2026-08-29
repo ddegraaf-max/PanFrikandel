@@ -28,6 +28,7 @@
   <nav class="nav-links">
     <a href="#sklep"><%= t('navShop') %></a>
     <a href="#dostawa"><%= t('navDelivery') %></a>
+    <a href="/hurt"><%= t('navHurt') %></a>
     <a href="#faq"><%= t('navFaq') %></a>
   </nav>
   <%- include('partials/lang') %>
@@ -72,8 +73,8 @@
     <p><%= t('shopSub') %></p>
   </div>
 
-  <% for (const catId of ['klasyki', 'bitterballen', 'sosy', 'boxy', 'sprzet']) { %>
-    <% const inCat = products.filter(x => x.cat === catId);
+  <% for (const catId of Object.keys(dict.cats)) { %>
+    <% const inCat = products.filter(x => x.cat === catId); if (!inCat.length) continue;
        const tops = inCat.filter(p => p.top).length ? inCat.filter(p => p.top) : inCat.slice(0, 4);
        const rest = inCat.filter(p => !tops.includes(p)); %>
     <h3 class="cat-title"><%= dict.cats[catId] %></h3>
@@ -132,6 +133,16 @@
       <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:18px"><%= t('addToCart') %> · <%= zl(p.price) %></button>
     </div>
   <% } %>
+
+  <!-- Większe ilości → /hurt (cena na zapytanie) -->
+  <a class="hurt-banner" href="/hurt">
+    <div>
+      <p class="local-kicker"><%= t('hurtBannerKicker') %></p>
+      <h3><%- t('hurtBannerH3Html') %></h3>
+      <p><%= t('hurtBannerP') %></p>
+    </div>
+    <span class="btn btn-primary"><%= t('hurtBannerCta') %></span>
+  </a>
 </main>
 
 <!-- ======================= DOSTAWA ======================= -->
@@ -183,6 +194,7 @@
     <div>
       <p class="footer-head"><%= t('footerShop') %></p>
       <a href="#sklep"><%= t('footerAll') %></a>
+      <a href="/hurt"><%= t('footerHurt') %></a>
       <a href="#dostawa"><%= t('navDelivery') %></a>
       <a href="#faq"><%= t('navFaq') %></a>
     </div>

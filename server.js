@@ -45,11 +45,19 @@ const BUILD = String(process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GIT_COMMI
 const VERSION_LABEL = 'v' + VERSION + (BUILD ? ' · ' + BUILD : '');
 const STARTED_AT = new Date();
 // Publieke URL: BASE_URL als die gezet is, anders afgeleid van het request (zodat Stripe nooit naar localhost terugstuurt)
-const siteUrl = req => process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+const siteUrl = req => {
+  let u = String(process.env.BASE_URL || '').trim().replace(/\/+$/, '');
+  if (u && !/^https?:\/\//i.test(u)) u = 'https://' + u;
+  return u || `${req.protocol}://${req.get('host')}`;
+};
 
 app.set('trust proxy', 1);   // Railway/proxy: juiste protocol en host voor redirect-URL's
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use((req, res, next) => {
+  if (/\/{2,}/.test(req.path)) return res.redirect(301, req.originalUrl.replace(/\/{2,}/g, '/'));
+  next();
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
@@ -879,7 +887,11 @@ app.get('/foodtruck', async (req, res) => {
 
 app.get('/kierowca', (req, res) => res.render('kierowca', { v: ASSET_V, gpsConfigured: !!GPS_TOKEN }));
 
-app.get('/api/version', (req, res) => res.json({ version: VERSION, build: BUILD || null, startedAt: STARTED_AT.toISOString() }));
+app.get('/api/version', (req, res) => res.json({
+  version: VERSION, build: BUILD || null, startedAt: STARTED_AT.toISOString(),
+  baseUrl: process.env.BASE_URL || null,
+  successUrl: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`
+}));
 
 app.get('/regulamin',   (req, res) => res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }));
 app.get('/prywatnosc',  (req, res) => res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }));
@@ -1467,7 +1479,10 @@ app.get('/sukces', async (req, res) => {
   res.render('sukces', { order, v: ASSET_V });
 });
 
-app.use((req, res) => res.redirect('/'));
+app.use((req, res) => {
+  console.warn(`↩️  onbekende URL → / : ${req.method} ${req.originalUrl}`);
+  res.redirect('/');
+});
 
 Promise.all([loadPrices(), loadFlags(), initStats(), initTruck(), initLive()]).then(() => {
   app.listen(PORT, () => console.log(`🍟 PanFrikandel ${VERSION_LABEL} draait op ${BASE_URL}`));

@@ -29,7 +29,7 @@ const RETAIL = [
   // ---------------- Frikandele i klasyki ----------------
   { id: 'mora-frikandellen-5', active: true, top: true, cat: 'klasyki', name: 'Mora Frikandellen Classics · 5 szt.', unit: '5 × 70 g (350 g)', buyEur: 2.15, badge: 'KLASYK', icon: 'frikandel', img: 'mora-frikandellen-5.png',
     mora: 'https://www.mora.nl/snacks/frikandellen-5x70g',
-    desc: 'Ten frikandel. Oryginalna receptura Mora od 1962 roku — dokładnie to, co Holendrzy wrzucają do koszyka w supermarkecie. Do frytkownicy, na patelnię lub na grilla.',
+    desc: 'Ten frikandel. Oryginalna receptura Mora od 1962 roku — dokładnie to, co Holendrzy wrzucają do koszyka w supermarkecie. Do frytkownicy, na patelnię lub na grilla — a potem do bułki z curry, majonezem i cebulką: broodje frikandel!',
     details: {
       prep: [['🍟 Frytkownica', '175°C · 4 min z zamrożenia (2 min po rozmrożeniu)'], ['🍳 Patelnia', 'odrobina oleju, średni ogień · 9 min z zamrożenia (5 min po rozmrożeniu), obracać'], ['💨 Airfryer', '200°C (nagrzany) · ok. 6 min z zamrożenia (4 min po rozmrożeniu)'], ['🔥 Grill / BBQ', '14 min z zamrożenia (10 min po rozmrożeniu), często obracać']],
       ingredients: 'Mięso oddzielone mechanicznie z kurczaka, woda, słonina wieprzowa, bułka tarta (mąka (zawiera PSZENICĘ), sól, drożdże), sól, cebula, przyprawy, dekstroza, maltodekstryna, syrop glukozowy, ekstrakt drożdżowy, emulgator: E450, przeciwutleniacz: kwas askorbinowy, stabilizator: E452, naturalny aromat, regulator kwasowości: kwas cytrynowy, ekstrakt przypraw.',

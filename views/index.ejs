@@ -94,6 +94,18 @@
         <button class="btn btn-more" data-more="<%= catId %>" data-count="<%= inCat.length %>"><%- t('showAllHtml', { n: inCat.length }) %></button>
       </div>
     <% } %>
+    <% if (catId === 'klasyki') { %>
+    <!-- Tip: frikandel z grilla → broodje frikandel speciaal -->
+    <aside class="tip-box">
+      <div class="tip-copy">
+        <p class="local-kicker"><%= t('tipKicker') %></p>
+        <h3><%- t('tipH3Html') %></h3>
+        <p><%= t('tipP') %></p>
+        <a href="#sklep" class="btn btn-primary"><%= t('tipCta') %></a>
+      </div>
+      <svg class="tip-art" viewBox="0 0 140 140" aria-hidden="true"><use href="#snack-broodje"/></svg>
+    </aside>
+    <% } %>
   <% } %>
 
   <!-- Detail-content per product (verborgen; modal kopieert dit) -->

@@ -32,6 +32,12 @@ UI.pl = {
   cardSpecs: 'Specyfikacja', cardIngredients: 'Składniki i przygotowanie', addToCart: '+ Do koszyka', productDetails: 'Szczegóły produktu',
   pdPrep: 'Przygotowanie', pdSpecs: 'Specyfikacja', pdIngredients: 'Składniki', pdAllergens: 'Alergeny', pdNutrition: 'Wartości odżywcze (na 100 g)', pdStorage: 'Przechowywanie',
 
+  // tip: frikandel z grilla → broodje frikandel (homepage)
+  tipKicker: '🔥 Porada PanFrikandela',
+  tipH3Html: 'Frikandel z grilla?<br><em>Tak — i to jak!</em>',
+  tipP: 'Polska to kraj grillowania, a frikandel na grillu wychodzi wybitnie: prosto z zamrażarki, ok. 14 minut, często obracać, aż skórka złapie kolor. Potem do miękkiej bułki z curry ketchupem, majonezem i garścią posiekanej surowej cebuli — i masz broodje frikandel speciaal, najsłynniejszą kanapkę holenderskich frytkowni.',
+  tipCta: 'Zobacz frikandele →',
+
   // hurt-banner op de homepage
   hurtBannerKicker: '🏭 Większe ilości',
   hurtBannerH3Html: 'Impreza, firma, gastronomia?<br><em>Kartony horeca na zapytanie.</em>',
@@ -55,7 +61,7 @@ UI.pl = {
     { q: 'Czym właściwie jest frikandel?', a: 'Najpopularniejsza przekąska w Holandii: podłużny, smażony kotlecik z mieszanki mięs, o gładkiej konsystencji i lekko korzennym smaku. Holendrzy zjadają ich ponad 600 milionów rocznie. „Frikandel speciaal" = z curry ketchupem, fritessaus i surową cebulką.' },
     { q: 'Dlaczego Mora?', a: 'Mora to najbardziej znana marka snacków w Holandii — od 1962 roku. To dokładnie te same opakowania, które Holendrzy wrzucają do koszyka w supermarkecie. Zaczynamy od małego, sprawdzonego wyboru i rozszerzamy asortyment, gdy widzimy, na co jest apetyt.' },
     { q: 'Czy produkty dojadą naprawdę zamrożone?', a: 'Tak. Przywozimy je prosto z mroźni (-18°C) w torbie termicznej i przekazujemy z ręki do ręki. Po odbiorze włóż produkty od razu do zamrażarki.' },
-    { q: 'Jak przygotować przekąski?', a: 'Produkty „Oven & Airfryer” są stworzone do piekarnika (220°C) i airfryera (200°C) — bez frytkownicy. Klasyczne (Classics) najlepiej smażyć we frytkownicy w 175°C, część z nich zrobisz też w airfryerze lub na patelni. Dokładne czasy znajdziesz przy każdym produkcie.' },
+    { q: 'Jak przygotować przekąski?', a: 'Produkty „Oven & Airfryer” są stworzone do piekarnika (220°C) i airfryera (200°C) — bez frytkownicy. Klasyczne (Classics) najlepiej smażyć we frytkownicy w 175°C, część z nich zrobisz też w airfryerze lub na patelni. Frikandele Classics możesz też rzucić na grilla (ok. 14 min, często obracać) i podać w bułce z cebulką — broodje frikandel. Dokładne czasy znajdziesz przy każdym produkcie.' },
     { q: 'Jakie są metody płatności?', a: 'BLIK, Przelewy24 i karty płatnicze — wszystko obsługiwane przez Stripe, bez zakładania konta.' },
     { q: 'Potrzebuję większych ilości — na imprezę, do firmy lub lokalu.', a: 'Mamy osobny katalog hurtowy: kartony horeca (np. 40 frikandeli), bitterballen w kartonach, sosy 900 ml, olej i sprzęt. Ceny na zapytanie — zobacz zakładkę „Hurt”.' },
     { q: 'Mieszkam dalej niż {radius} km od Płocka — co teraz?', a: 'Na razie dowozimy tylko w promieniu {radius} km od Płocka. Sprawdź swój kod — każde sprawdzenie zapisujemy i jeśli w Twojej okolicy będzie zainteresowanie, rozszerzymy strefę. Możesz też napisać na hallo@panfrikandel.pl.' },
@@ -281,6 +287,11 @@ UI.en = {
   cardSpecs: 'Specifications', cardIngredients: 'Ingredients & preparation', addToCart: '+ Add to cart', productDetails: 'Product details',
   pdPrep: 'Preparation', pdSpecs: 'Specifications', pdIngredients: 'Ingredients', pdAllergens: 'Allergens', pdNutrition: 'Nutrition (per 100 g)', pdStorage: 'Storage',
 
+  tipKicker: '🔥 PanFrikandel\'s tip',
+  tipH3Html: 'A frikandel on the barbecue?<br><em>Absolutely.</em>',
+  tipP: 'Poland is barbecue country, and a frikandel on the grill turns out brilliantly: straight from the freezer, about 14 minutes, turn often, until the skin takes colour. Then into a soft roll with curry ketchup, mayo and a handful of chopped raw onion — that\'s broodje frikandel speciaal, the most famous sandwich of the Dutch snack bar.',
+  tipCta: 'See the frikandels →',
+
   hurtBannerKicker: '🏭 Larger volumes',
   hurtBannerH3Html: 'Party, company, restaurant?<br><em>Catering boxes on request.</em>',
   hurtBannerP: 'Frikandels by the 40, bitterballen by the box, 900 ml sauces, oil and fryers — the full wholesale catalogue, priced on request.',
@@ -303,7 +314,7 @@ UI.en = {
     { q: 'What exactly is a frikandel?', a: 'The most popular snack in the Netherlands: a long, deep-fried sausage of minced meats with a smooth texture and a lightly spiced flavour. The Dutch eat over 600 million of them a year. "Frikandel speciaal" = with curry ketchup, fritessaus and raw onion.' },
     { q: 'Why Mora?', a: 'Mora is the best-known snack brand in the Netherlands — since 1962. These are exactly the packs the Dutch put in their supermarket basket. We start with a small, proven selection and expand the range as we see what people have an appetite for.' },
     { q: 'Will the products really arrive frozen?', a: 'Yes. We bring them straight from the freezer (-18°C) in a thermal bag and hand them over in person. Put them in your freezer right away.' },
-    { q: 'How do I prepare the snacks?', a: '"Oven & Airfryer" products are made for the oven (220°C) and air fryer (200°C) — no deep fryer needed. The Classics are best deep-fried at 175°C; some also work in an air fryer or a pan. Exact times are listed with each product.' },
+    { q: 'How do I prepare the snacks?', a: '"Oven & Airfryer" products are made for the oven (220°C) and air fryer (200°C) — no deep fryer needed. The Classics are best deep-fried at 175°C; some also work in an air fryer or a pan. The Classics frikandels also love the barbecue (about 14 min, turn often) — serve them in a roll with onion: broodje frikandel. Exact times are listed with each product.' },
     { q: 'Which payment methods do you accept?', a: 'BLIK, Przelewy24 and payment cards — all handled by Stripe, no account needed.' },
     { q: 'I need larger quantities — for a party, a company or a restaurant.', a: 'We have a separate wholesale catalogue: catering boxes (e.g. 40 frikandels), bitterballen by the box, 900 ml sauces, oil and equipment. Prices on request — see the "Wholesale" tab.' },
     { q: 'I live more than {radius} km from Płock — what now?', a: 'For now we only deliver within {radius} km of Płock. Check your postcode anyway — we log every check, and if there\'s interest in your area we\'ll extend the zone. You can also e-mail hallo@panfrikandel.pl.' },

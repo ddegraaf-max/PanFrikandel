@@ -750,6 +750,19 @@ em { font-style: normal; color: var(--oranje); }
 .success-hero .socials { justify-content: center; }
 @media (max-width: 860px) { .success-grid { grid-template-columns: 1fr; } }
 
+/* tip-box (frikandel z grilla) */
+.tip-box {
+  display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: center;
+  margin: 34px 0 10px; padding: clamp(22px, 3vw, 34px);
+  background: var(--paper); border: 3px solid var(--ink); border-radius: var(--radius); box-shadow: 8px 8px 0 var(--rood);
+}
+.tip-box .local-kicker { background: var(--rood); color: #fff; }
+.tip-box h3 { font-family: 'Shrikhand', cursive; font-weight: 400; font-size: clamp(24px, 3.2vw, 34px); line-height: 1.05; margin-bottom: 10px; }
+.tip-box h3 em { color: var(--oranje); font-style: normal; }
+.tip-box p { font-size: 15.5px; margin-bottom: 14px; }
+.tip-art { width: min(300px, 100%); justify-self: center; filter: drop-shadow(6px 8px 0 rgba(42,21,3,.18)); animation: bob 4s ease-in-out infinite; }
+@media (max-width: 860px) { .tip-box { grid-template-columns: 1fr; } .tip-art { width: min(240px, 80%); } }
+
 .h1-snack { width: 1.25em; height: 1.25em; vertical-align: -0.28em; margin-left: .1em; filter: drop-shadow(3px 3px 0 rgba(42,21,3,.25)); }
 
 /* versienummer (footer + admin) */

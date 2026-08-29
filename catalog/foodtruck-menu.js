@@ -21,6 +21,8 @@ module.exports = [
   { cat: 'snacki', name: { pl: 'Frikandel', en: 'Frikandel' }, price: 900 },
   { cat: 'snacki', name: { pl: 'Frikandel speciaal', en: 'Frikandel speciaal' },
     desc: { pl: 'Z curry ketchupem, majonezem i cebulką.', en: 'With curry ketchup, mayo and onion.' }, price: 1200 },
+  { cat: 'snacki', name: { pl: 'Broodje frikandel speciaal', en: 'Broodje frikandel speciaal' },
+    desc: { pl: 'Frikandel w miękkiej bułce z curry ketchupem, majonezem i surową cebulką — kanapka nr 1 w Holandii.', en: 'Frikandel in a soft roll with curry ketchup, mayo and raw onion — the number one sandwich in the Netherlands.' }, price: 1400 },
   { cat: 'snacki', name: { pl: 'Kroket wołowy', en: 'Beef kroket' }, price: 1000 },
   { cat: 'snacki', name: { pl: 'Broodje kroket', en: 'Broodje kroket' },
     desc: { pl: 'Kroket na miękkiej bułce z musztardą.', en: 'Kroket on a soft roll with mustard.' }, price: 1400 },

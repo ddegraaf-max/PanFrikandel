@@ -1,7 +1,7 @@
 {
   "name": "pan-frikandel",
   "version": "1.0.0",
-  "description": "Pan Frikandel \u2014 holenderskie przek\u0105ski z dostaw\u0105 w ca\u0142ej Polsce",
+  "description": "PanFrikandel \u2014 holenderskie przek\u0105ski, dowozimy sami w P\u0142ocku i okolicach (50 km) \u00b7 PL/EN",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

@@ -1191,13 +1191,12 @@ app.post('/api/strefa', (req, res) => {
 app.post('/api/checkout', async (req, res) => {
   const t = res.locals.t, lang = req.lang;
   try {
-    if (!stripe) return res.status(500).json({ error: t('errStripe') });
-
     // Alleen bezorgen binnen de zone — server beslist, niet de browser
     const zone = checkZone(req.body.kod);
     if (!zone.inZone) {
       return res.status(400).json({ error: t('errOutsideZone', { radius: DELIVERY.radiusKm }), outsideZone: true });
     }
+    if (!stripe) return res.status(500).json({ error: t('errStripe') });
 
     const items = Array.isArray(req.body.items) ? req.body.items : [];
     const lineItems = [];

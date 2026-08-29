@@ -580,3 +580,15 @@ em { font-style: normal; color: var(--oranje); }
 .stat b { display: block; font-family: 'Shrikhand', cursive; font-size: 26px; color: var(--oranje); line-height: 1.1; }
 .stat span { font-size: 12.5px; font-weight: 700; color: var(--muted); }
 .admin-section { margin-top: 40px; }
+
+/* ---------- Taalkeuze PL | EN ---------- */
+.lang { display: flex; align-items: center; gap: 4px; font-weight: 800; font-size: 13px; letter-spacing: .04em; }
+.lang a { color: var(--muted); text-decoration: none; padding: 4px 7px; border-radius: 8px; border: 2px solid transparent; }
+.lang a:hover { color: var(--ink); }
+.lang a.on { color: var(--ink); background: var(--geel); border-color: var(--ink); box-shadow: 2px 2px 0 var(--ink); }
+.lang i { color: var(--muted); font-style: normal; }
+.nav .logo + .lang { margin-left: auto; }      /* pagina's zonder nav-links (regulamin, sukces) */
+@media (max-width: 860px) { .lang { margin-left: auto; } }
+
+/* winkelmand: bezorgstatus */
+.cart-ship.warn { color: var(--rood); }

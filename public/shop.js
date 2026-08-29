@@ -1,21 +1,23 @@
-// ===== Pan Frikandel — koszyk =====
+// ===== PanFrikandel — koszyk =====
+// Teksten komen uit window.T (PL/EN, zie locales/ui.js), bezorgconfig uit window.DELIVERY.
 (function () {
-  const KEY = 'pf_cart_v1';
+  const KEY = 'pf_cart_v1', ZKEY = 'pf_zone_v1';
+  const T = window.T || {}, D = window.DELIVERY || {}, LANG = window.LANG || 'pl';
   const byId = Object.fromEntries(window.CATALOG.map(p => [p.id, p]));
-  const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
-
-  const LOCAL = window.LOCAL || { enabled: false };
-  const ZKEY = 'pf_zone_v1';
+  const zl = gr => (gr / 100).toFixed(2).replace('.', LANG === 'en' ? '.' : ',') + ' zł';
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const fill = (s, vars) => Object.entries(vars || {}).reduce((acc, [k, v]) => acc.split('{' + k + '}').join(v), s || '');
+  const V = () => ({ radius: D.radiusKm, city: D.city, price: zl(D.priceGr), free: zl(D.freeAboveGr), eta: D.eta });
 
   let cart = {};
   try { cart = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { cart = {}; }
-  // strefa dostawy lokalnej (Płock + 50 km) — onthouden per browser
-  let zone = null;
-  try { zone = LOCAL.enabled ? JSON.parse(localStorage.getItem(ZKEY)) : null; } catch (e) { zone = null; }
-  if (zone && !zone.code) zone = null;
   // opschonen: alleen bekende producten
   for (const id of Object.keys(cart)) if (!byId[id]) delete cart[id];
+
+  // strefa dostawy (Płock + 50 km) — onthouden per browser: { code, known, place, km, inZone }
+  let zone = null;
+  try { zone = JSON.parse(localStorage.getItem(ZKEY)); } catch (e) { zone = null; }
+  if (zone && !zone.code) zone = null;
 
   const $ = s => document.querySelector(s);
   const drawer = $('#cartDrawer'), overlay = $('#cartOverlay');
@@ -23,6 +25,17 @@
   function save() { localStorage.setItem(KEY, JSON.stringify(cart)); }
   function count() { return Object.values(cart).reduce((a, b) => a + b, 0); }
   function subtotal() { return Object.entries(cart).reduce((s, [id, q]) => s + byId[id].price * q, 0); }
+
+  // Bezorging: alleen binnen de zone kan er afgerekend worden
+  function deliveryFor(sub) {
+    if (!zone) return { ok: false, gr: 0, cls: 'warn', text: fill(T.needZone, V()) };
+    if (!zone.inZone) {
+      const vars = { ...V(), place: zone.place, km: zone.km, code: zone.code };
+      return { ok: false, gr: 0, cls: 'warn', text: fill(zone.known ? T.outsideZone : T.unknownZone, vars) };
+    }
+    if (sub >= D.freeAboveGr) return { ok: true, gr: 0, cls: 'free', text: fill(T.shipFree, { place: zone.place }) };
+    return { ok: true, gr: D.priceGr, cls: '', text: fill(T.shipLine, { ...V(), place: zone.place, km: zone.km, missing: zl(D.freeAboveGr - sub) }) };
+  }
 
   function render() {
     const n = count();
@@ -32,48 +45,28 @@
 
     const box = $('#cartItems');
     if (!n) {
-      box.innerHTML = '<p class="cart-empty">Koszyk jest pusty…<br>a frikandele same się nie zjedzą 🍟</p>';
+      box.innerHTML = '<p class="cart-empty">' + T.cartEmptyHtml + '</p>';
     } else {
       box.innerHTML = Object.entries(cart).map(([id, q]) => {
         const p = byId[id];
         return `<div class="ci">
           ${p.img ? `<img src="/img/${p.img}" alt="">` : `<svg viewBox="0 0 140 140"><use href="#snack-${p.icon}"/></svg>`}
-          <div><div class="ci-name">${p.name}</div><div class="ci-price">${zl(p.price)} / ${p.unit}</div></div>
+          <div><div class="ci-name">${esc(p.name)}</div><div class="ci-price">${zl(p.price)} / ${esc(p.unit)}</div></div>
           <div class="ci-qty">
-            <button data-dec="${id}" aria-label="Mniej">−</button><b>${q}</b><button data-inc="${id}" aria-label="Więcej">+</button>
+            <button data-dec="${id}" aria-label="${esc(T.less)}">−</button><b>${q}</b><button data-inc="${id}" aria-label="${esc(T.more)}">+</button>
           </div>
         </div>`;
       }).join('');
     }
 
     const sub = subtotal();
+    const d = deliveryFor(sub);
     const ship = $('#cartShip');
-    const s = shippingFor(sub);
-    if (!n) { ship.textContent = ''; ship.classList.remove('free'); }
-    else { ship.textContent = s.text; ship.classList.toggle('free', s.free); }
-    $('#cartTotal').textContent = zl(sub + (n ? s.gr : 0));
-    $('#checkoutBtn').disabled = !n;
+    ship.className = 'cart-ship' + (n && d.cls ? ' ' + d.cls : '');
+    ship.textContent = n ? d.text : '';
+    $('#cartTotal').textContent = zl(sub + (n && d.ok ? d.gr : 0));
+    $('#checkoutBtn').disabled = !n || !d.ok;
     save();
-  }
-
-  // Verzendkosten: lokale bezorging als de postcode in de zone valt, anders kurier
-  function shippingFor(sub) {
-    if (zone && zone.inZone) {
-      const free = sub >= LOCAL.freeAboveGr;
-      return {
-        gr: free ? 0 : LOCAL.priceGr, free,
-        text: free
-          ? `🎉 Dowozimy sami do ${zone.place} — GRATIS!`
-          : `🛵 Dowozimy sami (${zone.place}, ${zone.km} km): ${zl(LOCAL.priceGr)} · gratis od ${zl(LOCAL.freeAboveGr)}`
-      };
-    }
-    const free = sub >= window.SHIPPING.freeAboveGr;
-    return {
-      gr: free ? 0 : window.SHIPPING.standardGr, free,
-      text: free
-        ? '🎉 Darmowa dostawa!'
-        : `Dostawa ${zl(window.SHIPPING.standardGr)} · do darmowej brakuje ${zl(window.SHIPPING.freeAboveGr - sub)}`
-    };
   }
 
   function open() { drawer.hidden = false; overlay.hidden = false; document.body.style.overflow = 'hidden'; }
@@ -113,7 +106,7 @@
     if (!lbOverlay) {
       lbOverlay = document.createElement('div');
       lbOverlay.className = 'lightbox';
-      lbOverlay.innerHTML = '<button class="modal-close lightbox-close" aria-label="Zamknij">✕</button><img alt="">';
+      lbOverlay.innerHTML = '<button class="modal-close lightbox-close" aria-label="' + esc(T.close || '✕') + '">✕</button><img alt="">';
       document.body.appendChild(lbOverlay);
       lbImg = lbOverlay.querySelector('img');
       lbOverlay.addEventListener('click', e => {
@@ -148,7 +141,7 @@
     const inc = e.target.closest('[data-inc]');
     const dec = e.target.closest('[data-dec]');
     if (det && !add) { openDetails(det.dataset.details); return; }
-    if (add) { const id = add.dataset.add; cart[id] = (cart[id] || 0) + 1; render(); toast('Dodano do koszyka! Lekker 👌'); closeDetails(); }
+    if (add) { const id = add.dataset.add; cart[id] = (cart[id] || 0) + 1; render(); toast(T.added); closeDetails(); }
     if (inc) { cart[inc.dataset.inc]++; render(); }
     if (dec) {
       const id = dec.dataset.dec;
@@ -170,7 +163,7 @@
   $('#checkoutBtn').addEventListener('click', async () => {
     const btn = $('#checkoutBtn');
     btn.disabled = true;
-    btn.textContent = 'Chwileczkę…';
+    btn.textContent = T.wait;
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -182,23 +175,25 @@
       });
       const data = await res.json();
       if (data.url) { location.href = data.url; return; }
-      toast(data.error || 'Coś poszło nie tak.');
+      toast(data.error || T.errGeneric);
     } catch (e) {
-      toast('Błąd połączenia. Spróbuj ponownie.');
+      toast(T.errConn);
     }
     btn.disabled = false;
-    btn.textContent = 'Przejdź do płatności →';
+    btn.textContent = T.checkout;
+    render();
   });
 
-  // ---- strefa dostawy lokalnej: kod pocztowy → /api/strefa ----
+  // ---- strefa dostawy: kod pocztowy → /api/strefa ----
   const fmtKod = v => {
     const d = String(v).replace(/\D/g, '').slice(0, 5);
     return d.length > 2 ? d.slice(0, 2) + '-' + d.slice(2) : d;
   };
   function zoneMsg(z) {
-    if (z.inZone) return { cls: 'ok', html: `✅ <b>${esc(z.place)}</b> (${z.km} km od Płocka) — dowozimy sami! ${zl(z.priceGr)}, gratis od ${zl(z.freeAboveGr)}, ${esc(z.eta)}.` };
-    if (z.known) return { cls: 'no', html: `🚚 <b>${esc(z.place)}</b> to ${z.km} km od Płocka — poza strefą ${z.radiusKm} km. Wyślemy kurierem w termoboxie (24–48 h).` };
-    return { cls: 'no', html: `🚚 Kodu ${esc(z.code)} nie ma w naszej strefie — wyślemy kurierem (24–48 h). Mieszkasz blisko Płocka? <a href="mailto:hallo@panfrikandel.pl">Napisz do nas</a>.` };
+    const vars = { ...V(), place: esc(z.place || ''), km: z.km, code: esc(z.code || '') };
+    if (z.inZone) return { cls: 'ok', html: fill(T.zoneOkHtml, vars) };
+    if (z.known) return { cls: 'no', html: fill(T.zoneFarHtml, vars) };
+    return { cls: 'no', html: fill(T.zoneUnknownHtml, vars) };
   }
   function showZoneResult(out, cls, html) {
     if (!out) return;
@@ -227,7 +222,7 @@
     const btn = f.querySelector('button[type="submit"]');
     const kod = fmtKod(inp.value);
     inp.value = kod;
-    if (kod.length !== 6) { showZoneResult(out, 'no', 'Wpisz pełny kod pocztowy, np. 09-400.'); return; }
+    if (kod.length !== 6) { showZoneResult(out, 'no', esc(T.zoneInvalid)); return; }
     btn.disabled = true;
     try {
       const r = await fetch('/api/strefa', {
@@ -236,14 +231,14 @@
         body: JSON.stringify({ kod, zrodlo: f.dataset.source })
       });
       const z = await r.json();
-      if (!r.ok) throw new Error(z.error || 'Błąd');
-      zone = z;
+      if (!r.ok) throw new Error(z.error || 'error');
+      zone = { code: z.code, known: z.known, place: z.place, km: z.km, inZone: z.inZone };
       try { localStorage.setItem(ZKEY, JSON.stringify(zone)); } catch (err) {}
       paintZone();
       render();
-      if (z.inZone) toast('🛵 Dowozimy do Ciebie sami!');
+      if (z.inZone) toast(T.zoneToast);
     } catch (err) {
-      showZoneResult(out, 'no', 'Nie udało się sprawdzić kodu — spróbuj ponownie.');
+      showZoneResult(out, 'no', esc(T.zoneErr));
     }
     btn.disabled = false;
   });
@@ -261,29 +256,25 @@ document.addEventListener('click', e => {
   if (!btn) return;
   const box = document.getElementById('more-' + btn.dataset.more);
   if (!box) return;
+  const T = window.T || {};
   const open = box.hidden;
   box.hidden = !open;
-  btn.innerHTML = open
-    ? 'Pokaż mniej ▴'
-    : 'Pokaż wszystkie <span class="more-count">' + btn.dataset.count + '</span> produktów ▾';
+  btn.innerHTML = open ? T.showLess : (T.showAllHtml || '').split('{n}').join(btn.dataset.count);
   if (!open) btn.closest('.more-wrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
-document.querySelectorAll('[data-more]').forEach(b => {
-  const c = b.querySelector('.more-count');
-  if (c) b.dataset.count = c.textContent;
-});
 
-// ===== Pan Frikandel — AI assistent =====
+// ===== PanFrikandel — AI assistent =====
 (function () {
   const fab = document.getElementById('aiFab');
   const panel = document.getElementById('aiPanel');
   if (!fab || !panel) return;
+  const T = window.T || {}, LANG = window.LANG || 'pl';
   const msgsBox = document.getElementById('aiMsgs');
   const form = document.getElementById('aiForm');
   const input = document.getElementById('aiInput');
   const send = document.getElementById('aiSend');
   const byId = Object.fromEntries(window.CATALOG.map(p => [p.id, p]));
-  const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
+  const zl = gr => (gr / 100).toFixed(2).replace('.', LANG === 'en' ? '.' : ',') + ' zł';
   const history = [];
 
   fab.addEventListener('click', () => { panel.hidden = false; fab.hidden = true; input.focus(); });
@@ -324,7 +315,7 @@ document.querySelectorAll('[data-more]').forEach(b => {
     addMsg('ai-msg-user', esc(q));
     history.push({ role: 'user', content: q });
     send.disabled = true;
-    const typing = addMsg('ai-msg-bot ai-typing', 'Pan Frikandel myśli…');
+    const typing = addMsg('ai-msg-bot ai-typing', esc(T.aiThinking || '…'));
     try {
       const r = await fetch('/api/assistent', {
         method: 'POST',
@@ -337,11 +328,11 @@ document.querySelectorAll('[data-more]').forEach(b => {
         history.push({ role: 'assistant', content: data.reply });
         addMsg('ai-msg-bot', renderBot(data.reply));
       } else {
-        addMsg('ai-msg-bot', esc(data.error || 'Coś poszło nie tak — spróbuj ponownie.'));
+        addMsg('ai-msg-bot', esc(data.error || T.aiErr));
       }
     } catch (err) {
       typing.remove();
-      addMsg('ai-msg-bot', 'Błąd połączenia — spróbuj ponownie.');
+      addMsg('ai-msg-bot', esc(T.aiConn));
     }
     send.disabled = false;
     input.focus();

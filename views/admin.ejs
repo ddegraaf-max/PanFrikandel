@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-  <title>Admin — Pan Frikandel</title>
+  <title>Admin — PanFrikandel</title>
   <%- include('partials/head') %>
   <meta name="robots" content="noindex,nofollow">
 </head>
@@ -9,7 +9,7 @@
 <header class="nav">
   <a href="/" class="logo">
     <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/></svg>
-    <span translate="no">Pan&nbsp;Frikandel</span>
+    <span translate="no">PanFrikandel</span>
   </a>
   <% if (authed) { %>
   <form method="POST" action="/admin/logout" style="margin-left:auto">
@@ -27,26 +27,28 @@
     <button class="btn btn-primary" type="submit">Inloggen</button>
   </form>
 <% } else { %>
-  <% if (localStats) { %>
-  <h1>Pilot: bezorging <%= local.city %> +<%= local.radiusKm %> km</h1>
-  <p style="color:var(--muted);font-weight:700">Laatste <%= localStats.days %> dagen. Postcodechecks komen uit de winkelmand en de sectie „Dostawa”; lokale bestellingen zijn betaalde Stripe-sessies met de optie „Dowozimy sami”. Uitzetten: env <code>LOCAL_DELIVERY=off</code>.</p>
+  <% if (stats) { %>
+  <h1>Bezorging <%= delivery.city %> +<%= delivery.radiusKm %> km</h1>
+  <p style="color:var(--muted);font-weight:700">Laatste <%= stats.days %> dagen. Postcodechecks komen uit de winkelmand en de sectie „Dostawa”; bestellingen zijn betaalde Stripe-sessies. Checks buiten de zone laten zien waar vraag zit — handig om te beslissen of de straal (env <code>DELIVERY_RADIUS_KM</code>) omhoog kan.</p>
   <div class="stats">
-    <div class="stat"><b><%= localStats.checks %></b><span>postcodechecks</span></div>
-    <div class="stat"><b><%= localStats.inZone %></b><span>binnen de zone</span></div>
-    <div class="stat"><b><%= localStats.uniqueCodes %></b><span>unieke postcodes</span></div>
-    <div class="stat"><b><%= localStats.unknown %></b><span>onbekend (niet in tabel)</span></div>
-    <div class="stat"><b><%= localStats.orders %></b><span>lokale bestellingen</span></div>
-    <div class="stat"><b><%= zl(localStats.revenueGr) %></b><span>omzet lokaal</span></div>
+    <div class="stat"><b><%= stats.checks %></b><span>postcodechecks</span></div>
+    <div class="stat"><b><%= stats.inZone %></b><span>binnen de zone</span></div>
+    <div class="stat"><b><%= stats.checks - stats.inZone %></b><span>buiten de zone</span></div>
+    <div class="stat"><b><%= stats.uniqueCodes %></b><span>unieke postcodes</span></div>
+    <div class="stat"><b><%= stats.orders %></b><span>bestellingen</span></div>
+    <div class="stat"><b><%= zl(stats.revenueGr) %></b><span>omzet</span></div>
   </div>
-  <% if (localStats.outOfZone) { %><p class="admin-error">⚠️ <%= localStats.outOfZone %> lokale bestelling(en) met een afleveradres buiten de zone — controleer in Stripe.</p><% } %>
-  <% if (localStats.topCodes.length) { %>
+  <% if (stats.outOfZone) { %><p class="admin-error">⚠️ <%= stats.outOfZone %> bestelling(en) met een afleveradres buiten de zone — controleer in Stripe.</p><% } %>
+
+  <% if (stats.topCodes.length) { %>
+  <h2 style="margin:18px 0 8px">Meest gecheckte postcodes</h2>
   <table class="admin-table">
     <thead><tr><th>Postcode</th><th>Plaats</th><th>Afstand</th><th>Zone</th><th style="text-align:right">Checks</th></tr></thead>
     <tbody>
-    <% for (const c of localStats.topCodes) { %>
+    <% for (const c of stats.topCodes) { %>
       <tr>
         <td><b><%= c.code %></b></td>
-        <td class="admin-unit"><%= c.place || 'onbekend — voeg toe aan LOCAL_POSTCODES' %></td>
+        <td class="admin-unit"><%= c.place || 'onbekend — voeg toe aan ZONE_POSTCODES' %></td>
         <td class="admin-unit"><%= c.km != null ? c.km + ' km' : '–' %></td>
         <td><%= c.inZone ? '✅' : '—' %></td>
         <td style="text-align:right"><%= c.n %></td>
@@ -57,11 +59,30 @@
   <% } else { %>
   <p style="color:var(--muted);font-weight:700">Nog geen postcodechecks.</p>
   <% } %>
-  <% if (localStats.recentOrders.length) { %>
-  <table class="admin-table" style="margin-top:14px">
+
+  <% if (stats.topOutside.length) { %>
+  <h2 style="margin:18px 0 8px">Vraag buiten de zone</h2>
+  <table class="admin-table">
+    <thead><tr><th>Postcode</th><th>Plaats</th><th>Afstand</th><th style="text-align:right">Checks</th></tr></thead>
+    <tbody>
+    <% for (const c of stats.topOutside) { %>
+      <tr>
+        <td><b><%= c.code %></b></td>
+        <td class="admin-unit"><%= c.place || 'onbekend' %></td>
+        <td class="admin-unit"><%= c.km != null ? c.km + ' km' : '–' %></td>
+        <td style="text-align:right"><%= c.n %></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } %>
+
+  <% if (stats.recentOrders.length) { %>
+  <h2 style="margin:18px 0 8px">Laatste bestellingen</h2>
+  <table class="admin-table">
     <thead><tr><th>Datum</th><th>Postcode</th><th>Plaats</th><th>Afstand</th><th style="text-align:right">Bedrag</th></tr></thead>
     <tbody>
-    <% for (const o of localStats.recentOrders) { %>
+    <% for (const o of stats.recentOrders) { %>
       <tr>
         <td class="admin-unit"><%= o.at.toLocaleDateString('nl-NL') %></td>
         <td><b><%= o.code || '?' %></b><% if (o.outOfZone) { %> ⚠️<% } %></td>

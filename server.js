@@ -197,7 +197,7 @@ const SOCIALS = {
   tiktok:    process.env.SOCIAL_TIKTOK    || 'https://www.tiktok.com/@panfrikandel'
 };
 // Starttekst op /foodtruck (bv. "wiosna 2027" / "spring 2027"); leeg = "wkrótce" / "soon"
-const FOODTRUCK_LAUNCH = { pl: process.env.FOODTRUCK_LAUNCH_PL || '', en: process.env.FOODTRUCK_LAUNCH_EN || '' };
+const FOODTRUCK_LAUNCH = { pl: process.env.FOODTRUCK_LAUNCH_PL || '2027', en: process.env.FOODTRUCK_LAUNCH_EN || '2027' };
 
 // Kody pocztowe → przybliżone współrzędne (centrum miejscowości / gminy).
 // Dokładny kod ma pierwszeństwo, potem prefiks "NN-N" (główne miasto podregionu).

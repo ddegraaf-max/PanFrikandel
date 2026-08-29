@@ -19,6 +19,12 @@
   try { zone = JSON.parse(localStorage.getItem(ZKEY)); } catch (e) { zone = null; }
   if (zone && !zone.code) zone = null;
 
+  // kortingscode van een abonnee: { code: 'PF-XXXXXX', percent }
+  const CKEY = 'pf_code_v1';
+  let disc = null;
+  try { disc = JSON.parse(localStorage.getItem(CKEY)); } catch (e) { disc = null; }
+  if (disc && !(disc.code && disc.percent)) disc = null;
+
   const $ = s => document.querySelector(s);
   const drawer = $('#cartDrawer'), overlay = $('#cartOverlay');
 
@@ -64,7 +70,12 @@
     const ship = $('#cartShip');
     ship.className = 'cart-ship' + (n && d.cls ? ' ' + d.cls : '');
     ship.textContent = n ? d.text : '';
-    $('#cartTotal').textContent = zl(sub + (n && d.ok ? d.gr : 0));
+    // korting (percentage op de producten; gratis-bezorgdrempel blijft op het subtotaal vóór korting)
+    const off = disc && n ? Math.round(sub * disc.percent / 100) : 0;
+    const discEl = $('#cartDiscount');
+    discEl.hidden = !off;
+    discEl.textContent = off ? fill(T.discountLine, { percent: disc.percent, code: disc.code, amount: zl(off) }) : '';
+    $('#cartTotal').textContent = zl(sub - off + (n && d.ok ? d.gr : 0));
     $('#checkoutBtn').disabled = !n || !d.ok;
     save();
   }
@@ -170,11 +181,13 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           items: Object.entries(cart).map(([id, qty]) => ({ id, qty })),
-          kod: zone ? zone.code : null
+          kod: zone ? zone.code : null,
+          kod_rabatowy: disc ? disc.code : null
         })
       });
       const data = await res.json();
       if (data.url) { location.href = data.url; return; }
+      if (data.badCode) { disc = null; try { localStorage.removeItem(CKEY); } catch (e) {} paintCode(); }
       toast(data.error || T.errGeneric);
     } catch (e) {
       toast(T.errConn);
@@ -243,6 +256,35 @@
     btn.disabled = false;
   });
   paintZone();
+
+  // ---- kortingscode: PF-XXXXXX → /api/kod ----
+  const codeForm = document.querySelector('[data-code-form]');
+  function paintCode() {
+    if (!codeForm) return;
+    const inp = codeForm.querySelector('[data-code-input]'), out = codeForm.querySelector('[data-code-result]');
+    if (disc) { inp.value = disc.code; showZoneResult(out, 'ok', fill(T.codeOkHtml, { code: esc(disc.code), percent: disc.percent })); }
+    else { out.hidden = true; }
+  }
+  if (codeForm) {
+    codeForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const inp = codeForm.querySelector('[data-code-input]'), out = codeForm.querySelector('[data-code-result]');
+      const btn = codeForm.querySelector('button[type="submit"]');
+      const raw = inp.value.trim();
+      if (!raw) { disc = null; try { localStorage.removeItem(CKEY); } catch (err) {} paintCode(); render(); return; }
+      btn.disabled = true;
+      try {
+        const r = await fetch('/api/kod', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ code: raw }) });
+        const d = await r.json();
+        if (!r.ok) { disc = null; try { localStorage.removeItem(CKEY); } catch (err) {} showZoneResult(out, 'no', esc(d.error || T.codeInvalid)); render(); }
+        else { disc = { code: d.code, percent: d.percent }; try { localStorage.setItem(CKEY, JSON.stringify(disc)); } catch (err) {} paintCode(); render(); toast(fill(T.codeOkHtml, { code: d.code, percent: d.percent }).replace(/<[^>]+>/g, '')); }
+      } catch (err) {
+        showZoneResult(out, 'no', esc(T.codeErr));
+      }
+      btn.disabled = false;
+    });
+    paintCode();
+  }
 
   // na sukces-pagina wordt de cart geleegd; hier: als ?anulowano=1 open drawer weer
   if (new URLSearchParams(location.search).get('anulowano')) open();

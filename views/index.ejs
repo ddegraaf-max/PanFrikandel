@@ -250,7 +250,14 @@
       <button type="submit" class="btn btn-add"><%= t('zoneCheck') %></button>
       <p class="zone-result" data-zone-result hidden></p>
     </form>
+    <form class="cart-zone cart-code" data-code-form>
+      <span class="cart-zone-label"><%= t('cartCodeLabel') %></span>
+      <input data-code-input placeholder="<%= t('cartCodePlaceholder') %>" maxlength="12" autocomplete="off" autocapitalize="characters" aria-label="<%= t('cartCodeLabel') %>">
+      <button type="submit" class="btn btn-add"><%= t('cartCodeApply') %></button>
+      <p class="zone-result" data-code-result hidden></p>
+    </form>
     <p class="cart-ship" id="cartShip"></p>
+    <p class="cart-discount" id="cartDiscount" hidden></p>
     <div class="cart-total"><span><%= t('cartTotal') %></span><b id="cartTotal">0,00 zł</b></div>
     <button class="btn btn-primary btn-checkout" id="checkoutBtn" disabled><%= t('checkout') %></button>
     <p class="cart-pay"><%= t('cartPay') %></p>

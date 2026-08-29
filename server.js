@@ -4,6 +4,9 @@
 //  Stack: Express + EJS + Stripe Checkout + Resend
 // ============================================================
 
+// .env laden als het bestand bestaat (Node ≥ 20.12) — op Railway komen de variabelen uit de omgeving
+try { process.loadEnvFile(); } catch (e) {}
+
 const express = require('express');
 const path = require('path');
 const Stripe = require('stripe');
@@ -566,6 +569,222 @@ function registerFail(ip) {
 }
 
 // ============================================================
+//  FOOD TRUCK LIVE — GPS-positie (chauffeurspagina /kierowca of een tracker
+//  → POST /api/gps met GPS_TOKEN), abonnees met locatie-mail + kortingscode,
+//  menukaart (catalog/foodtruck-menu.js)
+// ============================================================
+
+const FOODTRUCK_MENU = require('./catalog/foodtruck-menu');
+const GPS_TOKEN = process.env.GPS_TOKEN || null;
+const GPS_STALE_MIN = parseInt(process.env.GPS_STALE_MIN, 10) || 30;
+const SUB_SECRET = process.env.SUB_SECRET || ADMIN_PASSWORD || 'pf-dev-secret';
+const SUB_DISCOUNT = {
+  percent: Math.min(Math.max(parseInt(process.env.SUB_DISCOUNT_PERCENT, 10) || 10, 1), 90),
+  once: process.env.SUB_DISCOUNT_ONCE !== 'false'
+};
+const STATE_FILE = path.join(__dirname, 'data', 'truck-state.json');
+const SUBS_FILE = path.join(__dirname, 'data', 'subscribers.json');
+let truckState = { lat: null, lon: null, accuracy: null, updatedAt: 0, live: false, place: '', info: '', announcedAt: 0 };
+let subsMem = [];
+
+async function initLive() {
+  try {
+    if (pool) {
+      await pool.query('CREATE TABLE IF NOT EXISTS truck_state (id INTEGER PRIMARY KEY, state TEXT NOT NULL, updated_at TIMESTAMPTZ DEFAULT now())');
+      await pool.query(`CREATE TABLE IF NOT EXISTS subscribers (
+        id SERIAL PRIMARY KEY, email TEXT UNIQUE NOT NULL, lang TEXT, place TEXT, confirmed BOOLEAN DEFAULT false,
+        code TEXT UNIQUE, code_used_at TIMESTAMPTZ, created_at TIMESTAMPTZ DEFAULT now(),
+        confirmed_at TIMESTAMPTZ, unsubscribed_at TIMESTAMPTZ)`);
+      const { rows } = await pool.query('SELECT state FROM truck_state WHERE id = 1');
+      if (rows[0]) truckState = { ...truckState, ...JSON.parse(rows[0].state) };
+    } else {
+      if (fs.existsSync(STATE_FILE)) truckState = { ...truckState, ...JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')) };
+      if (fs.existsSync(SUBS_FILE)) subsMem = JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Live init mislukt:', err.message);
+  }
+}
+function saveSubsMem() {
+  try { fs.mkdirSync(path.dirname(SUBS_FILE), { recursive: true }); fs.writeFileSync(SUBS_FILE, JSON.stringify(subsMem, null, 2)); } catch (e) {}
+}
+async function saveState() {
+  try {
+    if (pool) await pool.query('INSERT INTO truck_state (id, state, updated_at) VALUES (1, $1, now()) ON CONFLICT (id) DO UPDATE SET state = $1, updated_at = now()', [JSON.stringify(truckState)]);
+    else { fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true }); fs.writeFileSync(STATE_FILE, JSON.stringify(truckState)); }
+  } catch (err) {
+    console.error('Live state opslaan mislukt:', err.message);
+  }
+}
+const isLive = () => truckState.live && truckState.lat != null && Date.now() - truckState.updatedAt < GPS_STALE_MIN * 60000;
+const publicLive = () => isLive()
+  ? { live: true, lat: truckState.lat, lon: truckState.lon, accuracy: truckState.accuracy, place: truckState.place, info: truckState.info,
+      updatedAt: truckState.updatedAt, ageMin: Math.round((Date.now() - truckState.updatedAt) / 60000) }
+  : { live: false };
+function gpsAuth(req) {
+  const tok = String(req.headers['x-gps-token'] || req.body?.token || req.query.t || '');
+  if (!GPS_TOKEN || !tok || tok.length !== GPS_TOKEN.length) return false;
+  return crypto.timingSafeEqual(Buffer.from(tok), Buffer.from(GPS_TOKEN));
+}
+
+// ---- abonnees (powiadomienia) + kortingscode PF-XXXXXX ----
+const subToken = email => crypto.createHmac('sha256', SUB_SECRET).update(email.toLowerCase()).digest('hex').slice(0, 32);
+const tokenOk = (email, tok) => { const a = Buffer.from(String(tok || '')), b = Buffer.from(subToken(email)); return a.length === b.length && crypto.timingSafeEqual(a, b); };
+const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) && e.length <= 160;
+const normCode = c => String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '').replace(/^PF/, '');
+const fmtCode = c => 'PF-' + c;
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let s = '';
+  for (let i = 0; i < 6; i++) s += chars[crypto.randomInt(chars.length)];
+  return s;
+}
+const subRow = r => ({
+  email: r.email, lang: r.lang || 'pl', place: r.place || '', confirmed: !!r.confirmed, code: r.code || null,
+  codeUsedAt: r.code_used_at || r.codeUsedAt || null, createdAt: r.created_at || r.createdAt || null,
+  confirmedAt: r.confirmed_at || r.confirmedAt || null, unsubscribedAt: r.unsubscribed_at || r.unsubscribedAt || null
+});
+async function subFind(email) {
+  if (pool) { const { rows } = await pool.query('SELECT * FROM subscribers WHERE email = $1', [email]); return rows[0] ? subRow(rows[0]) : null; }
+  const s = subsMem.find(x => x.email === email); return s ? subRow(s) : null;
+}
+async function subByCode(code) {
+  if (pool) { const { rows } = await pool.query('SELECT * FROM subscribers WHERE code = $1', [code]); return rows[0] ? subRow(rows[0]) : null; }
+  const s = subsMem.find(x => x.code === code); return s ? subRow(s) : null;
+}
+async function subUpsert(email, lang, place) {
+  const cur = await subFind(email);
+  if (cur && cur.confirmed && !cur.unsubscribedAt) return { confirmed: true };
+  if (pool) {
+    await pool.query('INSERT INTO subscribers (email, lang, place) VALUES ($1, $2, $3) ON CONFLICT (email) DO UPDATE SET lang = $2, place = $3, unsubscribed_at = NULL', [email, lang, place]);
+  } else {
+    const s = subsMem.find(x => x.email === email);
+    if (s) { s.lang = lang; s.place = place; s.unsubscribedAt = null; }
+    else subsMem.push({ email, lang, place, confirmed: false, createdAt: Date.now() });
+    saveSubsMem();
+  }
+  return { confirmed: false };
+}
+async function subConfirm(email) {
+  const cur = await subFind(email);
+  if (!cur) return null;
+  let code = cur.code;
+  if (!code) { do { code = genCode(); } while (await subByCode(code)); }
+  if (pool) {
+    await pool.query('UPDATE subscribers SET confirmed = true, confirmed_at = COALESCE(confirmed_at, now()), unsubscribed_at = NULL, code = $2 WHERE email = $1', [email, code]);
+  } else {
+    const s = subsMem.find(x => x.email === email);
+    s.confirmed = true; s.confirmedAt = s.confirmedAt || Date.now(); s.unsubscribedAt = null; s.code = code;
+    saveSubsMem();
+  }
+  return { code, wasConfirmed: cur.confirmed && !cur.unsubscribedAt };
+}
+async function subUnsubscribe(email) {
+  if (pool) await pool.query('UPDATE subscribers SET unsubscribed_at = now() WHERE email = $1', [email]);
+  else { const s = subsMem.find(x => x.email === email); if (s) { s.unsubscribedAt = Date.now(); saveSubsMem(); } }
+}
+async function subList() {
+  if (pool) return (await pool.query('SELECT * FROM subscribers ORDER BY created_at DESC')).rows.map(subRow);
+  return subsMem.slice().reverse().map(subRow);
+}
+const subActive = list => list.filter(s => s.confirmed && !s.unsubscribedAt);
+// → { ok, code, percent, sub } | { ok: false, reason: 'invalid' | 'used', usedAt }
+async function codeCheck(raw) {
+  const c = normCode(raw);
+  if (c.length < 4) return { ok: false, reason: 'invalid' };
+  const s = await subByCode(c);
+  if (!s || !s.confirmed) return { ok: false, reason: 'invalid' };
+  if (SUB_DISCOUNT.once && s.codeUsedAt) return { ok: false, reason: 'used', usedAt: s.codeUsedAt };
+  return { ok: true, code: c, percent: SUB_DISCOUNT.percent, sub: s };
+}
+async function codeUse(code) {
+  const c = normCode(code);
+  if (!c) return;
+  if (pool) await pool.query('UPDATE subscribers SET code_used_at = now() WHERE code = $1', [c]);
+  else { const s = subsMem.find(x => x.code === c); if (s) { s.codeUsedAt = Date.now(); saveSubsMem(); } }
+}
+// Stripe-coupon voor de abonneekorting: één per percentage, vaste id
+const couponCache = {};
+async function ensureCoupon(percent) {
+  const id = `PF_SUB_${percent}`;
+  if (couponCache[id]) return id;
+  try { await stripe.coupons.retrieve(id); }
+  catch (e) { await stripe.coupons.create({ id, percent_off: percent, duration: 'once', name: `Zniżka dla subskrybentów ${percent}%` }); }
+  couponCache[id] = true;
+  return id;
+}
+
+// ---- mails ----
+const mailHtml = (headline, bodyHtml, footerHtml) => `
+  <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
+    <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
+      <h1 style="margin:0;font-size:26px">${headline}</h1>
+    </div>
+    <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
+      ${bodyHtml}
+      <p style="color:#8a6a4f;font-size:13px">${footerHtml}</p>
+    </div>
+  </div>`;
+const mailButton = (url, label) => `<p><a href="${url}" style="display:inline-block;background:#ffc93c;color:#2a1503;font-weight:bold;padding:12px 22px;border-radius:999px;text-decoration:none;border:2px solid #2a1503">${label}</a></p>`;
+const unsubUrl = email => `${BASE_URL}/subskrypcja/rezygnacja?e=${encodeURIComponent(email)}&t=${subToken(email)}`;
+async function sendMailBatch(mails) {
+  let sent = 0;
+  for (let i = 0; i < mails.length; i += 50) {
+    const chunk = mails.slice(i, i + 50);
+    try {
+      if (resend.batch && resend.batch.send) await resend.batch.send(chunk);
+      else for (const m of chunk) await resend.emails.send(m);
+      sent += chunk.length;
+    } catch (err) { console.error('Mail-batch mislukt:', err.message); }
+  }
+  return sent;
+}
+
+// Reverse geocoding via Nominatim (OSM) — één call per aankondiging, met fallback
+async function reverseGeocode(lat, lon) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000);
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=17&accept-language=pl`,
+      { headers: { 'User-Agent': 'PanFrikandel/1.0 (hallo@panfrikandel.pl)' }, signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!r.ok) return '';
+    const a = (await r.json()).address || {};
+    const street = [a.road || a.pedestrian || a.square, a.house_number].filter(Boolean).join(' ');
+    const town = a.city || a.town || a.village || a.municipality || '';
+    return [street, town].filter(Boolean).join(', ');
+  } catch (e) { return ''; }
+}
+
+// "Ogłoś lokalizację": plaatsnaam bepalen, state opslaan, mail naar alle bevestigde abonnees
+async function announceLocation(info) {
+  if (truckState.lat == null) throw new Error('no-position');
+  const { lat, lon } = truckState;
+  const today = new Date().toISOString().slice(0, 10);
+  const stop = (await getStops(true)).find(s => s.dateFrom <= today && s.dateTo >= today);
+  const place = (stop && stop.name) || await reverseGeocode(lat, lon) || `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+  const hours = (stop && stop.hours) || '';
+  truckState.place = place; truckState.info = String(info || '').trim().slice(0, 300); truckState.announcedAt = Date.now(); truckState.live = true;
+  await saveState();
+  const subs = subActive(await subList());
+  let sent = 0;
+  if (resend && subs.length) {
+    const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+    const mails = subs.map(s => {
+      const lang = LANGS.includes(s.lang) ? s.lang : 'pl';
+      const t = makeT(lang);
+      const body = t('liveMailBodyHtml', { place: escHtml(place), hours: hours ? t('liveMailHours', { hours: escHtml(hours) }) : '', info: truckState.info ? '<p>' + escHtml(truckState.info) + '</p>' : '', mapUrl, siteUrl: BASE_URL })
+        + (s.code && !(SUB_DISCOUNT.once && s.codeUsedAt) ? t('liveMailCodeHtml', { code: fmtCode(s.code), percent: SUB_DISCOUNT.percent }) : '');
+      return { from: ORDER_EMAIL_FROM, to: s.email, subject: t('liveMailSubject', { place }), html: mailHtml(t('liveMailSubject', { place: escHtml(place) }), body, t('mailUnsubHtml', { url: unsubUrl(s.email) })) };
+    });
+    sent = await sendMailBatch(mails);
+  } else {
+    console.log(`📣 Locatie aangekondigd: ${place} — ${subs.length} abonnees${resend ? '' : ' (geen mail geconfigureerd)'}`);
+  }
+  return { place, sent, subscribers: subs.length };
+}
+
+// ============================================================
 //  TAAL (PL/EN)  — ?lang=en zet een cookie en redirect naar de schone URL;
 //  daarna cookie, anders Accept-Language (Engels vóór Pools → EN), anders PL.
 //  Views krijgen: lang, t(), dict, zl() (geldformaat per taal), delivery.
@@ -634,26 +853,28 @@ app.get('/hurt', (req, res) => {
 app.get('/foodtruck', async (req, res) => {
   let stops = [];
   try { stops = await getStops(true); } catch (err) { console.error('Standplaatsen:', err.message); }
-  res.render('foodtruck', { stops, launch: FOODTRUCK_LAUNCH[req.lang] || '', v: ASSET_V });
+  res.render('foodtruck', { stops, menu: FOODTRUCK_MENU, launch: FOODTRUCK_LAUNCH[req.lang] || '', v: ASSET_V });
 });
+
+app.get('/kierowca', (req, res) => res.render('kierowca', { v: ASSET_V, gpsConfigured: !!GPS_TOKEN }));
 
 app.get('/regulamin',   (req, res) => res.render(req.lang === 'en' ? 'regulamin-en'  : 'regulamin',  { v: ASSET_V }));
 app.get('/prywatnosc',  (req, res) => res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }));
 
 // ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
-const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], error: null, ...extra });
+const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], subs: [], live: publicLive(), truck: truckState, gpsToken: GPS_TOKEN, subDiscount: SUB_DISCOUNT, error: null, ...extra });
 
 app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
   const authed = isAdmin(req);
-  let stats = null, quotes = [], stops = [], events = [];
+  let stats = null, quotes = [], stops = [], events = [], subs = [];
   if (authed) {
     try {
       stats = await getStats(30); quotes = await getQuotes(30);
-      stops = await getStops(false); events = await getEvents(60);
+      stops = await getStops(false); events = await getEvents(60); subs = await subList();
     } catch (err) { console.error('Statistieken:', err.message); }
   }
-  res.render('admin', adminLocals({ authed, stats, quotes, stops, events }));
+  res.render('admin', adminLocals({ authed, stats, quotes, stops, events, subs }));
 });
 
 app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
@@ -725,6 +946,12 @@ app.post('/admin/foodtruck/usun', express.urlencoded({ extended: false }), async
   res.redirect('/admin#foodtruck');
 });
 
+app.post('/admin/oglos', express.urlencoded({ extended: false }), async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).send('Niet ingelogd.');
+  try { await announceLocation(req.body.info); } catch (err) { console.error('Aankondigen mislukt:', err.message); }
+  res.redirect('/admin#live');
+});
+
 // ---- AI-assistent (PanFrikandel) ----
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || null;
 
@@ -735,7 +962,7 @@ const CATALOG_FOR_AI = lang => catalog(lang).map(p =>
 const ASSISTANT_SYSTEM = lang => `Jesteś "PanFrikandel" — sympatycznym asystentem sklepu panfrikandel.pl z holenderskimi przekąskami.
 Dostawa: dowozimy sami WYŁĄCZNIE w promieniu ${DELIVERY.radiusKm} km od Płocka (${DELIVERY.eta.pl}), koszt ${money(DELIVERY.priceGr, 'pl')}, gratis od ${money(DELIVERY.freeAboveGr, 'pl')}. Klient sprawdza kod pocztowy w koszyku. Poza strefą na razie nie dowozimy — zapisujemy zainteresowanie i rozszerzamy zasięg tam, gdzie jest popyt.
 Sklep sprzedaje konsumenckie opakowania Mora (najpopularniejsza holenderska marka snacków). Większe ilości (kartony horeca, sosy 900 ml, olej, frytkownice) są w katalogu hurtowym na stronie /hurt — tam cena jest na zapytanie; kieruj tam klientów pytających o duże ilości, firmy lub gastronomię.
-Mamy też food trucka (frytkownia na kółkach — frytki, frikandel speciaal, bitterballen): grafik, mapa lokalizacji, socials i zgłoszenia wydarzeń są na stronie /foodtruck.
+Mamy też food trucka (frytkownia na kółkach — frytki, frikandel speciaal, bitterballen): grafik, mapa lokalizacji, socials i zgłoszenia wydarzeń są na stronie /foodtruck. Kto zapisze się tam na powiadomienia e-mail o lokalizacji, dostaje osobisty kod rabatowy ${SUB_DISCOUNT.percent}% (PF-XXXXXX) na zamówienie w sklepie lub przy okienku.
 
 Twoje zadanie: pomagasz klientom wybrać przekąski z katalogu poniżej. Doradzasz jak holenderski przyjaciel — konkretnie, ciepło, z humorem, ale krótko (maks. 4-5 zdań + polecenia).
 
@@ -939,6 +1166,116 @@ app.post('/api/wydarzenie', async (req, res) => {
   }
 });
 
+// ---- Food truck LIVE: GPS-positie ----
+app.get('/api/gps', (req, res) => { res.set('Cache-Control', 'no-store'); res.json(publicLive()); });
+function gpsGuard(req, res) {
+  if (!GPS_TOKEN) { res.status(503).json({ error: res.locals.t('errGpsNoToken') }); return false; }
+  if (!gpsAuth(req)) { res.status(401).json({ error: res.locals.t('errGpsAuth') }); return false; }
+  return true;
+}
+app.post('/api/gps', async (req, res) => {
+  if (!gpsGuard(req, res)) return;
+  const lat = parseFloat(req.body.lat), lon = parseFloat(req.body.lon);
+  if (!(lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180)) return res.status(400).json({ error: 'lat/lon' });
+  truckState = { ...truckState, lat, lon, accuracy: Math.min(Math.max(parseInt(req.body.accuracy, 10) || 0, 0), 99999), updatedAt: Date.now(), live: true };
+  await saveState();
+  res.json({ ok: true, updatedAt: truckState.updatedAt });
+});
+app.post('/api/gps/stop', async (req, res) => {
+  if (!gpsGuard(req, res)) return;
+  truckState.live = false;
+  await saveState();
+  res.json({ ok: true });
+});
+app.get('/api/gps/status', async (req, res) => {
+  if (!gpsGuard(req, res)) return;
+  const subs = subActive(await subList());
+  res.json({ live: isLive(), lat: truckState.lat, lon: truckState.lon, updatedAt: truckState.updatedAt, place: truckState.place, announcedAt: truckState.announcedAt, subscribers: subs.length });
+});
+app.post('/api/gps/oglos', async (req, res) => {
+  if (!gpsGuard(req, res)) return;
+  try {
+    res.json({ ok: true, ...(await announceLocation(req.body.info)) });
+  } catch (err) {
+    if (err.message === 'no-position') return res.status(400).json({ error: res.locals.t('errGpsPos') });
+    console.error('Aankondigen mislukt:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+// Kortingscode aan het loket: checken en (optioneel) als gebruikt markeren
+app.post('/api/gps/kod', async (req, res) => {
+  if (!gpsGuard(req, res)) return;
+  const r = await codeCheck(req.body.code);
+  if (!r.ok) return res.json({ ok: false, reason: r.reason, usedAt: r.usedAt || null });
+  if (req.body.use) await codeUse(r.code);
+  res.json({ ok: true, code: fmtCode(r.code), percent: r.percent, email: r.sub.email.replace(/^(.{2}).*(@.*)$/, '$1…$2'), used: !!req.body.use });
+});
+
+// ---- Powiadomienia: zapis (double opt-in), potwierdzenie, rezygnacja; kortingscode ----
+app.post('/api/subskrypcja', async (req, res) => {
+  const t = res.locals.t, lang = req.lang;
+  try {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+    if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
+    const email = String(req.body.email || '').trim().toLowerCase();
+    if (!validEmail(email)) return res.status(400).json({ error: t('errSubEmail') });
+    if (!req.body.consent) return res.status(400).json({ error: t('errSubConsent') });
+    quoteHits.get(ip).push(Date.now());
+    const r = await subUpsert(email, lang, String(req.body.place || '').trim().slice(0, 120));
+    if (r.confirmed) return res.json({ ok: true, confirmed: true });
+    const url = `${BASE_URL}/subskrypcja/potwierdz?e=${encodeURIComponent(email)}&t=${subToken(email)}`;
+    if (resend) {
+      await resend.emails.send({
+        from: ORDER_EMAIL_FROM, to: email, subject: t('subMailSubject'),
+        html: mailHtml(t('subMailSubject'), '<p>' + t('subMailBodyHtml') + '</p>' + mailButton(url, t('subMailButton')), t('mailFooterHtml'))
+      });
+    } else {
+      console.log('🔔 Bevestigingslink (geen mail geconfigureerd):', url);
+    }
+    res.json({ ok: true, confirmed: false });
+  } catch (err) {
+    console.error('Zapis mislukt:', err.message);
+    res.status(500).json({ error: t('errSubSend') });
+  }
+});
+app.get('/subskrypcja/potwierdz', async (req, res) => {
+  const t = res.locals.t;
+  const email = String(req.query.e || '').trim().toLowerCase();
+  if (!validEmail(email) || !tokenOk(email, req.query.t)) {
+    return res.status(400).render('info', { ok: false, title: t('infoBadLinkTitle'), text: t('infoBadLinkText'), v: ASSET_V });
+  }
+  try {
+    const r = await subConfirm(email);
+    if (!r) return res.status(400).render('info', { ok: false, title: t('infoBadLinkTitle'), text: t('infoBadLinkText'), v: ASSET_V });
+    if (!r.wasConfirmed && resend) {
+      await resend.emails.send({
+        from: ORDER_EMAIL_FROM, to: email, subject: t('subWelcomeSubject'),
+        html: mailHtml(t('subWelcomeSubject'), t('subWelcomeBodyHtml', { code: fmtCode(r.code), percent: SUB_DISCOUNT.percent, siteUrl: BASE_URL }), t('mailUnsubHtml', { url: unsubUrl(email) }))
+      });
+    }
+    res.render('info', { ok: true, title: t('infoConfirmedTitle'), text: t('infoConfirmedText') + ' ' + t('infoCodeText', { code: fmtCode(r.code), percent: SUB_DISCOUNT.percent }), v: ASSET_V });
+  } catch (err) {
+    console.error('Bevestigen mislukt:', err.message);
+    res.status(500).render('info', { ok: false, title: t('infoBadLinkTitle'), text: t('errSubSend'), v: ASSET_V });
+  }
+});
+app.get('/subskrypcja/rezygnacja', async (req, res) => {
+  const t = res.locals.t;
+  const email = String(req.query.e || '').trim().toLowerCase();
+  if (!validEmail(email) || !tokenOk(email, req.query.t)) {
+    return res.status(400).render('info', { ok: false, title: t('infoBadLinkTitle'), text: t('infoBadLinkText'), v: ASSET_V });
+  }
+  try { await subUnsubscribe(email); } catch (err) { console.error('Afmelden mislukt:', err.message); }
+  res.render('info', { ok: true, title: t('infoUnsubTitle'), text: t('infoUnsubText'), v: ASSET_V });
+});
+// Kortingscode in de winkelmand
+app.post('/api/kod', async (req, res) => {
+  const t = res.locals.t;
+  const r = await codeCheck(req.body.code);
+  if (!r.ok) return res.status(404).json({ error: t(r.reason === 'used' ? 'errCodeUsed' : 'errCodeInvalid') });
+  res.json({ ok: true, code: fmtCode(r.code), percent: r.percent });
+});
+
 // ---- Stripe Checkout ----
 app.post('/api/checkout', async (req, res) => {
   const t = res.locals.t, lang = req.lang;
@@ -972,6 +1309,13 @@ app.post('/api/checkout', async (req, res) => {
 
     if (!lineItems.length) return res.status(400).json({ error: t('errEmptyCart') });
 
+    // Kortingscode van een abonnee (PF-XXXXXX) → Stripe-coupon; ongeldig = duidelijke fout, niet stil negeren
+    let disc = null;
+    if (String(req.body.kod_rabatowy || '').trim()) {
+      disc = await codeCheck(req.body.kod_rabatowy);
+      if (!disc.ok) return res.status(400).json({ error: t(disc.reason === 'used' ? 'errCodeUsed' : 'errCodeInvalid'), badCode: true });
+    }
+
     const free = subtotal >= DELIVERY.freeAboveGr;
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -992,10 +1336,12 @@ app.post('/api/checkout', async (req, res) => {
           metadata: { typ: 'lokalna', kod: zone.code, km: String(zone.km) }
         }
       }],
+      ...(disc ? { discounts: [{ coupon: await ensureCoupon(disc.percent) }] } : {}),
       metadata: {
         kod_pocztowy: zone.code,
         miejscowosc: zone.place,
         odleglosc_km: String(zone.km),
+        kod_rabatowy: disc ? disc.code : '',
         lang
       },
       success_url: `${BASE_URL}/sukces?session_id={CHECKOUT_SESSION_ID}`,
@@ -1039,6 +1385,7 @@ app.get('/sukces', async (req, res) => {
         // Statistiek: bestelling registreren + checken of het afleveradres echt in de zone ligt
         if (!loggedSessions.has(session.id)) {
           loggedSessions.add(session.id);
+          if (session.metadata?.kod_rabatowy) codeUse(session.metadata.kod_rabatowy);
           const z = checkZone(addr?.postal_code || session.metadata?.kod_pocztowy);
           if (!z.inZone) console.warn(`⚠️ Bestelling buiten de zone: ${session.id}, kod ${addr?.postal_code || '?'}`);
           logOrder({
@@ -1082,6 +1429,6 @@ app.get('/sukces', async (req, res) => {
 
 app.use((req, res) => res.redirect('/'));
 
-Promise.all([loadPrices(), loadFlags(), initStats(), initTruck()]).then(() => {
+Promise.all([loadPrices(), loadFlags(), initStats(), initTruck(), initLive()]).then(() => {
   app.listen(PORT, () => console.log(`🍟 PanFrikandel draait op ${BASE_URL}`));
 });

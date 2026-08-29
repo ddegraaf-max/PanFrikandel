@@ -39,11 +39,13 @@
       <p class="hero-sub"><%= t('truckIntro') %></p>
       <div class="hero-cta">
         <a href="#gdzie" class="btn btn-primary"><%= t('truckCtaWhere') %></a>
+        <a href="#menu" class="btn btn-ghost"><%= t('truckCtaMenu') %></a>
         <a href="#wydarzenie" class="btn btn-ghost"><%= t('truckCtaEvent') %></a>
       </div>
       <div class="hero-badges">
         <span>🍟 Frikandel speciaal · bitterballen · kroket</span>
         <span>📍 <%= t('truckLaunch', { launch: launch || t('truckLaunchSoon') }) %></span>
+        <span><%= t('badgeNotify') %></span>
       </div>
     </div>
     <div class="hero-art hero-art-truck">
@@ -54,15 +56,40 @@
   <div class="check-strip"></div>
 </section>
 
+<!-- ======================= MENU ======================= -->
+<section id="menu" class="delivery menu-board">
+  <div class="delivery-inner">
+    <h2><%- t('menuH2Html') %></h2>
+    <p class="delivery-sub"><%= t('menuP') %></p>
+    <div class="menu-cols">
+      <% for (const cat of Object.keys(dict.menuCats)) { const items = menu.filter(m => m.cat === cat); if (!items.length) continue; %>
+      <div class="menu-cat">
+        <h3><%= dict.menuCats[cat] %></h3>
+        <% for (const m of items) { %>
+        <div class="menu-item">
+          <div class="menu-name"><b><%= m.name[lang] || m.name.pl %></b><% if (m.desc) { %><small><%= m.desc[lang] || m.desc.pl %></small><% } %></div>
+          <div class="menu-price">
+            <% if (m.variants) { for (const vr of m.variants) { %><span><i><%= vr.label[lang] || vr.label.pl %></i> <%= zl(vr.price) %></span><% } } else { %><%= zl(m.price) %><% } %>
+          </div>
+        </div>
+        <% } %>
+      </div>
+      <% } %>
+    </div>
+  </div>
+  <div class="check-strip"></div>
+</section>
+
 <!-- ======================= GDZIE STOIMY ======================= -->
 <section id="gdzie" class="shop truck-where">
   <div class="section-head">
     <h2><%- t('truckWhereH2Html') %></h2>
-    <p><%= t('truckWhereP') %></p>
+    <p><%= t('truckWhereP') %> <%= t('liveMapHint') %></p>
   </div>
-  <% if (stops.length) { %>
-  <div class="where-grid">
-    <div id="map" class="truck-map" role="region" aria-label="<%= t('truckMapAria') %>"></div>
+  <p class="live-bar" id="liveBar" hidden></p>
+  <div class="where-grid<%= stops.length ? '' : ' no-map' %>">
+    <div id="map" class="truck-map" role="region" aria-label="<%= t('truckMapAria') %>" <%= stops.length ? '' : 'hidden' %>></div>
+    <% if (stops.length) { %>
     <div class="stops">
       <% for (const s of stops) { const today = new Date().toISOString().slice(0, 10); const isToday = s.dateFrom <= today && s.dateTo >= today; %>
       <article class="stop<%= isToday ? ' stop-today' : '' %>" data-lat="<%= s.lat || '' %>" data-lon="<%= s.lon || '' %>">
@@ -74,22 +101,43 @@
       </article>
       <% } %>
     </div>
-  </div>
-  <% } else { %>
-  <div class="local-box local-box-light">
-    <div class="local-copy">
-      <p class="local-kicker"><%= t('truckKicker') %></p>
-      <h3><%- t('truckWhereH2Html') %></h3>
-      <p><%= t('truckNoStops') %></p>
+    <% } else { %>
+    <div class="local-box local-box-light">
+      <div class="local-copy">
+        <p class="local-kicker"><%= t('truckKicker') %></p>
+        <h3><%- t('truckWhereH2Html') %></h3>
+        <p><%= t('truckNoStops') %></p>
+      </div>
+      <%- include('partials/socials') %>
     </div>
-    <%- include('partials/socials') %>
+    <% } %>
   </div>
-  <% } %>
+</section>
+
+<!-- ======================= POWIADOMIENIA ======================= -->
+<section id="powiadom" class="notify">
+  <div class="local-box notify-box">
+    <div class="local-copy">
+      <p class="local-kicker"><%= t('subKicker') %></p>
+      <h3><%- t('subH2Html') %></h3>
+      <p><%= t('subP') %></p>
+    </div>
+    <form class="zone-form" id="subForm">
+      <div class="ask-grid">
+        <input name="email" type="email" placeholder="<%= t('subEmail') %>" maxlength="160" autocomplete="email" required class="ask-wide">
+        <input name="place" placeholder="<%= t('subPlace') %>" maxlength="120" class="ask-wide">
+        <label class="consent ask-wide"><input type="checkbox" name="consent" value="1"> <span><%- t('subConsentHtml') %></span></label>
+      </div>
+      <p class="zone-result" id="subStatus" hidden></p>
+      <button type="submit" class="btn btn-primary" id="subSend" style="width:100%"><%= t('subSend') %></button>
+    </form>
+  </div>
 </section>
 
 <!-- ======================= SOCIALS ======================= -->
 <section class="delivery">
   <div class="check-strip"></div>
+  <% /* socials volgen na de powiadomienia-box */ %>
   <div class="delivery-inner">
     <h2><%- t('truckSocialH2Html') %></h2>
     <p class="delivery-sub"><%= t('truckSocialP') %></p>
@@ -150,7 +198,7 @@
   window.T = <%- JSON.stringify(dict.client) %>;
   window.STOPS = <%- JSON.stringify(stops.map(s => ({ name: s.name, address: s.address, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo, hours: s.hours }))) %>;
 </script>
-<% if (stops.length) { %><script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script><% } %>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="/foodtruck.js?v=<%= v %>"></script>
 </body>
 </html>

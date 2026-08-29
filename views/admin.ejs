@@ -116,6 +116,44 @@
   <% } %>
   <% } %>
 
+  <h1 class="admin-section" id="live">Food truck — live GPS & abonnees</h1>
+  <div class="admin-note">
+    <% if (live.live) { %>🟢 <b>Live:</b> <%= live.place || (live.lat.toFixed(4) + ', ' + live.lon.toFixed(4)) %> · laatste signaal <%= live.ageMin %> min geleden (±<%= live.accuracy || '?' %> m)<% } else { %>⚪ Niet live<% if (truck.updatedAt) { %> — laatste signaal <%= new Date(truck.updatedAt).toLocaleString('nl-NL') %><% } %><% } %>.
+    Laatste aankondiging: <%= truck.announcedAt ? new Date(truck.announcedAt).toLocaleString('nl-NL') + ' — ' + truck.place : 'nog niet' %>.<br>
+    <% if (gpsToken) { %>Chauffeurspagina (telefoon in de kar, HTTPS): <a href="/kierowca?t=<%= encodeURIComponent(gpsToken) %>" target="_blank">/kierowca?t=…</a> — deze link bevat het token, deel hem alleen met wie in de kar staat. Trackers/apps kunnen posten naar <code>POST /api/gps</code> met header <code>x-gps-token</code>.<% } else { %>⚠️ <code>GPS_TOKEN</code> is niet gezet — de chauffeurspagina en <code>/api/gps</code> zijn uitgeschakeld.<% } %>
+  </div>
+  <form method="POST" action="/admin/oglos" class="admin-bar" style="position:static" onsubmit="return confirm('Locatie-mail sturen naar alle bevestigde abonnees?')">
+    <input name="info" placeholder="Extra tekst in de mail (bv. „stoimy do 20:00”) — optioneel" maxlength="300">
+    <button class="btn btn-primary" type="submit" <%= truck.lat == null ? 'disabled title="Nog geen GPS-positie"' : '' %>>📣 Locatie-mail sturen</button>
+  </form>
+  <% const subsActive = subs.filter(s => s.confirmed && !s.unsubscribedAt); %>
+  <div class="stats">
+    <div class="stat"><b><%= subsActive.length %></b><span>bevestigde abonnees</span></div>
+    <div class="stat"><b><%= subs.filter(s => !s.confirmed).length %></b><span>nog niet bevestigd</span></div>
+    <div class="stat"><b><%= subs.filter(s => s.unsubscribedAt).length %></b><span>afgemeld</span></div>
+    <div class="stat"><b><%= subs.filter(s => s.codeUsedAt).length %></b><span>kortingscodes gebruikt</span></div>
+    <div class="stat"><b><%= subDiscount.percent %>%</b><span>korting (<%= subDiscount.once ? 'eenmalig' : 'onbeperkt' %>)</span></div>
+  </div>
+  <% if (subs.length) { %>
+  <table class="admin-table">
+    <thead><tr><th>E-mail</th><th>Taal</th><th>Plaats</th><th>Status</th><th>Code</th><th>Aangemeld</th></tr></thead>
+    <tbody>
+    <% for (const s of subs.slice(0, 200)) { %>
+      <tr class="<%= s.unsubscribedAt || !s.confirmed ? 'inactive' : '' %>">
+        <td><b><%= s.email %></b></td>
+        <td class="admin-unit"><%= s.lang %></td>
+        <td class="admin-unit"><%= s.place || '–' %></td>
+        <td class="admin-unit"><%= s.unsubscribedAt ? 'afgemeld' : (s.confirmed ? '✅ bevestigd' : '⏳ wacht op bevestiging') %></td>
+        <td class="admin-unit"><%= s.code ? 'PF-' + s.code + (s.codeUsedAt ? ' · gebruikt' : '') : '–' %></td>
+        <td class="admin-unit"><%= s.createdAt ? new Date(s.createdAt).toLocaleDateString('nl-NL') : '' %></td>
+      </tr>
+    <% } %>
+    </tbody>
+  </table>
+  <% } else { %>
+  <p style="color:var(--muted);font-weight:700">Nog geen abonnees.</p>
+  <% } %>
+
   <h1 class="admin-section" id="foodtruck">Food truck — standplaatsen</h1>
   <p style="color:var(--muted);font-weight:700">Waar en wanneer staat de frietkar? Dit vult de kaart en het schema op <a href="/foodtruck" target="_blank">/foodtruck</a>. Klik op de kaart om de plek te prikken (of vul lat/lon in). Standplaatsen in het verleden blijven bewaard maar verdwijnen van de site.</p>
   <div class="truck-admin">

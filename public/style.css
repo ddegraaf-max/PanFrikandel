@@ -675,6 +675,46 @@ em { font-style: normal; color: var(--oranje); }
 .truck-banner h3 em { color: var(--geel); }
 @media (max-width: 860px) { .where-grid, .banners { grid-template-columns: 1fr; } .truck-map { height: 320px; } }
 
+/* live-balk, powiadomienia, menukaart, chauffeur, kortingscode */
+.live-bar {
+  max-width: 820px; margin: -14px auto 26px; padding: 12px 18px; text-align: center;
+  border: 3px solid var(--ink); border-radius: 14px; font-weight: 700; font-size: 15px; box-shadow: var(--shadow-sm);
+}
+.live-bar.on { background: var(--geel); }
+.live-bar.off { background: var(--paper); color: var(--muted); }
+.live-bar.off a { color: var(--oranje); }
+.live-ago, .live-info { font-weight: 600; color: var(--muted); }
+.live-info { display: block; }
+.where-grid.no-map { grid-template-columns: 1fr; }
+.pf-pin-live { font-size: 34px; line-height: 44px; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { transform: scale(1.15); } }
+.notify { max-width: 1180px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) clamp(40px, 6vw, 72px); }
+.notify-box { background: var(--oranje); color: var(--paper); border-color: var(--ink); box-shadow: var(--shadow); margin-top: 0; }
+.notify-box .local-kicker { background: var(--ink); color: var(--geel); }
+.consent { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+.consent input { width: 18px; height: 18px; margin-top: 2px; accent-color: var(--oranje); flex: none; }
+.consent a { color: var(--oranje); }
+.menu-board .delivery-inner { padding-top: clamp(40px, 6vw, 72px); }
+.menu-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 26px; margin-top: 36px; text-align: left; }
+.menu-cat h3 { font-family: 'Shrikhand', cursive; font-weight: 400; color: var(--geel); font-size: 24px; margin-bottom: 10px; border-bottom: 2px dashed rgba(255,248,236,.35); padding-bottom: 6px; }
+.menu-item { display: flex; justify-content: space-between; gap: 14px; padding: 8px 0; border-bottom: 1px dotted rgba(255,248,236,.25); }
+.menu-name b { font-size: 16px; }
+.menu-name small { display: block; font-size: 13px; opacity: .8; margin-top: 2px; }
+.menu-price { font-family: 'Shrikhand', cursive; color: var(--geel); font-size: 18px; white-space: nowrap; text-align: right; display: flex; flex-direction: column; gap: 2px; }
+.menu-price i { font: 700 12px 'Hanken Grotesk', sans-serif; opacity: .85; margin-right: 4px; }
+.driver { max-width: 560px; }
+.driver .local-kicker { background: var(--ink); color: var(--geel); }
+.driver-card { background: var(--paper); border: 3px solid var(--ink); border-radius: 14px; padding: 18px; box-shadow: var(--shadow-sm); margin-top: 16px; }
+.driver-label { display: block; font-weight: 800; margin-bottom: 8px; }
+.driver-buttons { display: grid; gap: 10px; }
+.driver-big { width: 100%; text-align: center; font-size: 18px; padding: 16px; }
+.driver-status { margin-top: 12px; font-weight: 700; }
+.driver-status.bad { color: var(--rood); }
+.driver-hint { margin-top: 8px; font-size: 13px; color: var(--muted); font-weight: 700; }
+.driver-card textarea { width: 100%; border: 2.5px solid var(--ink); border-radius: 12px; padding: 10px 12px; font: 600 14px 'Hanken Grotesk', sans-serif; margin-bottom: 10px; }
+.cart-discount { font-size: 13.5px; font-weight: 800; color: #1a7a2e; margin-bottom: 8px; }
+.cart-code input { text-transform: uppercase; letter-spacing: .08em; }
+
 /* admin: food truck */
 .truck-admin { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 12px 0 16px; }
 .truck-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-content: start; }

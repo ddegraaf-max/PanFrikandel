@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <title><%= title %> — PanFrikandel</title>
+  <%- include('partials/head') %>
+</head>
+<body>
+<%- include('partials/snacks') %>
+<header class="nav">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/></svg>
+    <span translate="no">PanFrikandel</span>
+  </a>
+  <%- include('partials/lang') %>
+</header>
+
+<div class="success-hero">
+  <div class="hero-sticker"><%- ok ? '🔔' : '🤔' %></div>
+  <h1 style="font-family:'Shrikhand';font-size:clamp(30px,5vw,48px)"><%= title %></h1>
+  <p style="max-width:52ch;margin:16px auto 32px"><%= text %></p>
+  <p><a class="btn btn-primary" href="/foodtruck">← Food truck</a></p>
+</div>
+</body>
+</html>

@@ -33,6 +33,10 @@ Twee catalogi:
 | `PRICING_MARKUP` | opslag op de inkoopprijs (optioneel, standaard 2.2) |
 | `SOCIAL_INSTAGRAM` / `SOCIAL_FACEBOOK` / `SOCIAL_TIKTOK` | links naar de socials (optioneel, standaard `…/panfrikandel`) |
 | `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN` | starttekst food truck, bv. `wiosna 2027` / `spring 2027` (optioneel) |
+| `GPS_TOKEN` | geheim voor `/kierowca` en `POST /api/gps` (lange willekeurige string) |
+| `GPS_STALE_MIN` | minuten zonder signaal waarna de kar "niet live" is (standaard 30) |
+| `SUB_SECRET` | geheim voor bevestig-/afmeldlinks (standaard = `ADMIN_PASSWORD`) |
+| `SUB_DISCOUNT_PERCENT` / `SUB_DISCOUNT_ONCE` | korting voor abonnees in % (10) en eenmalig (true) |
 
 ## Stripe-instellingen
 
@@ -72,6 +76,42 @@ odżywcze/przygotowanie van mora.nl (`mora`-veld = bronpagina). 10 staan aan,
   `data/local-stats.json`). Max. 5 aanvragen per IP per uur. Zonder Resend
   wordt de aanvraag in de serverlog geprint.
 - Aanvragen van de laatste 30 dagen staan onderaan de statistieken in `/admin`.
+
+## Omgevingsvariabelen
+
+Alle variabelen staan met uitleg in **`.env.example`**. Lokaal: kopieer naar
+`.env` (wordt automatisch geladen, staat in `.gitignore`). Op Railway: zet ze
+onder *Variables*.
+
+## Food truck LIVE — GPS, abonnees, kortingscode, menukaart
+
+- **GPS**: de telefoon in de kar opent `/kierowca?t=GPS_TOKEN` (link staat in
+  `/admin`; HTTPS vereist voor browser-GPS). "▶ Nadawaj pozycję" stuurt elke
+  ~15 s (of bij >25 m verplaatsing, plus een hartslag per minuut) de positie
+  naar `POST /api/gps`. Een losse tracker of app (OwnTracks, Traccar, Tasker…)
+  kan hetzelfde endpoint aanroepen met header `x-gps-token` en body
+  `{ lat, lon, accuracy }`. Na `GPS_STALE_MIN` minuten zonder signaal is de kar
+  "niet live".
+- **Live op de site**: `/foodtruck` toont "🟢 Jesteśmy teraz: …" en een 🚚 op de
+  kaart (`GET /api/gps`, ververst elke 30 s). Admin toont dezelfde status.
+- **Abonnees (powiadomienia)**: formulier op `/foodtruck` → `POST /api/subskrypcja`
+  → bevestigingsmail (double opt-in, HMAC-token met `SUB_SECRET`) →
+  `/subskrypcja/potwierdz` → welkomstmail met persoonlijke **kortingscode
+  `PF-XXXXXX`**. Afmeldlink (`/subskrypcja/rezygnacja`) in elke mail. Tabel
+  `subscribers` (e-mail, taal, plaats, bevestigd, code, code gebruikt).
+- **Locatie-mail**: de chauffeur drukt "📣 Ogłoś lokalizację" (of jij in admin
+  "Locatie-mail sturen"): plaatsnaam = geplande standplaats van vandaag, anders
+  reverse-geocoding via OSM Nominatim, anders coördinaten; alle bevestigde
+  abonnees krijgen een mail in hun taal met plaats, uren, kaartlink en (zolang
+  ongebruikt) hun code. Verzending in batches van 50 via Resend.
+- **Kortingscode**: `SUB_DISCOUNT_PERCENT` (10) en `SUB_DISCOUNT_ONCE` (true =
+  eenmalig). In de webshop: veld in de winkelmand → `POST /api/kod` → bij
+  afrekenen een Stripe-coupon `PF_SUB_<percent>` (wordt automatisch
+  aangemaakt); na betaling wordt de code als gebruikt gemarkeerd (`/sukces`).
+  Aan het loket: de chauffeurspagina heeft "Kod rabatowy klienta" → Sprawdź →
+  Oznacz jako użyty (`POST /api/gps/kod`).
+- **Menukaart**: `catalog/foodtruck-menu.js` (PL/EN, prijzen in grosze —
+  startwaarden zijn aannames), categorieën in `locales/ui.js` → `menuCats`.
 
 ## Food truck (`/foodtruck`) — frietkar, kaart, socials, evenementen
 

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="<%= lang %>">
+<head>
+  <title><%= t('driverTitle') %></title>
+  <%- include('partials/head') %>
+  <meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<%- include('partials/snacks') %>
+<header class="nav">
+  <a href="/" class="logo">
+    <svg viewBox="0 0 100 100" class="logo-mark"><rect width="100" height="100" rx="22" fill="#FF4D00"/><rect x="20" y="40" width="60" height="22" rx="11" fill="#A0522D" stroke="#2A1503" stroke-width="6"/></svg>
+    <span translate="no">PanFrikandel</span>
+  </a>
+  <%- include('partials/lang') %>
+</header>
+
+<div class="page driver">
+  <p class="local-kicker">🚚 Food truck · GPS</p>
+  <h1><%- t('driverH1Html') %></h1>
+  <p><%= t('driverIntro') %></p>
+  <% if (!gpsConfigured) { %><p class="admin-error"><%= t('driverNoToken') %></p><% } %>
+
+  <div class="driver-card">
+    <label class="driver-label" for="gpsToken"><%= t('driverToken') %></label>
+    <div class="zone-row">
+      <input id="gpsToken" type="password" placeholder="<%= t('driverTokenPlaceholder') %>" autocomplete="off">
+      <button class="btn btn-add" id="gpsTokenSave" type="button"><%= t('driverTokenSave') %></button>
+    </div>
+  </div>
+
+  <div class="driver-card">
+    <div class="driver-buttons">
+      <button class="btn btn-primary driver-big" id="gpsStart" type="button"><%= t('driverStart') %></button>
+      <button class="btn btn-add driver-big" id="gpsStop" type="button" hidden><%= t('driverStop') %></button>
+    </div>
+    <p class="driver-status" id="gpsStatus"><%= dict.client.gpsIdle %></p>
+    <p class="driver-hint"><%= t('driverHttps') %></p>
+  </div>
+
+  <div class="driver-card">
+    <textarea id="gpsInfo" rows="2" maxlength="300" placeholder="<%= t('driverInfoPlaceholder') %>"></textarea>
+    <button class="btn btn-primary driver-big" id="gpsAnnounce" type="button"><%= t('driverAnnounce') %></button>
+    <p class="driver-status" id="gpsAnnounceStatus" hidden></p>
+    <p class="driver-hint" id="gpsSubs"></p>
+  </div>
+
+  <div class="driver-card">
+    <label class="driver-label" for="gpsCode"><%= t('driverCodeLabel') %></label>
+    <div class="zone-row">
+      <input id="gpsCode" placeholder="PF-XXXXXX" maxlength="12" autocomplete="off" autocapitalize="characters">
+      <button class="btn btn-add" id="gpsCodeCheck" type="button"><%= t('driverCodeCheck') %></button>
+    </div>
+    <p class="driver-status" id="gpsCodeStatus" hidden></p>
+    <button class="btn btn-primary" id="gpsCodeUse" type="button" hidden><%= t('driverCodeUse') %></button>
+  </div>
+</div>
+
+<script>
+  window.LANG = <%- JSON.stringify(lang) %>;
+  window.T = <%- JSON.stringify(dict.client) %>;
+  window.TT = <%- JSON.stringify({ subs: t('driverSubs'), last: t('driverLastAnnounce'), never: t('driverNever') }) %>;
+</script>
+<script src="/kierowca.js?v=<%= v %>"></script>
+</body>
+</html>

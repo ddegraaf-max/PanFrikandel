@@ -140,7 +140,8 @@
         <h4><%= t('pdStorage') %></h4>
         <p class="pd-small"><%= d.storage %></p>
       <% } %>
-      <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:18px"><%= t('addToCart') %> · <%= zl(p.price) %></button>
+      <% if (p.stock != null) { %><p class="stock <%= p.stock <= 0 ? 'stock-out' : (p.stock <= 3 ? 'stock-low' : '') %>" style="margin-top:14px"><%= p.stock <= 0 ? t('stockOut', { eta: delivery.backorderEta }) : (p.stock <= 3 ? t('stockLow', { n: p.stock }) : t('stockIn', { n: p.stock })) %></p><% } %>
+      <button class="btn btn-primary" data-add="<%= p.id %>" style="width:100%;margin-top:10px"><%= t('addToCart') %> · <%= zl(p.price) %></button>
     </div>
   <% } %>
 
@@ -266,6 +267,7 @@
       <p class="zone-result" data-code-result hidden></p>
     </form>
     <p class="cart-ship" id="cartShip"></p>
+    <p class="cart-backorder" id="cartBackorder" hidden></p>
     <p class="cart-discount" id="cartDiscount" hidden></p>
     <div class="cart-total"><span><%= t('cartTotal') %></span><b id="cartTotal">0,00 zł</b></div>
     <button class="btn btn-primary btn-checkout" id="checkoutBtn" disabled><%= t('checkout') %></button>
@@ -307,7 +309,7 @@
   window.LANG = <%- JSON.stringify(lang) %>;
   window.T = <%- JSON.stringify(dict.client) %>;
   window.DELIVERY = <%- JSON.stringify(delivery) %>;
-  window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon, img: p.img || null }))) %>;
+  window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, price: p.price, unit: p.unit, icon: p.icon, img: p.img || null, stock: p.stock == null ? null : p.stock }))) %>;
 </script>
 <script src="/shop.js?v=<%= v %>"></script>
 </body>

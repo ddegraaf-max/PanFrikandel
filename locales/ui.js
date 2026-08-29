@@ -30,6 +30,8 @@ UI.pl = {
   catsHurt: { klasyki: 'Frikandele i klasyki — kartony horeca', bitterballen: 'Bitterballen i krokiety — kartony', sosy: 'Sosy — duże opakowania', sprzet: 'Olej i sprzęt' },
   showAllHtml: 'Pokaż wszystkie <span class="more-count">{n}</span> produktów ▾',
   cardSpecs: 'Specyfikacja', cardIngredients: 'Składniki i przygotowanie', addToCart: '+ Do koszyka', productDetails: 'Szczegóły produktu',
+  stockIn: 'Na stanie: {n} szt.', stockLow: 'Zostały tylko {n} szt.!', stockOut: 'Na zamówienie — dostawa {eta}',
+  backorderNoteHtml: '⏳ <strong>Część produktów mamy na zamówienie</strong> — dostawa potrwa {eta}. Damy znać, gdy będziemy w drodze.',
   pdPrep: 'Przygotowanie', pdSpecs: 'Specyfikacja', pdIngredients: 'Składniki', pdAllergens: 'Alergeny', pdNutrition: 'Wartości odżywcze (na 100 g)', pdStorage: 'Przechowywanie',
 
   // tip: frikandel z grilla → broodje frikandel (homepage)
@@ -224,6 +226,8 @@ UI.pl = {
     shipFree: '🎉 Dostawa gratis — dowozimy sami do {place}!',
     shipLine: '🛵 Dostawa ({place}, {km} km): {price} · do darmowej brakuje {missing}',
     added: 'Dodano do koszyka! Lekker 👌',
+    backorderToast: '⏳ Powyżej stanu — dostawa tej pozycji potrwa {eta}.',
+    backorderLine: '⏳ Część produktów na zamówienie — dostawa {eta}',
     wait: 'Chwileczkę…', checkout: 'Przejdź do płatności →',
     errGeneric: 'Coś poszło nie tak.', errConn: 'Błąd połączenia. Spróbuj ponownie.',
     zoneOkHtml: '✅ <b>{place}</b> ({km} km od Płocka) — dowozimy! {price}, gratis od {free}, {eta}.',
@@ -285,6 +289,8 @@ UI.en = {
   catsHurt: { klasyki: 'Frikandels & classics — catering boxes', bitterballen: 'Bitterballen & croquettes — boxes', sosy: 'Sauces — large packs', sprzet: 'Oil & equipment' },
   showAllHtml: 'Show all <span class="more-count">{n}</span> products ▾',
   cardSpecs: 'Specifications', cardIngredients: 'Ingredients & preparation', addToCart: '+ Add to cart', productDetails: 'Product details',
+  stockIn: 'In stock: {n}', stockLow: 'Only {n} left!', stockOut: 'Made to order — delivery {eta}',
+  backorderNoteHtml: '⏳ <strong>Some products are made to order</strong> — delivery will take {eta}. We\'ll let you know when we\'re on our way.',
   pdPrep: 'Preparation', pdSpecs: 'Specifications', pdIngredients: 'Ingredients', pdAllergens: 'Allergens', pdNutrition: 'Nutrition (per 100 g)', pdStorage: 'Storage',
 
   tipKicker: '🔥 PanFrikandel\'s tip',
@@ -471,6 +477,8 @@ UI.en = {
     shipFree: '🎉 Free delivery — we bring it to {place} ourselves!',
     shipLine: '🛵 Delivery ({place}, {km} km): {price} · {missing} more for free delivery',
     added: 'Added to cart! Lekker 👌',
+    backorderToast: '⏳ Above our stock — this item will take {eta} to deliver.',
+    backorderLine: '⏳ Some products are made to order — delivery {eta}',
     wait: 'One moment…', checkout: 'Go to checkout →',
     errGeneric: 'Something went wrong.', errConn: 'Connection error. Please try again.',
     zoneOkHtml: '✅ <b>{place}</b> ({km} km from Płock) — we deliver! {price}, free from {free}, {eta}.',

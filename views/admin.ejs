@@ -210,7 +210,8 @@
   <div class="admin-note">
     Prijs = inkoop (Vomar, €) × koers <b><%= pricing.eurPln %></b> × opslag <b>×<%= pricing.markup %></b>, afgerond op ,90 zł
     (env <code>PRICING_EUR_PLN</code> / <code>PRICING_MARKUP</code>). Een handmatige prijs overschrijft de berekende; leeg = terug naar berekend kan niet, vul dan de berekende waarde in.
-    „Actief” bepaalt of het product in de shop staat — zo schaal je op zonder code.
+    „Actief” bepaalt of het product in de shop staat — zo schaal je op zonder code.<br>
+    <b>Voorraad</b> in stuks (start 10, env <code>STOCK_DEFAULT</code>): bij elke betaalde bestelling gaat het bestelde aantal eraf. Onder nul = "na zamówienie" — klanten kunnen dan nog steeds bestellen, maar zien een langere levertijd (<code>BACKORDER_ETA_PL/EN</code>, nu „<%= delivery.backorderEta %>”); een negatief getal is wat je nog moet inkopen. Na een inkoop bij Vomar: nieuwe voorraad invullen en opslaan.
   </div>
 
   <div class="admin-bar">
@@ -220,13 +221,14 @@
   <p id="adminStatus" class="admin-status" hidden></p>
 
   <table class="admin-table" id="adminTable">
-    <thead><tr><th>Actief</th><th>Product</th><th>Eenheid</th><th style="text-align:right">Inkoop €</th><th style="text-align:right">Berekend zł</th><th style="text-align:right">Prijs (zł)</th><th style="text-align:right">Marge</th></tr></thead>
+    <thead><tr><th>Actief</th><th>Product</th><th>Eenheid</th><th style="text-align:right">Voorraad</th><th style="text-align:right">Inkoop €</th><th style="text-align:right">Berekend zł</th><th style="text-align:right">Prijs (zł)</th><th style="text-align:right">Marge</th></tr></thead>
     <tbody>
       <% for (const p of products) { const on = p.active !== false; const costGr = p.buyEur ? Math.round(p.buyEur * pricing.eurPln * 100) : 0; const margin = costGr ? Math.round((p.price - costGr) / p.price * 100) : null; %>
       <tr data-search="<%= (p.name + ' ' + p.cat + ' ' + (p.badge || '')).toLowerCase() %>" class="<%= on ? '' : 'inactive' %>">
         <td><input type="checkbox" class="admin-active" data-id="<%= p.id %>" <%= on ? 'checked' : '' %> data-orig="<%= on ? '1' : '0' %>"></td>
         <td><b><%= p.name %></b><% if (p.badge) { %> <small class="admin-badge"><%= p.badge %></small><% } %><br><small class="admin-unit"><%= p.cat %><% if (p.mora) { %> · <a href="<%= p.mora %>" target="_blank" rel="noopener">mora.nl</a><% } %></small></td>
         <td class="admin-unit"><%= p.unit %></td>
+        <td style="text-align:right"><input type="number" step="1" min="-100000" max="100000" class="admin-stock<%= (p.stock || 0) < 0 ? ' neg' : '' %>" data-id="<%= p.id %>" value="<%= p.stock == null ? 0 : p.stock %>" data-orig="<%= p.stock == null ? 0 : p.stock %>"></td>
         <td class="admin-num"><%= p.buyEur ? '€ ' + p.buyEur.toFixed(2) : '–' %></td>
         <td class="admin-num"><%= p.basePrice ? zl(p.basePrice) : '–' %></td>
         <td style="text-align:right">
@@ -250,16 +252,20 @@
   function changedFlags() {
     return [...document.querySelectorAll('.admin-active')].filter(c => (c.checked ? '1' : '0') !== c.dataset.orig);
   }
+  function changedStock() {
+    return [...document.querySelectorAll('.admin-stock')].filter(i => parseInt(i.value, 10) !== parseInt(i.dataset.orig, 10));
+  }
   function refresh() {
     document.querySelectorAll('#adminTable tbody tr').forEach(tr => {
-      const price = tr.querySelector('.admin-price'), flag = tr.querySelector('.admin-active');
-      const dirty = parseFloat(price.value) !== parseFloat(price.dataset.orig) || (flag.checked ? '1' : '0') !== flag.dataset.orig;
+      const price = tr.querySelector('.admin-price'), flag = tr.querySelector('.admin-active'), stock = tr.querySelector('.admin-stock');
+      const dirty = parseFloat(price.value) !== parseFloat(price.dataset.orig) || (flag.checked ? '1' : '0') !== flag.dataset.orig || parseInt(stock.value, 10) !== parseInt(stock.dataset.orig, 10);
       tr.classList.toggle('dirty', dirty);
       tr.classList.toggle('inactive', !flag.checked);
+      stock.classList.toggle('neg', parseInt(stock.value, 10) < 0);
     });
-    saveBtn.disabled = changedPrices().length + changedFlags().length === 0;
+    saveBtn.disabled = changedPrices().length + changedFlags().length + changedStock().length === 0;
   }
-  document.addEventListener('input', e => { if (e.target.matches('.admin-price, .admin-active')) refresh(); });
+  document.addEventListener('input', e => { if (e.target.matches('.admin-price, .admin-active, .admin-stock')) refresh(); });
 
   $('#adminFilter').addEventListener('input', e => {
     const q = e.target.value.toLowerCase().trim();
@@ -269,23 +275,25 @@
   });
 
   saveBtn.addEventListener('click', async () => {
-    const dirtyP = changedPrices(), dirtyF = changedFlags();
-    if (!dirtyP.length && !dirtyF.length) return;
-    const prices = {}, active = {};
+    const dirtyP = changedPrices(), dirtyF = changedFlags(), dirtyS = changedStock();
+    if (!dirtyP.length && !dirtyF.length && !dirtyS.length) return;
+    const prices = {}, active = {}, stock = {};
     for (const i of dirtyP) prices[i.dataset.id] = i.value;
     for (const c of dirtyF) active[c.dataset.id] = c.checked;
+    for (const s of dirtyS) stock[s.dataset.id] = parseInt(s.value, 10);
     saveBtn.disabled = true;
     saveBtn.textContent = 'Opslaan…';
     try {
       const r = await fetch('/admin/prices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prices, active })
+        body: JSON.stringify({ prices, active, stock })
       });
       const data = await r.json();
       if (r.ok) {
         for (const i of dirtyP) i.dataset.orig = parseFloat(i.value).toFixed(2);
         for (const c of dirtyF) c.dataset.orig = c.checked ? '1' : '0';
+        for (const s of dirtyS) s.dataset.orig = String(parseInt(s.value, 10));
         refresh();
         status.textContent = '✅ ' + data.saved + ' wijziging(en) opgeslagen en direct live.';
       } else {

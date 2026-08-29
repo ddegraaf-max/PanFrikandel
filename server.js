@@ -158,6 +158,57 @@ async function saveFlags(changes) {
   }
 }
 
+// Voorraad per product (stuks). Standaard STOCK_DEFAULT (10); bij een betaalde bestelling gaat het
+// bestelde aantal eraf (/sukces). Mag negatief worden = "na zamówienie" (nog in te kopen).
+// In admin bij te stellen na een nieuwe inkoop.
+const STOCK_DEFAULT = parseInt(process.env.STOCK_DEFAULT, 10);
+for (const p of PRODUCTS) if (p.stock == null) p.stock = Number.isInteger(STOCK_DEFAULT) ? STOCK_DEFAULT : 10;
+const STOCK_FILE = path.join(__dirname, 'data', 'stock.json');
+function applyStock(rows) {
+  for (const [id, qty] of Object.entries(rows)) {
+    const n = parseInt(qty, 10);
+    if (productById[id] && Number.isInteger(n)) productById[id].stock = n;
+  }
+}
+async function loadStock() {
+  try {
+    if (pool) {
+      await pool.query('CREATE TABLE IF NOT EXISTS stock (product_id TEXT PRIMARY KEY, qty INTEGER NOT NULL, updated_at TIMESTAMPTZ DEFAULT now())');
+      const { rows } = await pool.query('SELECT product_id, qty FROM stock');
+      applyStock(Object.fromEntries(rows.map(r => [r.product_id, r.qty])));
+    } else if (fs.existsSync(STOCK_FILE)) {
+      applyStock(JSON.parse(fs.readFileSync(STOCK_FILE, 'utf8')));
+    }
+  } catch (err) {
+    console.error('Voorraad laden mislukt:', err.message);
+  }
+}
+async function saveStock(changes) {
+  applyStock(changes);
+  if (pool) {
+    for (const id of Object.keys(changes)) {
+      await pool.query(
+        'INSERT INTO stock (product_id, qty, updated_at) VALUES ($1, $2, now()) ON CONFLICT (product_id) DO UPDATE SET qty = $2, updated_at = now()',
+        [id, productById[id].stock]
+      );
+    }
+  } else {
+    fs.mkdirSync(path.dirname(STOCK_FILE), { recursive: true });
+    fs.writeFileSync(STOCK_FILE, JSON.stringify(Object.fromEntries(PRODUCTS.map(p => [p.id, p.stock])), null, 2));
+  }
+}
+// bestelde aantallen afboeken: { id: qty } (mag onder nul: na zamówienie)
+async function stockDeduct(items) {
+  const changes = {};
+  for (const [id, qty] of Object.entries(items)) {
+    if (productById[id]) changes[id] = (productById[id].stock || 0) - qty;
+  }
+  if (Object.keys(changes).length) {
+    try { await saveStock(changes); console.log('📦 Voorraad afgeboekt:', JSON.stringify(items)); }
+    catch (err) { console.error('Voorraad afboeken mislukt:', err.message); }
+  }
+}
+
 async function savePrices(changes) {
   applyOverrides(changes);
   if (pool) {
@@ -187,7 +238,9 @@ const DELIVERY = {
   center: { name: 'Płock', lat: 52.5464, lon: 19.7065 },
   priceGr: 1900,             // 19 zł
   freeAboveGr: 15000,        // gratis powyżej 150 zł
-  eta: { pl: 'zwykle następnego dnia', en: 'usually the next day' }
+  eta: { pl: 'zwykle następnego dnia', en: 'usually the next day' },
+  // levertijd als (een deel van) de bestelling boven de voorraad zit — "na zamówienie"
+  backorderEta: { pl: process.env.BACKORDER_ETA_PL || 'ok. 5–7 dni', en: process.env.BACKORDER_ETA_EN || 'about 5–7 days' }
 };
 
 // ---- Socials (footer, /foodtruck) + food truck ----
@@ -337,7 +390,8 @@ const deliveryPublic = lang => ({
   city: DELIVERY.center.name,
   priceGr: DELIVERY.priceGr,
   freeAboveGr: DELIVERY.freeAboveGr,
-  eta: DELIVERY.eta[lang] || DELIVERY.eta.pl
+  eta: DELIVERY.eta[lang] || DELIVERY.eta.pl,
+  backorderEta: DELIVERY.backorderEta[lang] || DELIVERY.backorderEta.pl
 });
 
 // ---- Statistieken: postcodechecks + bestellingen ----
@@ -951,9 +1005,16 @@ app.post('/admin/prices', async (req, res) => {
     for (const [id, on] of Object.entries(req.body.active || {})) {
       if (productById[id] && (productById[id].active !== false) !== !!on) flags[id] = !!on;
     }
+    const stock = {};
+    for (const [id, val] of Object.entries(req.body.stock || {})) {
+      const n = parseInt(val, 10);
+      if (!productById[id] || !Number.isInteger(n) || n < -100000 || n > 100000) continue;
+      if (n !== productById[id].stock) stock[id] = n;
+    }
     if (Object.keys(changes).length) await savePrices(changes);
     if (Object.keys(flags).length) await saveFlags(flags);
-    res.json({ saved: Object.keys(changes).length + Object.keys(flags).length });
+    if (Object.keys(stock).length) await saveStock(stock);
+    res.json({ saved: Object.keys(changes).length + Object.keys(flags).length + Object.keys(stock).length });
   } catch (err) {
     console.error('Prijzen opslaan mislukt:', err.message);
     res.status(500).json({ error: 'Opslaan mislukt — probeer opnieuw.' });
@@ -1327,20 +1388,21 @@ app.post('/api/checkout', async (req, res) => {
 
     const items = Array.isArray(req.body.items) ? req.body.items : [];
     const lineItems = [];
-    let subtotal = 0;
+    let subtotal = 0, backorder = false;
 
     for (const it of items) {
       const base = productById[it.id];
       const qty = Math.min(Math.max(parseInt(it.qty, 10) || 0, 1), 50);
       if (!base || base.active === false) continue;
       const p = localizeProduct(base, lang);
+      if (qty > (base.stock || 0)) backorder = true;   // boven de voorraad: mag, maar langere levertijd
       subtotal += p.price * qty;
       lineItems.push({
         quantity: qty,
         price_data: {
           currency: 'pln',
           unit_amount: p.price,
-          product_data: { name: p.name, description: p.unit }
+          product_data: { name: p.name, description: p.unit, metadata: { id: p.id } }
         }
       });
     }
@@ -1369,7 +1431,7 @@ app.post('/api/checkout', async (req, res) => {
           display_name: t(free ? 'shipLocalFree' : 'shipLocal', { place: zone.place, km: zone.km }),
           delivery_estimate: {
             minimum: { unit: 'business_day', value: 1 },
-            maximum: { unit: 'business_day', value: 1 }
+            maximum: { unit: 'business_day', value: backorder ? 7 : 1 }
           },
           metadata: { typ: 'lokalna', kod: zone.code, km: String(zone.km) }
         }
@@ -1380,6 +1442,7 @@ app.post('/api/checkout', async (req, res) => {
         miejscowosc: zone.place,
         odleglosc_km: String(zone.km),
         kod_rabatowy: disc ? disc.code : '',
+        na_zamowienie: backorder ? 'tak' : 'nie',
         lang
       },
       success_url: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`,
@@ -1402,7 +1465,7 @@ app.get('/sukces', async (req, res) => {
   try {
     if (stripe && req.query.session_id) {
       const session = await stripe.checkout.sessions.retrieve(req.query.session_id, {
-        expand: ['line_items', 'payment_intent.payment_method']
+        expand: ['line_items.data.price.product', 'payment_intent.payment_method']
       });
       const paid = session.payment_status === 'paid';
       // BLIK/P24 kunnen even "in behandeling" zijn: sessie compleet, betaling nog niet bevestigd
@@ -1421,7 +1484,8 @@ app.get('/sukces', async (req, res) => {
           email: session.customer_details?.email || null,
           name: session.customer_details?.name || '',
           phone: session.customer_details?.phone || '',
-          eta: DELIVERY.eta[lang],
+          eta: m.na_zamowienie === 'tak' ? DELIVERY.backorderEta[lang] : DELIVERY.eta[lang],
+          backorder: m.na_zamowienie === 'tak',
           address: addr ? [addr.line1, addr.line2, ((addr.postal_code || '') + ' ' + (addr.city || '')).trim()].filter(Boolean).join(', ') : '',
           items: (session.line_items?.data || []).map(li => ({
             name: li.description, qty: li.quantity, total: money(li.amount_total, lang)
@@ -1440,6 +1504,13 @@ app.get('/sukces', async (req, res) => {
           if (!loggedSessions.has(session.id)) {
             loggedSessions.add(session.id);
             if (m.kod_rabatowy) codeUse(m.kod_rabatowy);
+            // voorraad afboeken (product-id zit in de metadata van het Stripe-product)
+            const bought = {};
+            for (const li of (session.line_items?.data || [])) {
+              const pid = li.price?.product?.metadata?.id;
+              if (pid) bought[pid] = (bought[pid] || 0) + (li.quantity || 0);
+            }
+            stockDeduct(bought);
             const z = checkZone(addr?.postal_code || m.kod_pocztowy);
             if (!z.inZone) console.warn(`⚠️ Bestelling buiten de zone: ${session.id}, kod ${addr?.postal_code || '?'}`);
             logOrder({
@@ -1468,7 +1539,8 @@ app.get('/sukces', async (req, res) => {
                    ${sumRow(order.place ? t('successDelivery', { place: escHtml(order.place), km: order.km }) : t('navDelivery'), shippingGr ? order.shipping : t('successFree'))}
                  </table>
                  <p style="border-top:2px dashed #2a1503;padding-top:12px;font-weight:bold">${t('mailTotal')}: ${order.total}</p>
-                 <p>${t('mailDeliveryHtml', { eta: order.eta })}${order.address ? '<br>' + t('mailAddress') + escHtml(order.address) : ''}</p>`,
+                 <p>${t('mailDeliveryHtml', { eta: order.eta })}${order.address ? '<br>' + t('mailAddress') + escHtml(order.address) : ''}</p>
+                 ${order.backorder ? '<p>' + t('backorderNoteHtml', { eta: order.eta }) + '</p>' : ''}`,
                 t('mailFooterHtml')
               )
             });
@@ -1487,6 +1559,6 @@ app.use((req, res) => {
   res.redirect('/');
 });
 
-Promise.all([loadPrices(), loadFlags(), initStats(), initTruck(), initLive()]).then(() => {
+Promise.all([loadPrices(), loadFlags(), loadStock(), initStats(), initTruck(), initLive()]).then(() => {
   app.listen(PORT, () => console.log(`🍟 PanFrikandel ${VERSION_LABEL} draait op ${BASE_URL}`));
 });

@@ -29,6 +29,13 @@
   const drawer = $('#cartDrawer'), overlay = $('#cartOverlay');
 
   function save() { localStorage.setItem(KEY, JSON.stringify(cart)); }
+  // voorraad: boven de voorraad bestellen mag ("na zamówienie"), maar dan duurt de bezorging langer
+  function canAdd(id) {
+    const p = byId[id];
+    if (p && p.stock != null && (cart[id] || 0) + 1 > p.stock) toast(fill(T.backorderToast, { eta: D.backorderEta }));
+    return true;
+  }
+  const hasBackorder = () => Object.entries(cart).some(([id, q]) => byId[id] && byId[id].stock != null && q > byId[id].stock);
   function count() { return Object.values(cart).reduce((a, b) => a + b, 0); }
   function subtotal() { return Object.entries(cart).reduce((s, [id, q]) => s + byId[id].price * q, 0); }
 
@@ -70,6 +77,9 @@
     const ship = $('#cartShip');
     ship.className = 'cart-ship' + (n && d.cls ? ' ' + d.cls : '');
     ship.textContent = n ? d.text : '';
+    // deel van de mand boven de voorraad → langere levertijd melden
+    const bo = $('#cartBackorder');
+    if (bo) { const show = n && hasBackorder(); bo.hidden = !show; bo.textContent = show ? fill(T.backorderLine, { eta: D.backorderEta }) : ''; }
     // korting (percentage op de producten; gratis-bezorgdrempel blijft op het subtotaal vóór korting)
     const off = disc && n ? Math.round(sub * disc.percent / 100) : 0;
     const discEl = $('#cartDiscount');
@@ -152,8 +162,8 @@
     const inc = e.target.closest('[data-inc]');
     const dec = e.target.closest('[data-dec]');
     if (det && !add) { openDetails(det.dataset.details); return; }
-    if (add) { const id = add.dataset.add; cart[id] = (cart[id] || 0) + 1; render(); toast(T.added); closeDetails(); }
-    if (inc) { cart[inc.dataset.inc]++; render(); }
+    if (add) { const id = add.dataset.add; if (!canAdd(id)) return; cart[id] = (cart[id] || 0) + 1; render(); toast(T.added); closeDetails(); }
+    if (inc) { const id = inc.dataset.inc; if (!canAdd(id)) return; cart[id]++; render(); }
     if (dec) {
       const id = dec.dataset.dec;
       cart[id]--;

@@ -45,6 +45,7 @@
         <ol class="next-steps">
           <% dict.successSteps.forEach(s => { %><li><%= s.split('{eta}').join(order.eta) %></li><% }) %>
         </ol>
+        <% if (order.backorder) { %><p class="next-meta next-backorder"><%- t('backorderNoteHtml', { eta: order.eta }) %></p><% } %>
         <% if (order.address) { %><p class="next-meta">📍 <b><%= t('successAddress') %>:</b> <%= order.address %></p><% } %>
         <% if (order.phone) { %><p class="next-meta">📞 <b><%= t('successPhone') %>:</b> <%= order.phone %></p><% } %>
       </div>

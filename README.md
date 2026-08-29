@@ -65,6 +65,14 @@ odżywcze/przygotowanie van mora.nl (`mora`-veld = bronpagina). 10 staan aan,
   tekst in `locales/products-en-retail.js`, packshot in `public/img/`.
 - Categorieën van de shop staan in `locales/ui.js` (`cats`); lege categorieën
   worden niet getoond.
+- **Voorraad**: elk product start op `STOCK_DEFAULT` (10) stuks; bij een
+  betaalde bestelling (`/sukces`) gaat het bestelde aantal eraf (tabel
+  `stock`). De kaart toont "Na stanie: 7 szt.", "Zostały tylko 2!" of — onder
+  nul — "Na zamówienie — dostawa ok. 5–7 dni". Bestellen boven de voorraad
+  mag altijd: de winkelmand, Stripe (levertijd 7 werkdagen), de bedankpagina
+  en de mail melden dan de langere levertijd (`BACKORDER_ETA_PL/EN`). Negatieve
+  voorraad in `/admin` = nog in te kopen; na een inkoop vul je daar de nieuwe
+  stand in.
 
 ## Hurt (`/hurt`) — cena na zapytanie
 

@@ -77,6 +77,14 @@ odżywcze/przygotowanie van mora.nl (`mora`-veld = bronpagina). 10 staan aan,
   wordt de aanvraag in de serverlog geprint.
 - Aanvragen van de laatste 30 dagen staan onderaan de statistieken in `/admin`.
 
+## Versienummer
+
+De footer van elke pagina, de admin en `GET /api/version` tonen
+`v<versie> · <commit>` — de versie uit `package.json` plus de eerste 7 tekens
+van de deploy-commit (Railway zet `RAILWAY_GIT_COMMIT_SHA`). Na een push zie
+je zo direct of de nieuwe versie live staat. Verhoog `version` in
+`package.json` bij elke release.
+
 ## Omgevingsvariabelen
 
 Alle variabelen staan met uitleg in **`.env.example`**. Lokaal: kopieer naar

@@ -164,6 +164,7 @@
       <input name="phone" type="tel" placeholder="<%= t('hurtFormPhone') %>" maxlength="40" autocomplete="tel">
       <input name="place" placeholder="<%= t('hurtFormPlace') %>" maxlength="120" class="ask-wide">
       <textarea name="message" placeholder="<%= t('hurtFormMessage') %>" maxlength="2000" rows="3" class="ask-wide"></textarea>
+      <%- include('partials/turnstile') %>
     </div>
     <p class="zone-result" id="askStatus" hidden></p>
     <button type="submit" class="btn btn-primary btn-checkout" id="askSend"><%= t('hurtSend') %></button>
@@ -183,6 +184,7 @@
   window.T = <%- JSON.stringify(dict.client) %>;
   window.CATALOG = <%- JSON.stringify(products.map(p => ({ id: p.id, name: p.name, unit: p.unit, icon: p.icon, img: p.img || null }))) %>;
 </script>
+<% if (turnstileSiteKey) { %><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><% } %>
 <script src="/hurt.js?v=<%= v %>"></script>
 </body>
 </html>

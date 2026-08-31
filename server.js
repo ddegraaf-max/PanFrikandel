@@ -243,6 +243,28 @@ const DELIVERY = {
   backorderEta: { pl: process.env.BACKORDER_ETA_PL || 'ok. 5–7 dni', en: process.env.BACKORDER_ETA_EN || 'about 5–7 days' }
 };
 
+// ---- Cloudflare Turnstile (anti-spam op formulieren). Zonder sleutels: uitgeschakeld. ----
+const TURNSTILE_SITE_KEY = process.env.TURNSTILE_SITE_KEY || null;
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY || null;
+const clientIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+async function turnstileOk(req) {
+  if (!TURNSTILE_SECRET) return true;
+  const token = String(req.body?.turnstile || '').trim();
+  if (!token) return false;
+  try {
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: TURNSTILE_SECRET, response: token, remoteip: clientIp(req) })
+    });
+    const d = await r.json();
+    if (!d.success) console.warn('Turnstile geweigerd:', (d['error-codes'] || []).join(','));
+    return !!d.success;
+  } catch (err) {
+    console.error('Turnstile-verificatie mislukt:', err.message);
+    return false;
+  }
+}
+
 // ---- Socials (footer, /foodtruck) + food truck ----
 const SOCIALS = {
   instagram: process.env.SOCIAL_INSTAGRAM || 'https://www.instagram.com/panfrikandel',
@@ -920,6 +942,7 @@ app.use((req, res, next) => {
   res.locals.socials = SOCIALS;
   res.locals.company = COMPANY;
   res.locals.version = VERSION_LABEL;
+  res.locals.turnstileSiteKey = TURNSTILE_SITE_KEY;
   const base = siteUrl(req);
   res.locals.siteUrl = base;
   res.locals.meta = {
@@ -1158,10 +1181,20 @@ ZASADY:
 KATALOG:
 ${CATALOG_FOR_AI(lang)}`;
 
+const aiHits = new Map(); // ip → [timestamps]
+function aiAllowed(ip) {
+  const now = Date.now();
+  const arr = (aiHits.get(ip) || []).filter(ts => now - ts < 3600000);
+  arr.push(now);
+  aiHits.set(ip, arr);
+  return arr.length <= 40;
+}
+
 app.post('/api/assistent', async (req, res) => {
   const t = res.locals.t;
   try {
     if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: t('errAiConfig') });
+    if (!aiAllowed(clientIp(req))) return res.status(429).json({ error: t('errAiRate') });
 
     let msgs = Array.isArray(req.body.messages) ? req.body.messages : [];
     msgs = msgs.slice(-12).map(m => ({
@@ -1224,6 +1257,7 @@ app.post('/api/zapytanie', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
+    if (!(await turnstileOk(req))) return res.status(400).json({ error: t('errBot') });
     const s = (v, n) => String(v || '').trim().slice(0, n);
     const q = {
       name: s(req.body.name, 120), email: s(req.body.email, 160), phone: s(req.body.phone, 40),
@@ -1292,6 +1326,7 @@ app.post('/api/wydarzenie', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
+    if (!(await turnstileOk(req))) return res.status(400).json({ error: t('errBot') });
     const s = (v, n) => String(v || '').trim().slice(0, n);
     const TYPES = { firma: 'Degustacja/integracja w firmie', impreza: 'Impreza prywatna', wesele: 'Wesele', festyn: 'Festyn/event', inne: 'Inne' };
     const type = TYPES[String(req.body.type || '')] || '';
@@ -1402,6 +1437,7 @@ app.post('/api/subskrypcja', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
+    if (!(await turnstileOk(req))) return res.status(400).json({ error: t('errBot') });
     const email = String(req.body.email || '').trim().toLowerCase();
     if (!validEmail(email)) return res.status(400).json({ error: t('errSubEmail') });
     if (!req.body.consent) return res.status(400).json({ error: t('errSubConsent') });

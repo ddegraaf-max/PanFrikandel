@@ -126,6 +126,7 @@
         <input name="email" type="email" placeholder="<%= t('subEmail') %>" maxlength="160" autocomplete="email" required class="ask-wide">
         <input name="place" placeholder="<%= t('subPlace') %>" maxlength="120" class="ask-wide">
         <label class="consent ask-wide"><input type="checkbox" name="consent" value="1"> <span><%- t('subConsentHtml') %></span></label>
+        <%- include('partials/turnstile') %>
       </div>
       <p class="zone-result" id="subStatus" hidden></p>
       <button type="submit" class="btn btn-primary" id="subSend" style="width:100%"><%= t('subSend') %></button>
@@ -162,6 +163,7 @@
       <input name="guests" inputmode="numeric" placeholder="<%= t('eventFormGuests') %>" maxlength="20">
       <input name="place" placeholder="<%= t('eventFormPlace') %>" maxlength="200" class="ask-wide">
       <textarea name="message" placeholder="<%= t('eventFormMessage') %>" maxlength="2000" rows="4" class="ask-wide"></textarea>
+      <%- include('partials/turnstile') %>
     </div>
     <p class="zone-result" id="eventStatus" hidden></p>
     <button type="submit" class="btn btn-primary" id="eventSend"><%= t('eventSend') %></button>
@@ -199,6 +201,7 @@
   window.STOPS = <%- JSON.stringify(stops.map(s => ({ name: s.name, address: s.address, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo, hours: s.hours }))) %>;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<% if (turnstileSiteKey) { %><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><% } %>
 <script src="/foodtruck.js?v=<%= v %>"></script>
 </body>
 </html>

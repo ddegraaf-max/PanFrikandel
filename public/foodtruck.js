@@ -4,6 +4,9 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fill = (s, vars) => Object.entries(vars || {}).reduce((acc, [k, v]) => acc.split('{' + k + '}').join(v), s || '');
   const fmt = d => new Date(d).toLocaleDateString(LANG === 'en' ? 'en-GB' : 'pl-PL', { day: 'numeric', month: 'short' });
+  // Cloudflare Turnstile: token uit het formulier (null = geen widget op de pagina); na verzenden resetten
+  const tsToken = form => { const w = form.querySelector('.cf-turnstile'); if (!w) return null; const i = form.querySelector('input[name="cf-turnstile-response"]'); return (i && i.value) || ''; };
+  const tsReset = form => { const w = form.querySelector('.cf-turnstile'); if (w && window.turnstile) { try { window.turnstile.reset(w); } catch (e) {} } };
 
   // ---- kaart (Leaflet + OpenStreetMap): standplaatsen + live 🚚 ----
   const mapEl = document.getElementById('map'), grid = document.querySelector('.where-grid');
@@ -83,9 +86,11 @@
       const f = Object.fromEntries(new FormData(subForm).entries());
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(f.email || '')) { show('no', esc(T.subErrEmail)); return; }
       if (!f.consent) { show('no', esc(T.subErrConsent)); return; }
+      const ts = tsToken(subForm);
+      if (ts === '') { show('no', esc(T.botCheck)); return; }
       btn.disabled = true; btn.textContent = T.subSending;
       try {
-        const r = await fetch('/api/subskrypcja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: f.email, place: f.place || '', consent: true }) });
+        const r = await fetch('/api/subskrypcja', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: f.email, place: f.place || '', consent: true, turnstile: ts }) });
         const d = await r.json();
         if (!r.ok) throw new Error(d.error || T.errGeneric);
         show('ok', d.confirmed ? T.subAlreadyHtml : T.subSentHtml);
@@ -93,6 +98,7 @@
       } catch (err) {
         show('no', esc(err.message || T.errConn));
       }
+      tsReset(subForm);
       btn.disabled = false; btn.textContent = T.subSend;
     });
   }
@@ -105,13 +111,15 @@
     e.preventDefault();
     const f = Object.fromEntries(new FormData(form).entries());
     if (!f.name.trim() || !(f.email.trim() || f.phone.trim()) || !f.date || !f.place.trim()) { showStatus('no', esc(T.eventErrForm)); return; }
+    const ts = tsToken(form);
+    if (ts === '') { showStatus('no', esc(T.botCheck)); return; }
     btn.disabled = true;
     btn.textContent = T.eventSending;
     try {
       const r = await fetch('/api/wydarzenie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(f)
+        body: JSON.stringify({ ...f, turnstile: ts })
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || T.errGeneric);
@@ -120,6 +128,7 @@
     } catch (err) {
       showStatus('no', esc(err.message || T.errConn));
     }
+    tsReset(form);
     btn.disabled = false;
     btn.textContent = T.eventSend;
   });

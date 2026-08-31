@@ -750,6 +750,9 @@ em { font-style: normal; color: var(--oranje); }
 .success-hero .socials { justify-content: center; }
 @media (max-width: 860px) { .success-grid { grid-template-columns: 1fr; } }
 
+/* Cloudflare Turnstile */
+.cf-turnstile { min-height: 65px; margin-top: 2px; }
+
 /* catering / degustacje */
 .hero-catering { background: var(--bruin); }
 .banners { grid-template-columns: repeat(3, 1fr); }

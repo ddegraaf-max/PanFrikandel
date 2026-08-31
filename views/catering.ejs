@@ -101,6 +101,7 @@
       <input name="place" placeholder="<%= t('eventFormPlace') %>" maxlength="200">
       <input name="guests" inputmode="numeric" placeholder="<%= t('eventFormGuests') %>" maxlength="20">
       <textarea name="message" placeholder="<%= t('eventFormMessage') %>" maxlength="2000" rows="4" class="ask-wide"></textarea>
+      <%- include('partials/turnstile') %>
     </div>
     <p class="zone-result" id="eventStatus" hidden></p>
     <button type="submit" class="btn btn-primary" id="eventSend"><%= t('eventSend') %></button>
@@ -148,6 +149,7 @@
   // pakketknop → juiste type in het formulier
   document.querySelectorAll('[data-type]').forEach(a => a.addEventListener('click', () => { const s = document.getElementById('eventType'); if (s) s.value = a.dataset.type; }));
 </script>
+<% if (turnstileSiteKey) { %><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><% } %>
 <script src="/foodtruck.js?v=<%= v %>"></script>
 </body>
 </html>

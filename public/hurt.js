@@ -103,13 +103,18 @@
     const items = Object.entries(ask).map(([id, qty]) => ({ id, qty }));
     if (!f.name.trim() || !(f.email.trim() || f.phone.trim())) { showStatus('no', esc(T.hurtErrForm)); return; }
     if (!items.length && !f.message.trim()) { showStatus('no', esc(T.hurtErrEmpty)); return; }
+    // Cloudflare Turnstile (alleen als de widget op de pagina staat)
+    const tsWidget = form.querySelector('.cf-turnstile');
+    const tsInput = form.querySelector('input[name="cf-turnstile-response"]');
+    const ts = tsWidget ? ((tsInput && tsInput.value) || '') : null;
+    if (ts === '') { showStatus('no', esc(T.botCheck)); return; }
     sendBtn.disabled = true;
     sendBtn.textContent = T.hurtSending;
     try {
       const r = await fetch('/api/zapytanie', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...f, items })
+        body: JSON.stringify({ ...f, items, turnstile: ts })
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.error || T.errGeneric);
@@ -120,6 +125,7 @@
     } catch (err) {
       showStatus('no', esc(err.message || T.errConn));
     }
+    if (tsWidget && window.turnstile) { try { window.turnstile.reset(tsWidget); } catch (e) {} }
     sendBtn.disabled = false;
     sendBtn.textContent = T.hurtSend;
   });

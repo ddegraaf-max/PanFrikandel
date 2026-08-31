@@ -138,6 +138,17 @@ FAQ en een aanvraagformulier dat dezelfde flow gebruikt als de food truck
 (`POST /api/wydarzenie` met `source=degustacja`, `type`, `company` → mail naar
 `QUOTE_EMAIL_TO`, bevestiging aan de aanvrager, lijst in `/admin`).
 
+## Anti-spam: Cloudflare Turnstile
+
+Zet `TURNSTILE_SITE_KEY` en `TURNSTILE_SECRET_KEY` (Cloudflare → Turnstile →
+widget voor panfrikandel.pl). Dan verschijnt de Turnstile-check in de
+formulieren voor locatie-mails, evenement-/cateringaanvragen en
+hurt-offertes, en weigert de server aanvragen zonder geldig token
+(`siteverify`). Zonder sleutels staat Turnstile uit en werken de formulieren
+zoals voorheen. De AI-chat heeft los daarvan een limiet van 40 berichten per
+uur per IP. Testen zonder echte sleutels kan met Cloudflare's testsleutels
+(site `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`).
+
 ## SEO
 
 - `robots.txt` en dynamische `sitemap.xml` (alle pagina's + productpagina's);

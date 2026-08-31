@@ -26,6 +26,14 @@
     <button class="btn btn-primary" type="submit">Inloggen</button>
   </form>
 <% } else { %>
+  <div class="admin-note admin-system">
+    <b>Systeem:</b>
+    <span class="<%= system.db === 'ok' ? 'sys-ok' : 'sys-bad' %>">database: <%= system.db %></span> ·
+    <span class="<%= system.stripe ? 'sys-ok' : 'sys-bad' %>">Stripe: <%= system.stripe ? (system.stripeLive ? 'live' : 'test') : 'niet gezet' %></span> ·
+    <span class="<%= system.resend ? 'sys-ok' : 'sys-bad' %>">Resend (mail): <%= system.resend ? 'ja' : 'niet gezet' %></span> ·
+    <span class="<%= system.turnstile ? 'sys-ok' : '' %>">Turnstile: <%= system.turnstile ? 'ja' : 'uit' %></span> ·
+    <span class="<%= system.baseUrl ? 'sys-ok' : '' %>">BASE_URL: <%= system.baseUrl || '(leeg, afgeleid van het request)' %></span>
+  </div>
   <% if (stats) { %>
   <h1>Bezorging <%= delivery.city %> +<%= delivery.radiusKm %> km</h1>
   <p style="color:var(--muted);font-weight:700">Laatste <%= stats.days %> dagen. Postcodechecks komen uit de winkelmand en de sectie „Dostawa”; bestellingen zijn betaalde Stripe-sessies. Checks buiten de zone laten zien waar vraag zit — handig om te beslissen of de straal (env <code>DELIVERY_RADIUS_KM</code>) omhoog kan.</p>

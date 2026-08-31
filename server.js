@@ -63,7 +63,7 @@ app.use((req, res, next) => {
   if (/\/{2,}/.test(req.path)) return res.redirect(301, req.originalUrl.replace(/\/{2,}/g, '/'));
   next();
 });
-app.get('/healthz', (req, res) => res.type('text/plain').send('ok ' + VERSION_LABEL));
+app.get('/healthz', (req, res) => res.type('text/plain').send('ok ' + VERSION_LABEL + ' · database: ' + dbStatus));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
@@ -94,6 +94,7 @@ const zl = gr => (gr / 100).toFixed(2).replace('.', ',') + ' zł';
 const fs = require('fs');
 const PRICES_FILE = path.join(__dirname, 'data', 'prices.json');
 let pool = null;
+let dbStatus = process.env.DATABASE_URL ? 'verbinden…' : 'geen (DATABASE_URL niet gezet — data gaat verloren bij een redeploy)';
 if (process.env.DATABASE_URL) {
   const { Pool } = require('pg');
   pool = new Pool({
@@ -101,7 +102,7 @@ if (process.env.DATABASE_URL) {
     ssl: process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('.railway.internal') ? false : { rejectUnauthorized: false },
     max: 5, connectionTimeoutMillis: 8000, idleTimeoutMillis: 30000
   });
-  pool.on('error', err => console.error('PostgreSQL-verbindingsfout (proces blijft draaien):', err.message));
+  pool.on('error', err => { dbStatus = 'fout: ' + err.message; console.error('PostgreSQL-verbindingsfout (proces blijft draaien):', err.message); });
 }
 
 function applyOverrides(overrides) {
@@ -117,6 +118,7 @@ async function loadPrices() {
     if (pool) {
       await pool.query('CREATE TABLE IF NOT EXISTS price_overrides (product_id TEXT PRIMARY KEY, price_gr INTEGER NOT NULL, updated_at TIMESTAMPTZ DEFAULT now())');
       const { rows } = await pool.query('SELECT product_id, price_gr FROM price_overrides');
+      dbStatus = 'ok';
       applyOverrides(Object.fromEntries(rows.map(r => [r.product_id, r.price_gr])));
       console.log(`💾 ${rows.length} prijs-overrides geladen uit PostgreSQL`);
     } else if (fs.existsSync(PRICES_FILE)) {
@@ -124,6 +126,7 @@ async function loadPrices() {
       console.log('💾 Prijs-overrides geladen uit data/prices.json (⚠️ zet DATABASE_URL voor persistentie op Railway)');
     }
   } catch (err) {
+    if (pool) dbStatus = 'fout: ' + err.message;
     console.error('Prijzen laden mislukt:', err.message);
   }
 }
@@ -1046,6 +1049,7 @@ app.get('/kierowca', (req, res) => { res.locals.meta.noindex = true; res.render(
 app.get('/api/version', (req, res) => res.json({
   version: VERSION, build: BUILD || null, startedAt: STARTED_AT.toISOString(),
   baseUrl: process.env.BASE_URL || null,
+  database: dbStatus, stripe: !!stripe, resend: !!resend, turnstile: !!TURNSTILE_SECRET, gps: !!GPS_TOKEN,
   successUrl: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`
 }));
 
@@ -1063,7 +1067,8 @@ app.get('/regulamin',   (req, res) => { res.locals.meta.title = res_t(req, 'term
 app.get('/prywatnosc',  (req, res) => { res.locals.meta.title = res_t(req, 'privacyTitle'); res.render(req.lang === 'en' ? 'prywatnosc-en' : 'prywatnosc', { v: ASSET_V }); });
 
 // ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
-const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], subs: [], live: publicLive(), truck: truckState, gpsToken: GPS_TOKEN, subDiscount: SUB_DISCOUNT, error: null, ...extra });
+const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], subs: [], live: publicLive(), truck: truckState, gpsToken: GPS_TOKEN, subDiscount: SUB_DISCOUNT, error: null,
+  system: { db: dbStatus, stripe: !!stripe, stripeLive: !!(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_'), resend: !!resend, turnstile: !!TURNSTILE_SECRET, baseUrl: process.env.BASE_URL || '' }, ...extra });
 
 app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');

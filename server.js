@@ -12,6 +12,9 @@ const path = require('path');
 const Stripe = require('stripe');
 const { Resend } = require('resend');
 
+process.on('unhandledRejection', err => console.error('Onafgevangen promise-fout:', err && err.stack || err));
+process.on('uncaughtException', err => console.error('Onafgevangen fout:', err && err.stack || err));
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 // BASE_URL normaliseren: spaties en slash aan het eind weg, https:// erbij als het schema ontbreekt
@@ -60,6 +63,7 @@ app.use((req, res, next) => {
   if (/\/{2,}/.test(req.path)) return res.redirect(301, req.originalUrl.replace(/\/{2,}/g, '/'));
   next();
 });
+app.get('/healthz', (req, res) => res.type('text/plain').send('ok ' + VERSION_LABEL));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
 
@@ -94,8 +98,10 @@ if (process.env.DATABASE_URL) {
   const { Pool } = require('pg');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.DATABASE_URL.includes('localhost') ? false : { rejectUnauthorized: false }
+    ssl: process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('.railway.internal') ? false : { rejectUnauthorized: false },
+    max: 5, connectionTimeoutMillis: 8000, idleTimeoutMillis: 30000
   });
+  pool.on('error', err => console.error('PostgreSQL-verbindingsfout (proces blijft draaien):', err.message));
 }
 
 function applyOverrides(overrides) {
@@ -805,8 +811,10 @@ async function codeCheck(raw) {
 async function codeUse(code) {
   const c = normCode(code);
   if (!c) return;
-  if (pool) await pool.query('UPDATE subscribers SET code_used_at = now() WHERE code = $1', [c]);
-  else { const s = subsMem.find(x => x.code === c); if (s) { s.codeUsedAt = Date.now(); saveSubsMem(); } }
+  try {
+    if (pool) await pool.query('UPDATE subscribers SET code_used_at = now() WHERE code = $1', [c]);
+    else { const s = subsMem.find(x => x.code === c); if (s) { s.codeUsedAt = Date.now(); saveSubsMem(); } }
+  } catch (err) { console.error('Kortingscode markeren mislukt:', err.message); }
 }
 // Stripe-coupon voor de abonneekorting: één per percentage, vaste id
 const couponCache = {};
@@ -1682,6 +1690,15 @@ app.use((req, res) => {
   res.redirect('/');
 });
 
-Promise.all([loadPrices(), loadFlags(), loadStock(), initStats(), initTruck(), initLive()]).then(() => {
-  app.listen(PORT, () => console.log(`🍟 PanFrikandel ${VERSION_LABEL} draait op ${BASE_URL}`));
-});
+console.log(`🍟 PanFrikandel ${VERSION_LABEL} start · Node ${process.version} · poort ${PORT} · BASE_URL ${process.env.BASE_URL || '(leeg → afgeleid van het request)'}`);
+console.log(`   database: ${pool ? 'PostgreSQL' : 'geen (JSON-bestanden in data/)'} · Stripe: ${stripe ? 'ja' : 'nee'} · Resend: ${resend ? 'ja' : 'nee'} · admin: ${ADMIN_PASSWORD ? 'ja' : 'nee'} · GPS: ${GPS_TOKEN ? 'ja' : 'nee'} · Turnstile: ${TURNSTILE_SECRET ? 'ja' : 'nee'}`);
+let listening = false;
+function listen(reason) {
+  if (listening) return;
+  listening = true;
+  app.listen(PORT, () => console.log(`🍟 PanFrikandel ${VERSION_LABEL} draait op ${BASE_URL} (${reason})`));
+}
+const init = Promise.all([loadPrices(), loadFlags(), loadStock(), initStats(), initTruck(), initLive()])
+  .then(() => listen('initialisatie klaar'))
+  .catch(err => { console.error('Initialisatie mislukt (server start toch):', err.message); listen('ondanks init-fout'); });
+setTimeout(() => { if (!listening) { console.warn('⚠️ Initialisatie duurt > 15 s (database bereikbaar?) — server start alvast, init loopt door'); listen('init nog bezig'); } }, 15000);

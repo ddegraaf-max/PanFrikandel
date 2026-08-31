@@ -854,18 +854,32 @@ async function ensureCoupon(percent) {
   return id;
 }
 
-// ---- mails ----
+// ---- mails (huisstijl, tabel-gebaseerd zodat het ook in Outlook klopt) ----
+const CHECK_STRIP = '<table role="presentation" align="center" cellpadding="0" cellspacing="0" width="600" style="width:600px;max-width:100%;margin:0 auto;border-collapse:collapse"><tr>' +
+  '<td width="30" height="10" bgcolor="#E22B2B" style="font-size:0;line-height:0">&nbsp;</td><td width="30" height="10" bgcolor="#FFF8EC" style="font-size:0;line-height:0">&nbsp;</td>'.repeat(10) +
+  '</tr></table>';
 const mailHtml = (headline, bodyHtml, footerHtml) => `
-  <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
-    <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
-      <h1 style="margin:0;font-size:26px">${headline}</h1>
-    </div>
-    <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
-      ${bodyHtml}
-      <p style="color:#8a6a4f;font-size:13px">${footerHtml}</p>
-    </div>
+  <div style="background-color:#FFF3E0;padding:26px 10px;margin:0">
+    ${CHECK_STRIP}
+    <table role="presentation" align="center" cellpadding="0" cellspacing="0" width="600" style="width:600px;max-width:100%;margin:0 auto;border-collapse:collapse">
+      <tr><td bgcolor="#FF4D00" style="padding:24px 32px 22px">
+        <div style="font-family:Arial,Helvetica,sans-serif;font-weight:bold;font-size:13px;letter-spacing:3px;color:#FFC93C;text-transform:uppercase;padding-bottom:10px">PanFrikandel</div>
+        <div style="font-family:Arial,Helvetica,sans-serif;font-weight:bold;font-size:26px;line-height:1.2;color:#FFF8EC">${headline}</div>
+      </td></tr>
+      <tr><td bgcolor="#FFF8EC" style="padding:26px 32px 22px;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#2A1503;border-left:2px solid #2A1503;border-right:2px solid #2A1503">
+        ${bodyHtml}
+      </td></tr>
+      <tr><td bgcolor="#FFF3C4" style="padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#8A6A4F;border-left:2px solid #2A1503;border-right:2px solid #2A1503;border-bottom:2px solid #2A1503;border-top:2px dashed #2A1503">
+        ${footerHtml}
+      </td></tr>
+    </table>
+    <div style="height:14px;line-height:14px;font-size:0">&nbsp;</div>
+    ${CHECK_STRIP}
   </div>`;
-const mailButton = (url, label) => `<p><a href="${url}" style="display:inline-block;background:#ffc93c;color:#2a1503;font-weight:bold;padding:12px 22px;border-radius:999px;text-decoration:none;border:2px solid #2a1503">${label}</a></p>`;
+const mailButton = (url, label) => `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:18px 0 8px;border-collapse:separate"><tr><td bgcolor="#FFC93C" style="border:2px solid #2A1503;border-radius:999px"><a href="${url}" style="display:inline-block;padding:12px 26px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#2A1503;text-decoration:none">${label}</a></td></tr></table>`;
+// nette gegevenstabel: [[label, waarde], …]
+const mailRows = pairs => '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:8px 0 4px">' +
+  pairs.map(([k, v]) => `<tr><td style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#8A6A4F;padding:5px 18px 5px 0;vertical-align:top;white-space:nowrap">${k}</td><td style="font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#2A1503;padding:5px 0">${v}</td></tr>`).join('') + '</table>';
 const unsubUrl = email => `${BASE_URL}/subskrypcja/rezygnacja?e=${encodeURIComponent(email)}&t=${subToken(email)}`;
 async function sendMailBatch(mails) {
   let sent = 0;
@@ -1336,36 +1350,38 @@ app.post('/api/zapytanie', async (req, res) => {
     logQuote(q);   // fire-and-forget
 
     if (resend && QUOTE_EMAIL_TO) {
-      const rows = itemLines.map(i => `<li>${escHtml(i.name)} — ${escHtml(i.unit)}${i.qty ? ' · <b>' + escHtml(i.qty) + '</b>' : ''}</li>`).join('');
-      // 1) eigenaar (Nederlands)
+      const productRows = itemLines.length
+        ? mailRows(itemLines.map(i => [escHtml(i.qty || '–'), '<b>' + escHtml(i.name) + '</b> <span style="color:#8A6A4F;font-weight:normal">' + escHtml(i.unit) + '</span>']))
+        : '';
       await sendMail({
         from: ORDER_EMAIL_FROM, to: QUOTE_EMAIL_TO,
         ...(q.email ? { reply_to: q.email } : {}),
         subject: `Offerte-aanvraag hurt: ${q.name}${q.company ? ' (' + q.company + ')' : ''}`,
-        html: `<div style="font-family:Arial,sans-serif;max-width:600px;color:#2a1503">
-          <h2 style="margin:0 0 12px">Nieuwe offerte-aanvraag (/hurt)</h2>
-          <p><b>${escHtml(q.name)}</b>${q.company ? ' · ' + escHtml(q.company) : ''}<br>
-          ${q.email ? 'E-mail: ' + escHtml(q.email) + '<br>' : ''}${q.phone ? 'Tel: ' + escHtml(q.phone) + '<br>' : ''}${q.place ? 'Plaats: ' + escHtml(q.place) + '<br>' : ''}Taal: ${lang}</p>
-          ${rows ? '<p><b>Producten</b></p><ul>' + rows + '</ul>' : ''}
-          ${q.message ? '<p><b>Bericht</b><br>' + escHtml(q.message).replace(/\n/g, '<br>') + '</p>' : ''}
-        </div>`
+        html: mailHtml(
+          'Nieuwe offerte-aanvraag (hurt)',
+          mailRows([
+            ['Naam', '<b>' + escHtml(q.name) + '</b>' + (q.company ? ' · ' + escHtml(q.company) : '')],
+            ...(q.email ? [['E-mail', '<a href="mailto:' + escHtml(q.email) + '" style="color:#FF4D00">' + escHtml(q.email) + '</a>']] : []),
+            ...(q.phone ? [['Telefoon', escHtml(q.phone)]] : []),
+            ...(q.place ? [['Plaats', escHtml(q.place)]] : []),
+            ['Taal klant', lang.toUpperCase()]
+          ]) +
+          (productRows ? '<p style="margin:14px 0 2px"><b>Producten</b></p>' + productRows : '') +
+          (q.message ? '<p style="margin:14px 0 0"><b>Bericht</b><br>' + escHtml(q.message).replace(/\n/g, '<br>') + '</p>' : ''),
+          'Beantwoord deze mail om direct bij de aanvrager uit te komen (reply-to staat goed).'
+        )
       });
-      // 2) bevestiging klant (in zijn taal)
       if (q.email) {
         await sendMail({
           from: ORDER_EMAIL_FROM, to: q.email,
           subject: t('quoteMailSubject'),
-          html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
-            <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
-              <h1 style="margin:0;font-size:26px">${t('mailThanks', { name: escHtml(q.name) })}</h1>
-            </div>
-            <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
-              <p>${t('quoteMailBody')}</p>
-              ${rows ? '<p><b>' + t('quoteMailItems') + '</b></p><ul>' + rows + '</ul>' : ''}
-              ${q.message ? '<p><b>' + t('quoteMailMessage') + '</b><br>' + escHtml(q.message).replace(/\n/g, '<br>') + '</p>' : ''}
-              <p style="color:#8a6a4f;font-size:13px">${t('mailFooterHtml')}</p>
-            </div>
-          </div>`
+          html: mailHtml(
+            t('mailThanks', { name: escHtml(q.name) }),
+            '<p style="margin:0 0 10px">' + t('quoteMailBody') + '</p>' +
+            (productRows ? '<p style="margin:14px 0 2px"><b>' + t('quoteMailItems') + '</b></p>' + productRows : '') +
+            (q.message ? '<p style="margin:14px 0 0;color:#8A6A4F">„' + escHtml(q.message).replace(/\n/g, '<br>') + '”</p>' : ''),
+            t('mailFooterHtml')
+          )
         });
       }
     } else {
@@ -1400,38 +1416,44 @@ app.post('/api/wydarzenie', async (req, res) => {
     quoteHits.get(ip).push(Date.now());
     logEvent(e);   // fire-and-forget
 
-    const details = [
-      e.event && ['Wydarzenie', e.event], ['Data', e.date], ['Miejsce', e.place],
-      e.guests && ['Goście', e.guests]
-    ].filter(Boolean).map(([k, v]) => `<li><b>${k}:</b> ${escHtml(v)}</li>`).join('');
+    const L = lang === 'en'
+      ? { event: 'Event', date: 'Date', place: 'Location', guests: 'Guests' }
+      : { event: 'Wydarzenie', date: 'Data', place: 'Miejsce', guests: 'Goście' };
+    const pairs = extra => [
+      ['' + extra.event, escHtml(e.event)], ['' + extra.date, escHtml(e.date)], ['' + extra.place, escHtml(e.place)],
+      ...(e.guests ? [['' + extra.guests, escHtml(e.guests)]] : [])
+    ];
 
     if (resend && QUOTE_EMAIL_TO) {
       await sendMail({
         from: ORDER_EMAIL_FROM, to: QUOTE_EMAIL_TO,
         ...(e.email ? { reply_to: e.email } : {}),
         subject: `${source === 'catering' ? 'Catering/degustatie' : 'Food truck'} aanvraag: ${e.event || e.place} (${e.date})`,
-        html: `<div style="font-family:Arial,sans-serif;max-width:600px;color:#2a1503">
-          <h2 style="margin:0 0 12px">Nieuwe aanvraag: ${source} (${source === 'catering' ? '/degustacja' : '/foodtruck'})</h2>
-          <p><b>${escHtml(e.name)}</b><br>${e.email ? 'E-mail: ' + escHtml(e.email) + '<br>' : ''}${e.phone ? 'Tel: ' + escHtml(e.phone) + '<br>' : ''}Taal: ${lang}</p>
-          <ul>${details}</ul>
-          ${e.message ? '<p><b>Bericht</b><br>' + escHtml(e.message).replace(/\n/g, '<br>') + '</p>' : ''}
-        </div>`
+        html: mailHtml(
+          source === 'catering' ? 'Nieuwe catering-aanvraag' : 'Nieuwe food-truck-aanvraag',
+          `<p style="margin:0 0 6px">Via ${source === 'catering' ? 'panfrikandel.pl/degustacja' : 'panfrikandel.pl/foodtruck'}:</p>` +
+          mailRows([
+            ['Naam', '<b>' + escHtml(e.name) + '</b>'],
+            ...(e.email ? [['E-mail', '<a href="mailto:' + escHtml(e.email) + '" style="color:#FF4D00">' + escHtml(e.email) + '</a>']] : []),
+            ...(e.phone ? [['Telefoon', escHtml(e.phone)]] : []),
+            ...pairs({ event: 'Evenement', date: 'Datum', place: 'Plaats', guests: 'Gasten' }),
+            ['Taal klant', lang.toUpperCase()]
+          ]) +
+          (e.message ? '<p style="margin:14px 0 0"><b>Bericht</b><br>' + escHtml(e.message).replace(/\n/g, '<br>') + '</p>' : ''),
+          'Beantwoord deze mail om direct bij de aanvrager uit te komen (reply-to staat goed).'
+        )
       });
       if (e.email) {
         await sendMail({
           from: ORDER_EMAIL_FROM, to: e.email,
           subject: t('eventMailSubject'),
-          html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
-            <div style="background:#ff4d00;color:#fff8ec;padding:28px 32px;border-radius:16px 16px 0 0">
-              <h1 style="margin:0;font-size:26px">${t('mailThanks', { name: escHtml(e.name) })}</h1>
-            </div>
-            <div style="border:2px solid #2a1503;border-top:0;padding:24px 32px;border-radius:0 0 16px 16px">
-              <p>${t('eventMailBody')}</p>
-              <p><b>${t('eventMailDetails')}</b></p><ul>${details}</ul>
-              ${e.message ? '<p>' + escHtml(e.message).replace(/\n/g, '<br>') + '</p>' : ''}
-              <p style="color:#8a6a4f;font-size:13px">${t('mailFooterHtml')}</p>
-            </div>
-          </div>`
+          html: mailHtml(
+            t('mailThanks', { name: escHtml(e.name) }),
+            '<p style="margin:0 0 10px">' + t('eventMailBody') + '</p>' +
+            '<p style="margin:14px 0 2px"><b>' + t('eventMailDetails') + '</b></p>' + mailRows(pairs(L)) +
+            (e.message ? '<p style="margin:14px 0 0;color:#8A6A4F">„' + escHtml(e.message).replace(/\n/g, '<br>') + '”</p>' : ''),
+            t('mailFooterHtml')
+          )
         });
       }
     } else {

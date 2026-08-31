@@ -828,6 +828,8 @@ em { font-style: normal; color: var(--oranje); }
 
 /* admin: systeemstatus */
 .admin-system { font-size: 13px; }
+.admin-testmail { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.admin-testmail input { border: 2px solid var(--ink); border-radius: 8px; padding: 6px 10px; font: 600 13px 'Hanken Grotesk', sans-serif; min-width: 240px; }
 .sys-ok { color: #1a7a2e; }
 .sys-bad { color: var(--rood); }
 

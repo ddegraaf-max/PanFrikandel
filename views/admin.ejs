@@ -33,6 +33,13 @@
     <span class="<%= system.resend ? 'sys-ok' : 'sys-bad' %>">Resend (mail): <%= system.resend ? 'ja' : 'niet gezet' %></span> ·
     <span class="<%= system.turnstile ? 'sys-ok' : '' %>">Turnstile: <%= system.turnstile ? 'ja' : 'uit' %></span> ·
     <span class="<%= system.baseUrl ? 'sys-ok' : '' %>">BASE_URL: <%= system.baseUrl || '(leeg, afgeleid van het request)' %></span>
+    <br><b>Mail:</b> afzender <code><%= system.mailFrom %></code> · kopie naar <code><%= system.mailBcc || '(ORDER_EMAIL_BCC leeg)' %></code> · aanvragen naar <code><%= system.quoteTo || '(QUOTE_EMAIL_TO leeg)' %></code> ·
+    <span class="<%= system.mail.lastError ? 'sys-bad' : (system.mail.sent ? 'sys-ok' : '') %>">verstuurd sinds start: <%= system.mail.sent %><% if (system.mail.lastError) { %> · laatste fout: <%= system.mail.lastError %> (naar <%= system.mail.lastTo %>)<% } %></span>
+    <form method="POST" action="/admin/testmail" class="admin-testmail">
+      <input name="to" type="email" placeholder="<%= system.mailBcc || 'jouw@mailadres.nl' %>" value="<%= system.mailBcc %>">
+      <button class="btn btn-add" type="submit">✉️ Testmail sturen</button>
+      <% if (typeof mailResult !== 'undefined' && mailResult) { %><span class="<%= mailResult.ok ? 'sys-ok' : 'sys-bad' %>"><%= mailResult.ok ? '✅ Verstuurd naar ' + mailResult.to + ' (id ' + mailResult.id + ') — check ook je spam.' : '⚠️ ' + mailResult.error %></span><% } %>
+    </form>
   </div>
   <% if (stats) { %>
   <h1>Bezorging <%= delivery.city %> +<%= delivery.radiusKm %> km</h1>

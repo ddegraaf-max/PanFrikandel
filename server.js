@@ -34,6 +34,30 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const ORDER_EMAIL_FROM = process.env.ORDER_EMAIL_FROM || 'PanFrikandel <zamowienia@panfrikandel.pl>';
+
+// Alle mail gaat via sendMail(): de Resend-SDK gooit geen fout maar geeft { data, error } terug —
+// zonder deze wrapper verdwijnt een geweigerde mail stilletjes. Status zichtbaar in /api/version en admin.
+const mailState = { sent: 0, lastSentAt: null, lastId: null, lastError: null, lastTo: null };
+async function sendMail(payload) {
+  if (!resend) return { ok: false, error: 'RESEND_API_KEY niet gezet' };
+  const to = Array.isArray(payload.to) ? payload.to.join(', ') : payload.to;
+  try {
+    const r = await resend.emails.send(payload);
+    if (r && r.error) {
+      mailState.lastError = r.error.message || JSON.stringify(r.error);
+      mailState.lastTo = to;
+      console.error(`✉️  Resend weigerde mail naar ${to} (from: ${payload.from}): ${mailState.lastError}`);
+      return { ok: false, error: mailState.lastError };
+    }
+    mailState.sent++; mailState.lastSentAt = Date.now(); mailState.lastId = r?.data?.id || null; mailState.lastError = null; mailState.lastTo = to;
+    console.log(`✉️  Mail verstuurd naar ${to} (${mailState.lastId || '?'})`);
+    return { ok: true, id: mailState.lastId };
+  } catch (err) {
+    mailState.lastError = err.message; mailState.lastTo = to;
+    console.error(`✉️  Mail naar ${to} mislukt: ${err.message}`);
+    return { ok: false, error: err.message };
+  }
+}
 const ORDER_EMAIL_BCC  = process.env.ORDER_EMAIL_BCC || null;
 
 // Bedrijfsgegevens (regulamin, privacybeleid, footer) — jednoosobowa działalność, wpis w CEIDG
@@ -848,8 +872,13 @@ async function sendMailBatch(mails) {
   for (let i = 0; i < mails.length; i += 50) {
     const chunk = mails.slice(i, i + 50);
     try {
-      if (resend.batch && resend.batch.send) await resend.batch.send(chunk);
-      else for (const m of chunk) await resend.emails.send(m);
+      if (resend.batch && resend.batch.send) {
+        const r = await resend.batch.send(chunk);
+        if (r && r.error) { mailState.lastError = r.error.message || JSON.stringify(r.error); console.error('✉️  Resend batch geweigerd:', mailState.lastError); continue; }
+        mailState.sent += chunk.length; mailState.lastSentAt = Date.now(); mailState.lastError = null;
+      } else {
+        for (const m of chunk) await sendMail(m);
+      }
       sent += chunk.length;
     } catch (err) { console.error('Mail-batch mislukt:', err.message); }
   }
@@ -1050,6 +1079,7 @@ app.get('/api/version', (req, res) => res.json({
   version: VERSION, build: BUILD || null, startedAt: STARTED_AT.toISOString(),
   baseUrl: process.env.BASE_URL || null,
   database: dbStatus, stripe: !!stripe, resend: !!resend, turnstile: !!TURNSTILE_SECRET, gps: !!GPS_TOKEN,
+  mail: { from: ORDER_EMAIL_FROM, sent: mailState.sent, lastSentAt: mailState.lastSentAt ? new Date(mailState.lastSentAt).toISOString() : null, lastError: mailState.lastError, lastTo: mailState.lastTo },
   successUrl: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`
 }));
 
@@ -1068,7 +1098,8 @@ app.get('/prywatnosc',  (req, res) => { res.locals.meta.title = res_t(req, 'priv
 
 // ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
 const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], subs: [], live: publicLive(), truck: truckState, gpsToken: GPS_TOKEN, subDiscount: SUB_DISCOUNT, error: null,
-  system: { db: dbStatus, stripe: !!stripe, stripeLive: !!(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_'), resend: !!resend, turnstile: !!TURNSTILE_SECRET, baseUrl: process.env.BASE_URL || '' }, ...extra });
+  system: { db: dbStatus, stripe: !!stripe, stripeLive: !!(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_'), resend: !!resend, turnstile: !!TURNSTILE_SECRET, baseUrl: process.env.BASE_URL || '',
+            mailFrom: ORDER_EMAIL_FROM, mailBcc: ORDER_EMAIL_BCC || '', quoteTo: QUOTE_EMAIL_TO || '', mail: mailState }, mailResult: null, ...extra });
 
 app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
@@ -1097,6 +1128,20 @@ app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => 
   }
   res.setHeader('Set-Cookie', `pf_admin=${adminToken()}; HttpOnly; Path=/; Max-Age=${8 * 3600}; SameSite=Lax${COOKIE_SECURE}`);
   res.redirect('/admin');
+});
+
+app.post('/admin/testmail', express.urlencoded({ extended: false }), async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).send('Niet ingelogd.');
+  const to = String(req.body.to || ORDER_EMAIL_BCC || '').trim();
+  let mailResult;
+  if (!to) mailResult = { ok: false, error: 'Geen ontvanger: vul een adres in of zet ORDER_EMAIL_BCC.' };
+  else mailResult = await sendMail({
+    from: ORDER_EMAIL_FROM, to, subject: 'Testmail PanFrikandel ' + VERSION_LABEL,
+    html: mailHtml('Testmail werkt ✅', '<p>Deze mail is verstuurd vanuit /admin van PanFrikandel (' + VERSION_LABEL + ').</p><p>Afzender: ' + escHtml(ORDER_EMAIL_FROM) + '</p>', 'PanFrikandel · admin')
+  });
+  let stats = null, quotes = [], stops = [], events = [], subs = [];
+  try { stats = await getStats(30); quotes = await getQuotes(30); stops = await getStops(false); events = await getEvents(60); subs = await subList(); } catch (e) {}
+  res.render('admin', adminLocals({ authed: true, stats, quotes, stops, events, subs, mailResult: { ...mailResult, to } }));
 });
 
 app.post('/admin/logout', (req, res) => {
@@ -1293,7 +1338,7 @@ app.post('/api/zapytanie', async (req, res) => {
     if (resend && QUOTE_EMAIL_TO) {
       const rows = itemLines.map(i => `<li>${escHtml(i.name)} — ${escHtml(i.unit)}${i.qty ? ' · <b>' + escHtml(i.qty) + '</b>' : ''}</li>`).join('');
       // 1) eigenaar (Nederlands)
-      await resend.emails.send({
+      await sendMail({
         from: ORDER_EMAIL_FROM, to: QUOTE_EMAIL_TO,
         ...(q.email ? { reply_to: q.email } : {}),
         subject: `Offerte-aanvraag hurt: ${q.name}${q.company ? ' (' + q.company + ')' : ''}`,
@@ -1307,7 +1352,7 @@ app.post('/api/zapytanie', async (req, res) => {
       });
       // 2) bevestiging klant (in zijn taal)
       if (q.email) {
-        await resend.emails.send({
+        await sendMail({
           from: ORDER_EMAIL_FROM, to: q.email,
           subject: t('quoteMailSubject'),
           html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
@@ -1361,7 +1406,7 @@ app.post('/api/wydarzenie', async (req, res) => {
     ].filter(Boolean).map(([k, v]) => `<li><b>${k}:</b> ${escHtml(v)}</li>`).join('');
 
     if (resend && QUOTE_EMAIL_TO) {
-      await resend.emails.send({
+      await sendMail({
         from: ORDER_EMAIL_FROM, to: QUOTE_EMAIL_TO,
         ...(e.email ? { reply_to: e.email } : {}),
         subject: `${source === 'catering' ? 'Catering/degustatie' : 'Food truck'} aanvraag: ${e.event || e.place} (${e.date})`,
@@ -1373,7 +1418,7 @@ app.post('/api/wydarzenie', async (req, res) => {
         </div>`
       });
       if (e.email) {
-        await resend.emails.send({
+        await sendMail({
           from: ORDER_EMAIL_FROM, to: e.email,
           subject: t('eventMailSubject'),
           html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#2a1503">
@@ -1459,7 +1504,7 @@ app.post('/api/subskrypcja', async (req, res) => {
     if (r.confirmed) return res.json({ ok: true, confirmed: true });
     const url = `${siteUrl(req)}/subskrypcja/potwierdz?e=${encodeURIComponent(email)}&t=${subToken(email)}`;
     if (resend) {
-      await resend.emails.send({
+      await sendMail({
         from: ORDER_EMAIL_FROM, to: email, subject: t('subMailSubject'),
         html: mailHtml(t('subMailSubject'), '<p>' + t('subMailBodyHtml') + '</p>' + mailButton(url, t('subMailButton')), t('mailFooterHtml'))
       });
@@ -1482,7 +1527,7 @@ app.get('/subskrypcja/potwierdz', async (req, res) => {
     const r = await subConfirm(email);
     if (!r) return res.status(400).render('info', { ok: false, title: t('infoBadLinkTitle'), text: t('infoBadLinkText'), v: ASSET_V });
     if (!r.wasConfirmed && resend) {
-      await resend.emails.send({
+      await sendMail({
         from: ORDER_EMAIL_FROM, to: email, subject: t('subWelcomeSubject'),
         html: mailHtml(t('subWelcomeSubject'), t('subWelcomeBodyHtml', { code: fmtCode(r.code), percent: SUB_DISCOUNT.percent, siteUrl: BASE_URL }), t('mailUnsubHtml', { url: unsubUrl(email) }))
       });
@@ -1660,7 +1705,7 @@ app.get('/sukces', async (req, res) => {
               `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${escHtml(i.name)}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`
             ).join('');
             const sumRow = (label, val) => `<tr><td style="padding:4px 12px 4px 0;color:#8a6a4f">${label}</td><td style="padding:4px 0;text-align:right;color:#8a6a4f">${val}</td></tr>`;
-            await resend.emails.send({
+            await sendMail({
               from: ORDER_EMAIL_FROM,
               to: order.email,
               ...(ORDER_EMAIL_BCC ? { bcc: ORDER_EMAIL_BCC } : {}),

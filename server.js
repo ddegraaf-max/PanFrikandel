@@ -1007,7 +1007,7 @@ app.use((req, res, next) => {
   res.locals.siteUrl = base;
   res.locals.meta = {
     title: res.locals.t('title'), description: res.locals.t('metaDesc'),
-    url: base + req.path.replace(/\/+$/, '') || base + '/', image: base + '/img/mora-frikandellen-5.png', type: 'website'
+    url: base + req.path.replace(/\/+$/, '') || base + '/', image: base + '/img/og-image.png', type: 'website'
   };
   next();
 });
@@ -1019,7 +1019,7 @@ app.use((req, res, next) => {
 // Structured data: het bedrijf (LocalBusiness) — op de homepage
 const businessJsonLd = (req) => ({
   '@context': 'https://schema.org', '@type': 'LocalBusiness', name: 'PanFrikandel', legalName: COMPANY.name,
-  url: siteUrl(req), image: siteUrl(req) + '/img/mora-frikandellen-5.png', description: res_t(req, 'metaDesc'),
+  url: siteUrl(req), image: siteUrl(req) + '/img/og-image.png', description: res_t(req, 'metaDesc'),
   email: COMPANY.email, ...(COMPANY.phone ? { telephone: COMPANY.phone } : {}),
   address: { '@type': 'PostalAddress', streetAddress: 'Białka 15', postalCode: '09-550', addressLocality: 'Białka', addressRegion: 'mazowieckie', addressCountry: 'PL' },
   areaServed: { '@type': 'GeoCircle', geoMidpoint: { '@type': 'GeoCoordinates', latitude: DELIVERY.center.lat, longitude: DELIVERY.center.lon }, geoRadius: DELIVERY.radiusKm * 1000 },

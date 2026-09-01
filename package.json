@@ -1,6 +1,6 @@
 {
   "name": "pan-frikandel",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "description": "PanFrikandel \u2014 holenderskie przek\u0105ski, dowozimy sami w P\u0142ocku i okolicach (50 km) \u00b7 PL/EN",
   "main": "server.js",
   "scripts": {

@@ -25,6 +25,12 @@ const normalizeBase = u => {
 };
 const BASE_URL = normalizeBase(process.env.BASE_URL) || `http://localhost:${PORT}`;
 
+// Betaalmethoden: standaard beslist het Stripe-dashboard (Settings → Payment methods) wat de klant ziet.
+// Een vaste lijst (card,p24,blik) liet de checkout in live vastlopen zolang BLIK/P24 daar nog niet aanstonden.
+// Wil je toch afdwingen: STRIPE_PAYMENT_METHODS=card,blik,p24
+const PAYMENT_METHODS = (process.env.STRIPE_PAYMENT_METHODS || '').split(',').map(s => s.trim()).filter(Boolean);
+// Laatste Stripe-fout bij het starten van een betaling — zichtbaar in /api/version en /admin
+const checkoutState = { started: 0, lastError: null, lastErrorAt: null };
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY)
   : null;
@@ -1093,6 +1099,7 @@ app.get('/api/version', (req, res) => res.json({
   version: VERSION, build: BUILD || null, startedAt: STARTED_AT.toISOString(),
   baseUrl: process.env.BASE_URL || null,
   database: dbStatus, stripe: !!stripe, resend: !!resend, turnstile: !!TURNSTILE_SECRET, gps: !!GPS_TOKEN,
+  checkout: { paymentMethods: PAYMENT_METHODS.length ? PAYMENT_METHODS : 'dashboard', ...checkoutState },
   mail: { from: ORDER_EMAIL_FROM, sent: mailState.sent, lastSentAt: mailState.lastSentAt ? new Date(mailState.lastSentAt).toISOString() : null, lastError: mailState.lastError, lastTo: mailState.lastTo },
   successUrl: `${siteUrl(req)}/sukces?session_id={CHECKOUT_SESSION_ID}`
 }));
@@ -1113,7 +1120,8 @@ app.get('/prywatnosc',  (req, res) => { res.locals.meta.title = res_t(req, 'priv
 // ---- Admin: prijzenbeheer + statistieken (Nederlands, altijd PL-geldformaat) ----
 const adminLocals = extra => ({ products: PRODUCTS, pricing: PRICING, v: ASSET_V, zl: gr => money(gr, 'pl'), delivery: deliveryPublic('pl'), stats: null, quotes: [], stops: [], events: [], subs: [], live: publicLive(), truck: truckState, gpsToken: GPS_TOKEN, subDiscount: SUB_DISCOUNT, error: null,
   system: { db: dbStatus, stripe: !!stripe, stripeLive: !!(process.env.STRIPE_SECRET_KEY || '').startsWith('sk_live_'), resend: !!resend, turnstile: !!TURNSTILE_SECRET, baseUrl: process.env.BASE_URL || '',
-            mailFrom: ORDER_EMAIL_FROM, mailBcc: ORDER_EMAIL_BCC || '', quoteTo: QUOTE_EMAIL_TO || '', mail: mailState }, mailResult: null, ...extra });
+            mailFrom: ORDER_EMAIL_FROM, mailBcc: ORDER_EMAIL_BCC || '', quoteTo: QUOTE_EMAIL_TO || '', mail: mailState,
+            checkout: checkoutState, paymentMethods: PAYMENT_METHODS.length ? PAYMENT_METHODS.join(', ') : 'volgens Stripe-dashboard' }, mailResult: null, ...extra });
 
 app.get('/admin', async (req, res) => {
   if (!ADMIN_PASSWORD) return res.status(503).send('Admin is niet geconfigureerd: zet de ADMIN_PASSWORD environment variable.');
@@ -1622,7 +1630,7 @@ app.post('/api/checkout', async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       locale: lang === 'en' ? 'en' : 'pl',
-      payment_method_types: ['card', 'p24', 'blik'],
+      ...(PAYMENT_METHODS.length ? { payment_method_types: PAYMENT_METHODS } : {}),
       line_items: lineItems,
       shipping_address_collection: { allowed_countries: ['PL'] },
       phone_number_collection: { enabled: true },
@@ -1651,9 +1659,12 @@ app.post('/api/checkout', async (req, res) => {
       cancel_url: `${siteUrl(req)}/?anulowano=1#sklep`
     });
 
+    checkoutState.started++;
     res.json({ url: session.url });
   } catch (err) {
-    console.error('Checkout error:', err.message);
+    checkoutState.lastError = [err.type, err.code, err.message].filter(Boolean).join(' · ');
+    checkoutState.lastErrorAt = new Date().toISOString();
+    console.error('💳 Checkout mislukt:', checkoutState.lastError);
     res.status(500).json({ error: t('errCheckout') });
   }
 });

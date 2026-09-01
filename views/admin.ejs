@@ -29,7 +29,7 @@
   <div class="admin-note admin-system">
     <b>Systeem:</b>
     <span class="<%= system.db === 'ok' ? 'sys-ok' : 'sys-bad' %>">database: <%= system.db %></span> ·
-    <span class="<%= system.stripe ? 'sys-ok' : 'sys-bad' %>">Stripe: <%= system.stripe ? (system.stripeLive ? 'live' : 'test') : 'niet gezet' %></span> ·
+    <span class="<%= !system.stripe || system.checkout.lastError ? 'sys-bad' : 'sys-ok' %>">Stripe: <%= system.stripe ? (system.stripeLive ? 'live' : 'test') : 'niet gezet' %> · betaalmethoden: <%= system.paymentMethods %> · betalingen gestart sinds start: <%= system.checkout.started %><% if (system.checkout.lastError) { %> · <b>laatste Stripe-fout:</b> <%= system.checkout.lastError %> (<%= system.checkout.lastErrorAt %>)<% } %></span> ·
     <span class="<%= system.resend ? 'sys-ok' : 'sys-bad' %>">Resend (mail): <%= system.resend ? 'ja' : 'niet gezet' %></span> ·
     <span class="<%= system.turnstile ? 'sys-ok' : '' %>">Turnstile: <%= system.turnstile ? 'ja' : 'uit' %></span> ·
     <span class="<%= system.baseUrl ? 'sys-ok' : '' %>">BASE_URL: <%= system.baseUrl || '(leeg, afgeleid van het request)' %></span>

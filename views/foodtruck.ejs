@@ -198,7 +198,7 @@
 <script>
   window.LANG = <%- JSON.stringify(lang) %>;
   window.T = <%- JSON.stringify(dict.client) %>;
-  window.STOPS = <%- JSON.stringify(stops.map(s => ({ name: s.name, address: s.address, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo, hours: s.hours }))) %>;
+  window.STOPS = <%- JSON.stringify(stops.map(s => ({ name: s.name, address: s.address, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo, hours: s.hours }))).replace(/</g, '\u003c') %>;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <% if (turnstileSiteKey) { %><script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script><% } %>

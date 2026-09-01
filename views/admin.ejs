@@ -330,7 +330,7 @@
   // Admin-kaart: klik prikt de standplaats (lat/lon in het formulier); bestaande standplaatsen als pins
   const el = document.getElementById('adminMap');
   if (!el || !window.L) return;
-  const stops = <%- JSON.stringify(stops.filter(s => s.lat != null).map(s => ({ name: s.name, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo }))) %>;
+  const stops = <%- JSON.stringify(stops.filter(s => s.lat != null).map(s => ({ name: s.name, lat: s.lat, lon: s.lon, dateFrom: s.dateFrom, dateTo: s.dateTo }))).replace(/</g, '\\u003c') %>;
   const map = L.map(el).setView([52.5464, 19.7065], 11);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '&copy; OpenStreetMap' }).addTo(map);
   const icon = L.divIcon({ className: 'pf-pin', html: '🍟', iconSize: [36, 36], iconAnchor: [18, 34], popupAnchor: [0, -30] });

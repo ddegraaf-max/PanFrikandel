@@ -91,6 +91,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use((req, res, next) => {
   if (/\/{2,}/.test(req.path)) return res.redirect(301, req.originalUrl.replace(/\/{2,}/g, '/'));
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (BASE_URL.startsWith('https')) res.setHeader('Strict-Transport-Security', 'max-age=15552000');
   next();
 });
 app.get('/healthz', (req, res) => res.type('text/plain').send('ok ' + VERSION_LABEL + ' · database: ' + dbStatus));
@@ -285,7 +289,7 @@ const DELIVERY = {
 // ---- Cloudflare Turnstile (anti-spam op formulieren). Zonder sleutels: uitgeschakeld. ----
 const TURNSTILE_SITE_KEY = process.env.TURNSTILE_SITE_KEY || null;
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY || null;
-const clientIp = req => req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '';
+const clientIp = req => req.ip || req.socket.remoteAddress || '';
 async function turnstileOk(req) {
   if (!TURNSTILE_SECRET) return true;
   const token = String(req.body?.turnstile || '').trim();
@@ -509,6 +513,12 @@ async function logZoneCheck(z, source) {
   }
 }
 
+async function orderLogged(sessionId) {
+  try {
+    if (pool) { const { rows } = await pool.query('SELECT 1 FROM local_orders WHERE session_id = $1', [sessionId]); return !!rows[0]; }
+    return statsMem.orders.some(o => o.sessionId === sessionId);
+  } catch (e) { return false; }
+}
 async function logOrder(o) {
   try {
     if (pool) {
@@ -1137,7 +1147,7 @@ app.get('/admin', async (req, res) => {
 });
 
 app.post('/admin/login', express.urlencoded({ extended: false }), (req, res) => {
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+  const ip = clientIp(req);
   if (!ADMIN_PASSWORD || !loginAllowed(ip)) {
     return res.status(429).render('admin', adminLocals({ authed: false, error: 'Te veel pogingen — probeer het over 15 minuten opnieuw.' }));
   }
@@ -1266,6 +1276,7 @@ function aiAllowed(ip) {
   const now = Date.now();
   const arr = (aiHits.get(ip) || []).filter(ts => now - ts < 3600000);
   arr.push(now);
+  if (aiHits.size > 20000) aiHits.clear();
   aiHits.set(ip, arr);
   return arr.length <= 40;
 }
@@ -1328,6 +1339,7 @@ const quoteHits = new Map(); // ip → [timestamps]
 function quoteAllowed(ip) {
   const now = Date.now();
   const arr = (quoteHits.get(ip) || []).filter(t => now - t < 3600000);
+  if (quoteHits.size > 20000) quoteHits.clear();
   quoteHits.set(ip, arr);
   return arr.length < 5;
 }
@@ -1335,7 +1347,7 @@ function quoteAllowed(ip) {
 app.post('/api/zapytanie', async (req, res) => {
   const t = res.locals.t, lang = req.lang;
   try {
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+    const ip = clientIp(req);
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
     if (!(await turnstileOk(req))) return res.status(400).json({ error: t('errBot') });
     const s = (v, n) => String(v || '').trim().slice(0, n);
@@ -1406,7 +1418,7 @@ app.post('/api/zapytanie', async (req, res) => {
 app.post('/api/wydarzenie', async (req, res) => {
   const t = res.locals.t, lang = req.lang;
   try {
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+    const ip = clientIp(req);
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
     if (!(await turnstileOk(req))) return res.status(400).json({ error: t('errBot') });
     const s = (v, n) => String(v || '').trim().slice(0, n);
@@ -1523,7 +1535,7 @@ app.post('/api/gps/kod', async (req, res) => {
 app.post('/api/subskrypcja', async (req, res) => {
   const t = res.locals.t, lang = req.lang;
   try {
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || '?';
+    const ip = clientIp(req);
     if (!quoteAllowed(ip)) return res.status(429).json({ error: t('errQuoteRate') });
     if (!(await turnstileOk(req))) return res.status(400).json({ error: t('errBot') });
     const email = String(req.body.email || '').trim().toLowerCase();
@@ -1577,9 +1589,20 @@ app.get('/subskrypcja/rezygnacja', async (req, res) => {
   try { await subUnsubscribe(email); } catch (err) { console.error('Afmelden mislukt:', err.message); }
   res.render('info', { ok: true, title: t('infoUnsubTitle'), text: t('infoUnsubText'), v: ASSET_V });
 });
+// Kortingscode raden beperken: 30 pogingen per uur per IP (geldt voor winkelmand én checkout)
+const kodHits = new Map();
+function kodAllowed(ip) {
+  const now = Date.now();
+  const arr = (kodHits.get(ip) || []).filter(ts => now - ts < 3600000);
+  arr.push(now);
+  if (kodHits.size > 20000) kodHits.clear();
+  kodHits.set(ip, arr);
+  return arr.length <= 30;
+}
 // Kortingscode in de winkelmand
 app.post('/api/kod', async (req, res) => {
   const t = res.locals.t;
+  if (!kodAllowed(clientIp(req))) return res.status(429).json({ error: t('errQuoteRate') });
   const r = await codeCheck(req.body.code);
   if (!r.ok) return res.status(404).json({ error: t(r.reason === 'used' ? 'errCodeUsed' : 'errCodeInvalid') });
   res.json({ ok: true, code: fmtCode(r.code), percent: r.percent });
@@ -1622,6 +1645,7 @@ app.post('/api/checkout', async (req, res) => {
     // Kortingscode van een abonnee (PF-XXXXXX) → Stripe-coupon; ongeldig = duidelijke fout, niet stil negeren
     let disc = null;
     if (String(req.body.kod_rabatowy || '').trim()) {
+      if (!kodAllowed(clientIp(req))) return res.status(429).json({ error: t('errQuoteRate'), badCode: true });
       disc = await codeCheck(req.body.kod_rabatowy);
       if (!disc.ok) return res.status(400).json({ error: t(disc.reason === 'used' ? 'errCodeUsed' : 'errCodeInvalid'), badCode: true });
     }
@@ -1713,8 +1737,10 @@ app.get('/sukces', async (req, res) => {
         };
 
         if (paid) {
+          // Dubbel verwerken voorkomen — ook na een herstart (Set is dan leeg, maar de bestelling staat al in de database)
+          const alreadyDone = loggedSessions.has(session.id) || await orderLogged(session.id);
           // Statistiek: bestelling registreren + checken of het afleveradres echt in de zone ligt
-          if (!loggedSessions.has(session.id)) {
+          if (!alreadyDone) {
             loggedSessions.add(session.id);
             if (m.kod_rabatowy) codeUse(m.kod_rabatowy);
             // voorraad afboeken (product-id zit in de metadata van het Stripe-product)
@@ -1732,7 +1758,7 @@ app.get('/sukces', async (req, res) => {
             });
           }
 
-          if (resend && order.email && !emailedSessions.has(session.id)) {
+          if (resend && order.email && !alreadyDone && !emailedSessions.has(session.id)) {
             emailedSessions.add(session.id);
             const rows = order.items.map(i =>
               `<tr><td style="padding:6px 12px 6px 0">${i.qty} × ${escHtml(i.name)}</td><td style="padding:6px 0;text-align:right">${i.total}</td></tr>`

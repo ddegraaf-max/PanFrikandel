@@ -309,10 +309,13 @@ async function turnstileOk(req) {
 }
 
 // ---- Socials (footer, /foodtruck) + food truck ----
+// Lege URL = knop verborgen. Let op: instagram.com/panfrikandel (zonder .pl) is
+// van iemand anders; het eigen account is @panfrikandel.pl. Facebook en TikTok
+// staan uit tot er een account is — dan SOCIAL_FACEBOOK / SOCIAL_TIKTOK zetten.
 const SOCIALS = {
-  instagram: process.env.SOCIAL_INSTAGRAM || 'https://www.instagram.com/panfrikandel',
-  facebook:  process.env.SOCIAL_FACEBOOK  || 'https://www.facebook.com/panfrikandel',
-  tiktok:    process.env.SOCIAL_TIKTOK    || 'https://www.tiktok.com/@panfrikandel'
+  instagram: process.env.SOCIAL_INSTAGRAM || 'https://www.instagram.com/panfrikandel.pl',
+  facebook:  process.env.SOCIAL_FACEBOOK  || '',
+  tiktok:    process.env.SOCIAL_TIKTOK    || ''
 };
 // Starttekst op /foodtruck (bv. "wiosna 2027" / "spring 2027"); leeg = "wkrótce" / "soon"
 const FOODTRUCK_LAUNCH = { pl: process.env.FOODTRUCK_LAUNCH_PL || '2027', en: process.env.FOODTRUCK_LAUNCH_EN || '2027' };
@@ -1034,7 +1037,7 @@ const businessJsonLd = (req) => ({
   address: { '@type': 'PostalAddress', streetAddress: 'Białka 15', postalCode: '09-550', addressLocality: 'Białka', addressRegion: 'mazowieckie', addressCountry: 'PL' },
   areaServed: { '@type': 'GeoCircle', geoMidpoint: { '@type': 'GeoCoordinates', latitude: DELIVERY.center.lat, longitude: DELIVERY.center.lon }, geoRadius: DELIVERY.radiusKm * 1000 },
   priceRange: 'zł', currenciesAccepted: 'PLN', paymentAccepted: 'BLIK, Przelewy24, karta',
-  sameAs: Object.values(SOCIALS)
+  sameAs: Object.values(SOCIALS).filter(Boolean)
 });
 const res_t = (req, key, vars) => makeT(req.lang)(key, vars);
 const productUrl = (req, p) => `${siteUrl(req)}/produkt/${p.id}`;

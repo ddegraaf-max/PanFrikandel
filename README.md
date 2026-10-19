@@ -31,7 +31,7 @@ Twee catalogi:
 | `DELIVERY_RADIUS_KM` | straal van de bezorgzone rond Płock in km (optioneel, standaard 50) |
 | `PRICING_EUR_PLN` | koers EUR→PLN voor het prijsmodel (optioneel, standaard 4.35) |
 | `PRICING_MARKUP` | opslag op de inkoopprijs (optioneel, standaard 2.2) |
-| `SOCIAL_INSTAGRAM` / `SOCIAL_FACEBOOK` / `SOCIAL_TIKTOK` | links naar de socials (optioneel, standaard `…/panfrikandel`) |
+| `SOCIAL_INSTAGRAM` / `SOCIAL_FACEBOOK` / `SOCIAL_TIKTOK` | links naar de socials; Instagram standaard `instagram.com/panfrikandel.pl`, Facebook/TikTok standaard leeg = knop verborgen |
 | `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN` | starttekst food truck, bv. `wiosna 2027` / `spring 2027` (optioneel) |
 | `GPS_TOKEN` | geheim voor `/kierowca` en `POST /api/gps` (lange willekeurige string) |
 | `GPS_STALE_MIN` | minuten zonder signaal waarna de kar "niet live" is (standaard 30) |
@@ -177,8 +177,8 @@ uur per IP. Testen zonder echte sleutels kan met Cloudflare's testsleutels
   (reply-to = aanvrager) + bevestiging in de taal van de klant + log (tabel
   `event_requests`), zichtbaar in `/admin`.
 - **Socials** in de footer van alle pagina's en op `/foodtruck`; URL's via env
-  `SOCIAL_INSTAGRAM`, `SOCIAL_FACEBOOK`, `SOCIAL_TIKTOK` (standaard
-  `…/panfrikandel`). Starttekst via `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN`
+  `SOCIAL_INSTAGRAM` (standaard `instagram.com/panfrikandel.pl`),
+  `SOCIAL_FACEBOOK`, `SOCIAL_TIKTOK` (standaard leeg = knop verborgen). Starttekst via `FOODTRUCK_LAUNCH_PL` / `FOODTRUCK_LAUNCH_EN`
   (standaard "2027"; bv. "wiosna 2027" / "spring 2027").
 
 ## Bezorging: alleen eigen bezorging, Płock + 50 km

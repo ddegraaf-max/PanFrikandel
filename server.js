@@ -1794,7 +1794,7 @@ app.get('/sukces', async (req, res) => {
     console.error('Success page error:', err.message);
   }
   res.locals.meta = { ...res.locals.meta, title: res_t(req, 'successTitle'), noindex: true };
-  res.render('sukces', { order, v: ASSET_V });
+  res.render('sukces', { order, v: ASSET_V, adsConversion: true }); // Google Ads-conversie (views/partials/gads.ejs)
 });
 
 app.use((req, res) => {
